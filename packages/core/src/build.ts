@@ -7,7 +7,13 @@ import { createSiteInfo } from './context.js';
 import { buildLinkReport, type LinkReport } from './links.js';
 import { createRenderer } from './render.js';
 import { langPrefix, categoryOutputPath, normalizeBasePath } from './routes.js';
-import { createCategoryView, createIndexView, createNotFoundView, createPageView } from './view.js';
+import {
+  createCategoryView,
+  createIndexView,
+  createNotFoundRender,
+  createPageView,
+  NOT_FOUND_SLUG,
+} from './view.js';
 
 export interface BuildOptions {
   /** 覆盖 config.outputDir */
@@ -48,7 +54,8 @@ export async function buildSite(
 
   const base = normalizeBasePath(config.basePath);
 
-  const published = pages.filter((p) => !p.draft);
+  // slug 为 404 的页面不按普通页面输出，它只负责生成根目录的 404.html
+  const published = pages.filter((p) => !p.draft && p.slug !== NOT_FOUND_SLUG);
   // 全站信息只算一次：宏与布局看到的是同一个对象，而且 generatedAt 保持一致
   const siteInfo = createSiteInfo(config, published);
 
@@ -95,10 +102,8 @@ export async function buildSite(
   }
 
   // 静态托管的 404 约定：根目录的 404.html。file:// 下没有这个概念，但其他托管都会用它。
-  const notFoundHtml = await renderer.renderLayout(
-    'not-found',
-    createNotFoundView(config, pages, siteInfo) as unknown as Record<string, unknown>,
-  );
+  const notFound = createNotFoundRender(config, pages, siteInfo);
+  const notFoundHtml = await renderer.renderLayout(notFound.layout, notFound.view);
   await writeFile(join(outputDir, '404.html'), notFoundHtml, 'utf8');
   written.push('404.html');
 

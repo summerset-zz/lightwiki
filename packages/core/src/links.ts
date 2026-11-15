@@ -1,5 +1,6 @@
 import type { LoadedConfig } from './config.js';
 import type { Page } from './content.js';
+import { NOT_FOUND_SLUG } from './context.js';
 import { categoryUrl, normalizeBasePath } from './routes.js';
 
 export interface RedLink {
@@ -40,7 +41,7 @@ function hrefToKey(href: string, config: LoadedConfig): string {
  * - 草稿不参与孤页判定，也不作为红链目标 —— 它本来就还没公开。
  */
 export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport {
-  const published = pages.filter((p) => !p.draft);
+  const published = pages.filter((p) => !p.draft && p.slug !== NOT_FOUND_SLUG);
   const known = new Set(published.map((p) => normUrl(p.url, config)));
 
   // 分类页是构建时生成的，也要算作已知目标，否则指向它们的链接会被误判为红链

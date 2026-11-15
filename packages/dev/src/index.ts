@@ -6,7 +6,7 @@ import { extname, join, resolve, sep } from 'node:path';
 import {
   createCategoryView,
   createIndexView,
-  createNotFoundView,
+  createNotFoundRender,
   createPageView,
   createRenderer,
   createSiteInfo,
@@ -227,11 +227,8 @@ export async function startDevServer(
     }
 
     if (route.kind === 'notfound') {
-      const html = await renderer.renderLayout(
-        'not-found',
-        createNotFoundView(config, state.pages, state.siteInfo) as unknown as Record<string, unknown>,
-      );
-      return inject(html);
+      const notFound = createNotFoundRender(config, state.pages, state.siteInfo);
+      return inject(await renderer.renderLayout(notFound.layout, notFound.view));
     }
 
     return null;

@@ -70,6 +70,8 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
   const allLangs = Object.keys(config.content);
   const missingTranslations: MissingTranslation[] = [];
   for (const [slug, present] of [...langsBySlug].sort(([a], [b]) => a.localeCompare(b))) {
+    // 404 页只有默认语言一份（产物也只能有一个 404.html），不参与缺译提示
+    if (slug === '404') continue;
     const missing = allLangs.filter((lang) => !present.has(lang));
     if (missing.length > 0) {
       missingTranslations.push({ slug, present: [...present].sort(), missing });

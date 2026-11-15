@@ -26,7 +26,7 @@ categories: [official]
 | `doc` | 每一篇内容页 |
 | `index` | 每种语言的目录页 |
 | `category` | 分类页 |
-| `not-found` | 产物根目录的 `404.html`（见 [[commands#not-found]]） |
+| `not-found` | 没有 `404.md` 时的兜底页（见 [[commands#not-found]]） |
 
 覆盖就是建同名文件，只写要改的部分。**没覆盖的部分会随主题升级自动跟进**——这也是不要整份拷贝主题的原因。
 

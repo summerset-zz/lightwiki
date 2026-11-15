@@ -52,6 +52,9 @@ export interface PageInfo {
   frontmatter: Record<string, unknown>;
 }
 
+/** 约定：slug 为 `404` 的页面不进导航，也不按普通页面输出，只负责生成根目录的 404.html */
+export const NOT_FOUND_SLUG = '404';
+
 /** 分类：键是 ASCII slug，显示名在站点配置里 */
 export interface CategoryInfo {
   slug: string;

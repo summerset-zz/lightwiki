@@ -1,6 +1,6 @@
 import type { LoadedConfig } from './config.js';
 import type { Page } from './content.js';
-import { keywordsOf, type SiteInfo } from './context.js';
+import { keywordsOf, NOT_FOUND_SLUG, type SiteInfo } from './context.js';
 import { categoryUrl, langPrefix, normalizeBasePath } from './routes.js';
 
 export interface NavPage {
@@ -28,13 +28,20 @@ function sortPages(a: Page, b: Page): number {
  * 侧栏导航：先按配置里声明的 section 顺序，未声明的按出现顺序排在后面。
  * 草稿不进导航（但可以按地址直接打开）。
  */
+/** 约定：slug 为 `404` 的页面不进导航，也不按普通页面输出 */
+export { NOT_FOUND_SLUG };
+
+function isVisible(page: Page): boolean {
+  return !page.draft && page.slug !== NOT_FOUND_SLUG;
+}
+
 export function buildNav(
   config: LoadedConfig,
   pages: Page[],
   lang: string,
   currentUrl: string,
 ): NavGroup[] {
-  return toGroups(config, pages.filter((p) => p.lang === lang && !p.draft), currentUrl);
+  return toGroups(config, pages.filter((p) => p.lang === lang && isVisible(p)), currentUrl);
 }
 
 /** 把一批页面按 section 分组；section 顺序听配置的 */
@@ -66,9 +73,7 @@ function toGroups(config: LoadedConfig, list: Page[], currentUrl: string): NavGr
 }
 
 function pagesInCategory(pages: Page[], lang: string, slug: string): Page[] {
-  return pages.filter(
-    (p) => p.lang === lang && !p.draft && p.categories.includes(slug),
-  );
+  return pages.filter((p) => p.lang === lang && isVisible(p) && p.categories.includes(slug));
 }
 
 /** 侧栏：默认是全站导航；页面声明了 `sidebarCategory` 就换成该分类的页面 */
@@ -226,6 +231,40 @@ export function createNotFoundView(
     lang,
     nav: buildNav(config, pages, lang, ''),
     index: { url: `${base}${langPrefix(config, lang)}/docs/` },
+  };
+}
+
+export interface NotFoundRender {
+  layout: 'doc' | 'not-found';
+  view: Record<string, unknown>;
+}
+
+/**
+ * 404 页的渲染方案。
+ *
+ * 有内容页就优先用它（走 `doc` 布局，于是侧栏、TOC、样式都跟其他页一致），
+ * 否则退回主题自带的 `not-found` 布局。两者的产物都是 `/404.html`。
+ */
+export function createNotFoundRender(
+  config: LoadedConfig,
+  pages: Page[],
+  site: SiteInfo,
+): NotFoundRender {
+  const url = `${normalizeBasePath(config.basePath)}/404.html`;
+  const page = pages.find(
+    (p) => p.slug === NOT_FOUND_SLUG && p.lang === config.defaultLanguage && !p.draft,
+  );
+
+  if (page) {
+    return {
+      layout: 'doc',
+      view: createPageView(config, pages, { ...page, url }, site) as unknown as Record<string, unknown>,
+    };
+  }
+
+  return {
+    layout: 'not-found',
+    view: createNotFoundView(config, pages, site) as unknown as Record<string, unknown>,
   };
 }
 
