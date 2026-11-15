@@ -1,0 +1,13 @@
+{
+  "name": "@lightwiki/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "wiki": "./src/index.ts"
+  },
+  "dependencies": {
+    "@lightwiki/core": "workspace:*",
+    "@lightwiki/schema": "workspace:*"
+  }
+}

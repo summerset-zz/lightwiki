@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.yarn/cache/
+.yarn/install-state.gz
+*.tsbuildinfo
+.env
+.DS_Store
+
+# 本地冒烟配置引用了另一个仓库的内容，不进版本库
+examples/fontcover/

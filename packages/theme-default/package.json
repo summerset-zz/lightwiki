@@ -1,0 +1,10 @@
+{
+  "name": "@lightwiki/theme-default",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "layouts",
+    "assets"
+  ]
+}

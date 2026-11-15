@@ -1,0 +1,22 @@
+{
+  "name": "lightwiki",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "yarn@4.9.2",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "type:check": "tsc -p tsconfig.json",
+    "wiki": "tsx packages/cli/src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "5.9.3"
+  }
+}
