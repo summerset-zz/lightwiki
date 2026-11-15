@@ -28,6 +28,10 @@ draft: false
 
 {{note("这一块是宏生成的，不是 markdown 里的内容。")}}
 
+宏里可以调另一个宏（`it.macro(...)`），下面这个 card 内部就调用了 glossary：
+
+{{card("基线", "card 的正文。标题由 glossary 宏生成。")}}
+
 嵌套在句子中间也可以，比如这里提到 {{glossary("em 方框")}}。
 
 ## 术语提示 {#hint}

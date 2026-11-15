@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
 import type { LoadedConfig } from './config.js';
-import type { MacroContext, MacroRegistry } from './macros.js';
+import type { MacroBase, MacroRegistry } from './macros.js';
 import type { LinkResolver } from './resolve.js';
 import { assetHref, localizeHref } from './routes.js';
 
@@ -310,7 +310,7 @@ function renderMacro(
     return null;
   }
 
-  const context: MacroContext = {
+  const context: MacroBase = {
     args,
     named,
     page: env.pageMeta ?? {},
@@ -383,11 +383,18 @@ function macroBlockRule(state: any, startLine: number, _endLine: number, silent:
   if (silent) return true;
 
   const env = state.env as RenderEnv;
-  // 未定义的宏交给段落 + 行内规则去处理，这样错误信息与行内形态一致
+  // 未定义的宏交给段落 + 行内规则处理，避免同一条错误被记两次
   if (!env.macros || !env.macros.has(call.name)) return false;
 
   const html = renderMacro(env, call.name, call.args, call.named);
-  if (html === null) return false;
+  if (html === null) {
+    // 宏存在但渲染失败（循环引用、嵌套过深）：原文以段落形式保留，不再回退给行内规则
+    const token = state.push('html_block', '', 0);
+    token.map = [startLine, startLine + 1];
+    token.content = `<p>${escapeHtml(line)}</p>`;
+    state.line = startLine + 1;
+    return true;
+  }
 
   const token = state.push('html_block', '', 0);
   token.map = [startLine, startLine + 1];

@@ -1,0 +1,4 @@
+<div class="card">
+  <p class="card-title"><%~ it.macro("glossary", it.args[0] ?? "") %></p>
+  <p><%= it.args[1] ?? "" %></p>
+</div>

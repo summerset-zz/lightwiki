@@ -9,7 +9,14 @@ export {
 export { buildSite, type BuildOptions, type BuildResult } from './build.js';
 export { checkSite, type CheckResult, type MissingTranslation, type SectionIssue, type UnresolvedIssue } from './check.js';
 export { buildLinkReport, normUrl, type LinkReport, type RedLink } from './links.js';
-export { loadMacros, listMacroNames, type MacroContext, type MacroProblem, type MacroRegistry } from './macros.js';
+export {
+  loadMacros,
+  listMacroNames,
+  type MacroBase,
+  type MacroContext,
+  type MacroProblem,
+  type MacroRegistry,
+} from './macros.js';
 export {
   LinkResolver,
   normalizeTitle,

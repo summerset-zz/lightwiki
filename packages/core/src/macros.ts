@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { Eta } from 'eta';
 import type { LoadedConfig } from './config.js';
 
-export interface MacroContext {
+export interface MacroBase {
   /** 位置参数，已解析成字符串或数字 */
   args: Array<string | number>;
   /** 命名参数（`k: v`）；v1 只解析不使用，留给后续 */
@@ -16,6 +16,17 @@ export interface MacroContext {
   addCategory: (name: string) => void;
 }
 
+export interface MacroContext extends MacroBase {
+  /**
+   * 在宏里调用另一个宏，返回已渲染的 HTML 片段。
+   *
+   * 为什么不写成 `{{另一个宏}}` 让引擎自己展开：宏的产物是待插入的 HTML 片段，
+   * 再拿去跑一遍 markdown 解析会把已经成形的标签重新当成源码处理。
+   * 显式调用能保证「已经渲染好的就是最终的」，也能做循环引用检测。
+   */
+  macro: (name: string, ...args: Array<string | number>) => string;
+}
+
 export interface MacroProblem {
   macro: string;
   message: string;
@@ -25,13 +36,15 @@ export interface MacroRegistry {
   /** 宏名大小写不敏感 */
   has(name: string): boolean;
   /** 同步渲染，返回 HTML 片段 */
-  render(name: string, context: MacroContext): string;
+  render(name: string, base: MacroBase): string;
   names(): string[];
   problems: MacroProblem[];
 }
 
+/** 嵌套上限：宏是手动组合的，正常不会深过个位数 */
+const MAX_MACRO_DEPTH = 20;
+
 /** 宏是同步的：markdown-it 的渲染管线不允许 await */
-const NOT_SYNC = Symbol('not-sync');
 
 /**
  * 载入宏。
@@ -62,16 +75,45 @@ export async function loadMacros(config: LoadedConfig): Promise<MacroRegistry> {
     problems,
     has: (name) => sources.has(name.toLowerCase()),
     names: () => [...sources.keys()].sort(),
-    render(name, context) {
-      const source = sources.get(name.toLowerCase());
-      if (source === undefined) {
-        throw new Error(`未定义的宏：${name}`);
-      }
-      const result: unknown = eta.renderString(source, context);
-      if (result === NOT_SYNC || typeof result !== 'string') {
-        throw new Error(`宏 ${name} 必须是同步的（模板里不能有 await）`);
-      }
-      return result;
+    render(name, base) {
+      const stack: string[] = [];
+
+      const run = (
+        macroName: string,
+        args: Array<string | number>,
+        named: Record<string, string>,
+      ): string => {
+        const key = macroName.toLowerCase();
+        const source = sources.get(key);
+        if (source === undefined) {
+          throw new Error(`未定义的宏：${macroName}`);
+        }
+        if (stack.includes(key)) {
+          throw new Error(`宏循环引用：${[...stack, key].join(' 到 ')}`);
+        }
+        if (stack.length >= MAX_MACRO_DEPTH) {
+          throw new Error(`宏嵌套超过 ${MAX_MACRO_DEPTH} 层：${[...stack, key].join(' 到 ')}`);
+        }
+
+        stack.push(key);
+        try {
+          const context: MacroContext = {
+            ...base,
+            args,
+            named,
+            macro: (child, ...childArgs) => run(child, childArgs, {}),
+          };
+          const result: unknown = eta.renderString(source, context);
+          if (typeof result !== 'string') {
+            throw new Error(`宏 ${macroName} 必须是同步的（模板里不能有 await）`);
+          }
+          return result;
+        } finally {
+          stack.pop();
+        }
+      };
+
+      return run(name, base.args, base.named);
     },
   };
 }

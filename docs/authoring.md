@@ -148,6 +148,18 @@ export default {
 <span class="glossary" title="<%= it.args[0] ?? '' %>"><%= it.args[1] ?? it.args[0] ?? '' %></span>
 ```
 
+宏可以调用另一个宏，用 `it.macro(名字, 参数…)`，返回值是已经渲染好的 HTML（所以用 `<%~ %>` 输出）：
+
+```html
+<div class="card">
+  <p class="card-title"><%~ it.macro("glossary", it.args[0] ?? "") %></p>
+  <p><%= it.args[1] ?? "" %></p>
+</div>
+```
+
+- 不要在宏里写 `{{另一个宏}}` 指望它被展开：宏的产物不会再过一轮 markdown 解析；
+- 循环引用和超过 20 层的嵌套都会被检测到，并在 `wiki check` 里报错，页面上保留原文。
+
 ---
 
 ## 4. 布局
