@@ -1,0 +1,1 @@
+<span class="glossary" title="<%= it.args[0] ?? '' %>"><%= it.args[1] ?? it.args[0] ?? '' %></span>

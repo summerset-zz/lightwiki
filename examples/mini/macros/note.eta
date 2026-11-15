@@ -1,0 +1,1 @@
+<div class="note"><%= it.args[0] ?? '' %></div>

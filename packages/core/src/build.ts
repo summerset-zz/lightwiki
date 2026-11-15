@@ -28,6 +28,16 @@ export async function buildSite(
 ): Promise<BuildResult> {
   const outputDir = resolve(config.root, options.outDir ?? config.outputDir);
   const { pages, problems, warnings } = await loadContent(config);
+
+  // 未解析的内链/未定义的宏进 build 的警告列表，否则产物里会静默露出占位或原文
+  for (const page of pages) {
+    for (const item of page.unresolved) {
+      warnings.push({
+        file: `${page.lang}/${page.slug}`,
+        messages: [`${item.kind === 'macro' ? '宏' : '内链'} ${item.target}：${item.message}`],
+      });
+    }
+  }
   const report = buildLinkReport(config, pages);
   const renderer = createRenderer(config);
   const written: string[] = [];

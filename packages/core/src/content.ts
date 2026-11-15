@@ -14,9 +14,13 @@ import {
   type Heading,
   type Hint,
   type LinkRef,
+  type RenderEnv,
   type SectionSource,
+  type UnresolvedRef,
 } from './markdown.js';
-import { outputPathFor, pageUrl } from './routes.js';
+import { loadMacros } from './macros.js';
+import { LinkResolver, type TitleConflict } from './resolve.js';
+import { normalizeBasePath, outputPathFor, pageUrl } from './routes.js';
 
 export interface Page {
   lang: string;
@@ -34,6 +38,10 @@ export interface Page {
   url: string;
   outputPath: string;
   draft: boolean;
+  /** 正文里没解析出来的内链 / 没定义的宏 */
+  unresolved: UnresolvedRef[];
+  /** 由宏登记的分类（frontmatter 里的分类不在这里） */
+  categories: string[];
 }
 
 export interface ContentProblem {
@@ -45,6 +53,8 @@ export interface LoadedContent {
   pages: Page[];
   problems: ContentProblem[];
   warnings: ContentProblem[];
+  /** 同一语言内标题撞车的情况；撞了内链就是不明确的 */
+  conflicts: TitleConflict[];
 }
 
 function stripQuotes(value: string): string {
@@ -127,9 +137,23 @@ function toPosix(p: string): string {
   return p.split('\\').join('/');
 }
 
+export interface PageSeed {
+  lang: string;
+  slug: string;
+  file: string;
+  relativePath: string;
+  data: Frontmatter;
+  /** 去掉 frontmatter 之后的 markdown 正文 */
+  body: string;
+  url: string;
+  outputPath: string;
+  draft: boolean;
+}
+
 export async function loadContent(config: LoadedConfig): Promise<LoadedContent> {
   const md = createMarkdown();
-  const pages: Page[] = [];
+  const macros = await loadMacros(config);
+  const seeds: PageSeed[] = [];
   const problems: ContentProblem[] = [];
   const warnings: ContentProblem[] = [];
 
@@ -165,19 +189,14 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
 
       const data = result.data;
       const slug = toPosix(relative(absDir, file)).replace(/\.md$/, '');
-      const rendered = renderMarkdown(md, parsed.content, { lang, config });
 
-      pages.push({
+      seeds.push({
         lang,
         slug,
         file,
         relativePath,
         data,
-        html: rendered.html,
-        headings: rendered.headings,
-        links: rendered.links,
-        hints: rendered.hints,
-        sources: rendered.sources,
+        body: parsed.content,
         url: pageUrl(config, lang, slug),
         outputPath: outputPathFor(config, lang, slug),
         draft: data.draft,
@@ -185,7 +204,56 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
     }
   }
 
-  return { pages, problems, warnings };
+  // 阶段 2：先把全站的 slug / 标题登记进索引，再渲染。
+  // 内链 `[[标题]]` 必须能看到「扫描顺序在后面」的页面，所以不能边扫边渲染。
+  const resolver = new LinkResolver();
+  for (const seed of seeds) {
+    resolver.add({ lang: seed.lang, slug: seed.slug, url: seed.url, title: seed.data.title });
+  }
+  resolver.finalize();
+
+  const siteMeta = {
+    title: config.title,
+    siteUrl: config.siteUrl,
+    base: normalizeBasePath(config.basePath),
+    languages: Object.keys(config.content),
+    defaultLanguage: config.defaultLanguage,
+  };
+
+  // 阶段 3：渲染
+  const pages: Page[] = seeds.map((seed) => {
+    const env: RenderEnv = {
+      lang: seed.lang,
+      config,
+      resolver,
+      macros,
+      pageMeta: seed.data as unknown as Record<string, unknown>,
+      siteMeta,
+      unresolved: [],
+      categories: new Set<string>(),
+    };
+    const rendered = renderMarkdown(md, seed.body, env);
+
+    return {
+      lang: seed.lang,
+      slug: seed.slug,
+      file: seed.file,
+      relativePath: seed.relativePath,
+      data: seed.data,
+      html: rendered.html,
+      headings: rendered.headings,
+      links: rendered.links,
+      hints: rendered.hints,
+      sources: rendered.sources,
+      url: seed.url,
+      outputPath: seed.outputPath,
+      draft: seed.draft,
+      unresolved: env.unresolved ?? [],
+      categories: [...(env.categories ?? [])],
+    };
+  });
+
+  return { pages, problems, warnings, conflicts: resolver.conflicts };
 }
 
 /** 文件名（不含扩展名），用于提示「你可能想要的是 xxx」 */

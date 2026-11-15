@@ -111,6 +111,32 @@ async function run(args: string[]): Promise<number> {
       }
     }
 
+    if (result.titleConflicts.length > 0) {
+      section(`标题重复 ${result.titleConflicts.length} 组（[[标题]] 这种内链会变得不明确）`);
+      for (const conflict of result.titleConflicts) {
+        line(`  ✗ [${conflict.lang}] 「${conflict.title}」→ ${conflict.pages.join('、')}`);
+      }
+    }
+
+    const macroIssues = result.unresolved.filter((item) => item.kind === 'macro');
+    const linkIssues = result.unresolved.filter((item) => item.kind === 'wikilink');
+
+    if (macroIssues.length > 0) {
+      section(`未定义的宏 ${macroIssues.length} 处（产物里会露出 {{...}} 原文）`);
+      for (const issue of macroIssues.slice(0, 30)) {
+        line(`  ✗ ${issue.file} → {{${issue.target}}}：${issue.message}`);
+      }
+      if (macroIssues.length > 30) line(`  …另有 ${macroIssues.length - 30} 处`);
+    }
+
+    if (linkIssues.length > 0) {
+      section(`未解析的内链 ${linkIssues.length} 处（slug 与标题都没命中）`);
+      for (const issue of linkIssues.slice(0, 30)) {
+        line(`  · ${issue.file} → [[${issue.target}]]`);
+      }
+      if (linkIssues.length > 30) line(`  …另有 ${linkIssues.length - 30} 处`);
+    }
+
     if (result.report.redLinks.length > 0) {
       section(`红链 ${result.report.redLinks.length} 处（指向不存在的页面）`);
       for (const red of result.report.redLinks.slice(0, 30)) {

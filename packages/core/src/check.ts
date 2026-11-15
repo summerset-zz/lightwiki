@@ -1,6 +1,7 @@
 import type { LoadedConfig } from './config.js';
 import { loadContent, type ContentProblem } from './content.js';
 import { buildLinkReport, type LinkReport } from './links.js';
+import type { TitleConflict } from './resolve.js';
 
 export interface SectionIssue {
   file: string;
@@ -11,6 +12,13 @@ export interface MissingTranslation {
   slug: string;
   present: string[];
   missing: string[];
+}
+
+export interface UnresolvedIssue {
+  file: string;
+  kind: 'wikilink' | 'macro';
+  target: string;
+  message: string;
 }
 
 export interface CheckResult {
@@ -25,10 +33,14 @@ export interface CheckResult {
    * 所以这里只是提示，不算失败。
    */
   missingTranslations: MissingTranslation[];
+  /** 同一语言内标题撞车：内链 `[[标题]]` 会变得不明确，算错误 */
+  titleConflicts: TitleConflict[];
+  /** 未解析的内链与未定义的宏 */
+  unresolved: UnresolvedIssue[];
 }
 
 export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
-  const { pages, problems, warnings } = await loadContent(config);
+  const { pages, problems, warnings, conflicts } = await loadContent(config);
   const report = buildLinkReport(config, pages);
 
   const sectionIssues: SectionIssue[] = [];
@@ -57,13 +69,35 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     }
   }
 
+  const unresolved: UnresolvedIssue[] = [];
+  for (const page of pages) {
+    for (const item of page.unresolved) {
+      unresolved.push({
+        file: `${page.lang}/${page.slug}`,
+        kind: item.kind,
+        target: item.target,
+        message: item.message,
+      });
+    }
+  }
+
+  // 未定义的宏会让产物里直接露出 `{{...}}` 原文，算错误；
+  // 未解析的内链与红链同级，是「目标还没写」的正常状态。
+  const macroErrors = unresolved.filter((item) => item.kind === 'macro').length;
+
   return {
-    ok: problems.length === 0 && sectionIssues.length === 0,
+    ok:
+      problems.length === 0 &&
+      sectionIssues.length === 0 &&
+      conflicts.length === 0 &&
+      macroErrors === 0,
     pageCount: pages.length,
     problems,
     warnings,
     report,
     sectionIssues,
     missingTranslations,
+    titleConflicts: conflicts,
+    unresolved,
   };
 }
