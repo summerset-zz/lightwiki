@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
 import type { LoadedConfig } from './config.js';
-import type { MacroBase, MacroRegistry } from './macros.js';
+import type { MacroRegistry } from './macros.js';
 import type { LinkResolver } from './resolve.js';
 import { assetHref, localizeHref } from './routes.js';
 
@@ -74,6 +74,10 @@ export interface RenderEnv {
   unresolved?: UnresolvedRef[];
   /** 渲染期收集：宏登记的分类 */
   categories?: Set<string>;
+  /**
+   * 宏展开栈。跨「递归解析」传递，否则 A 展开出 `{{A}}` 时会无限循环。
+   */
+  macroStack?: string[];
 }
 
 export interface RenderResult {
@@ -293,40 +297,76 @@ function parseMacroCall(src: string): ParsedMacro | null {
   return { name, args, named, length: cursor + 2 };
 }
 
-/** 渲染宏；失败返回 null，并把原因记进 env.unresolved */
-function renderMacro(
+/** 宏展开嵌套上限：宏是手工组合的，正常不会深过个位数 */
+const MAX_MACRO_DEPTH = 20;
+
+function recordUnresolved(env: RenderEnv, target: string, message: string): void {
+  (env.unresolved ??= []).push({ kind: 'macro', target, message });
+}
+
+/** 宏展开失败时，把原文作为已转义的段落留在产物里 */
+function emitRawBlock(state: any, startLine: number, line: string): void {
+  const token = state.push('html_block', '', 0);
+  token.map = [startLine, startLine + 1];
+  token.content = `<p>${escapeHtml(line)}</p>`;
+}
+
+/**
+ * 展开一个宏，返回要插回文本流的 markdown。
+ *
+ * 这里刻意**返回文本**而不是 HTML token：模板写的是 wikitext/markdown，
+ * 展开后要跟页面其它部分一样过一遍解析器（这就是 MediaWiki 的心智模型）。
+ * 代价是宏作者要像写正文那样注意 `*` `_` `[` 这些字符 —— 与 MediaWiki 一致。
+ */
+function expandMacro(
   env: RenderEnv,
   name: string,
   args: Array<string | number>,
   named: Record<string, string>,
+  onFailure: () => void,
 ): string | null {
   const registry = env.macros;
   if (!registry || !registry.has(name)) {
-    (env.unresolved ??= []).push({
-      kind: 'macro',
-      target: name,
-      message: registry ? `未定义的宏：${name}` : '宏未启用',
-    });
+    recordUnresolved(env, name, registry ? `未定义的宏：${name}` : '宏未启用');
+    onFailure();
     return null;
   }
 
-  const context: MacroBase = {
-    args,
-    named,
-    page: env.pageMeta ?? {},
-    site: env.siteMeta ?? {},
-    lang: env.lang,
-    addCategory: (category: string) => {
-      (env.categories ??= new Set<string>()).add(category);
-    },
-  };
+  const stack = (env.macroStack ??= []);
+  const key = name.toLowerCase();
 
+  if (stack.includes(key)) {
+    recordUnresolved(env, name, `宏循环引用：${[...stack, key].join(' 到 ')}`);
+    onFailure();
+    return null;
+  }
+  if (stack.length >= MAX_MACRO_DEPTH) {
+    recordUnresolved(env, name, `宏嵌套超过 ${MAX_MACRO_DEPTH} 层：${[...stack, key].join(' 到 ')}`);
+    onFailure();
+    return null;
+  }
+
+  stack.push(key);
   try {
-    return registry.render(name, context);
+    const text = registry.render(name, {
+      args,
+      named,
+      page: env.pageMeta ?? {},
+      site: env.siteMeta ?? {},
+      lang: env.lang,
+      addCategory: (category: string) => {
+        (env.categories ??= new Set<string>()).add(category);
+      },
+    });
+    return text;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    (env.unresolved ??= []).push({ kind: 'macro', target: name, message });
+    recordUnresolved(env, name, message);
+    onFailure();
     return null;
+  } finally {
+    // 栈在「子解析」期间必须保留，由调用方决定何时 pop
+    stack.pop();
   }
 }
 
@@ -352,14 +392,22 @@ function macroRule(state: any, silent: boolean): boolean {
   }
 
   const env = state.env as RenderEnv;
-  const html = renderMacro(env, call.name, call.args, call.named);
+  const raw = rest.slice(0, call.length);
 
-  if (html === null) {
-    const text = state.push('text', '', 0);
-    text.content = rest.slice(0, call.length);
-  } else {
-    const token = state.push('html_inline', '', 0);
-    token.content = html;
+  const text = expandMacro(env, call.name, call.args, call.named, () => {
+    const token = state.push('text', '', 0);
+    token.content = raw;
+  });
+
+  if (text !== null) {
+    // 展开结果再走一遍行内解析：`**粗体**`、`[[双链]]`、内嵌的 `{{宏}}` 都会生效
+    const stack = env.macroStack ?? [];
+    stack.push(call.name.toLowerCase());
+    try {
+      state.md.inline.parse(text, state.md, state.env, state.tokens);
+    } finally {
+      stack.pop();
+    }
   }
 
   state.pos += call.length;
@@ -386,19 +434,24 @@ function macroBlockRule(state: any, startLine: number, _endLine: number, silent:
   // 未定义的宏交给段落 + 行内规则处理，避免同一条错误被记两次
   if (!env.macros || !env.macros.has(call.name)) return false;
 
-  const html = renderMacro(env, call.name, call.args, call.named);
-  if (html === null) {
-    // 宏存在但渲染失败（循环引用、嵌套过深）：原文以段落形式保留，不再回退给行内规则
-    const token = state.push('html_block', '', 0);
-    token.map = [startLine, startLine + 1];
-    token.content = `<p>${escapeHtml(line)}</p>`;
+  const text = expandMacro(env, call.name, call.args, call.named, () => {
+    emitRawBlock(state, startLine, line);
+  });
+
+  if (text === null) {
     state.line = startLine + 1;
     return true;
   }
 
-  const token = state.push('html_block', '', 0);
-  token.map = [startLine, startLine + 1];
-  token.content = html;
+  // 展开结果走块级解析：宏可以产出段落、列表、表格这些结构
+  const stack = env.macroStack ?? [];
+  stack.push(call.name.toLowerCase());
+  try {
+    state.md.block.parse(text, state.md, state.env, state.tokens);
+  } finally {
+    stack.pop();
+  }
+
   state.line = startLine + 1;
   return true;
 }

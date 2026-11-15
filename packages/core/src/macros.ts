@@ -35,7 +35,7 @@ export interface MacroProblem {
 export interface MacroRegistry {
   /** 宏名大小写不敏感 */
   has(name: string): boolean;
-  /** 同步渲染，返回 HTML 片段 */
+  /** 同步渲染。返回值是**文本**（markdown / wikitext），会被再次解析 */
   render(name: string, base: MacroBase): string;
   names(): string[];
   problems: MacroProblem[];
