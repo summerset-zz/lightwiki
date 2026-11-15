@@ -17,6 +17,7 @@ const config: SiteConfigInput = {
     syntax: '语法',
     reference: '参考',
   },
+  redirects: [{ from: '/docs/old-macros', to: '/docs/macros' }],
   categories: {
     syntax: '语法',
     demo: '演示',

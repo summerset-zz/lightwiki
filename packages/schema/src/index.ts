@@ -92,6 +92,23 @@ export const siteConfigSchema = z.object({
    * 链接形态。directory 适合托管站（a/b/），file 适合 file:// 与 CHM（a/b.html）。
    */
   urlStyle: z.enum(['directory', 'file']).default('directory'),
+
+  /**
+   * 旧地址 → 新地址。`from` / `to` 都写**最终 URL**（含语言前缀），工具不做推断。
+   *
+   * 默认生成 JS 跳转页，因为用户可能只有 GitHub Pages 这类没有服务端的托管；
+   * 换成 `server` 则输出 Netlify / Cloudflare Pages 认的 `_redirects`（真 301）。
+   */
+  redirects: z
+    .array(
+      z.object({
+        from: z.string().min(1, 'from 不能为空'),
+        to: z.string().min(1, 'to 不能为空'),
+        status: z.number().int().default(301),
+      }),
+    )
+    .default([]),
+  redirectMode: z.enum(['js', 'server', 'both']).default('js'),
 });
 
 export type SiteConfig = z.infer<typeof siteConfigSchema>;

@@ -38,6 +38,16 @@ export function categoryOutputPath(config: LoadedConfig, lang: string, slug: str
   return config.urlStyle === 'file' ? `${dir}/${slug}.html` : `${dir}/${slug}/index.html`;
 }
 
+/** 把站内 URL 映射成产物里的相对文件路径（相对 outputDir） */
+export function urlToOutputPath(config: LoadedConfig, url: string): string {
+  const base = normalizeBasePath(config.basePath);
+  let path = url.split('#')[0] ?? url;
+  if (base && path.startsWith(base)) path = path.slice(base.length);
+  path = path.replace(/^\/+/, '').replace(/\.html$/, '').replace(/\/+$/, '');
+  if (!path) return 'index.html';
+  return config.urlStyle === 'file' ? `${path}.html` : `${path}/index.html`;
+}
+
 /** 把一个站内绝对路径拆成 path / hash */
 function splitHash(href: string): { path: string; hash: string } {
   const idx = href.indexOf('#');

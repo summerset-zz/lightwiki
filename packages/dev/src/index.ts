@@ -113,6 +113,14 @@ export function resolveDevRoute(
   const page = state.byUrl.get(lookup);
   if (page) return { kind: 'page', page };
 
+  // 重定向规则：页面优先，真实页面不会被规则盖掉。
+  // dev 下直接 302，比渲染一张 JS 跳转页更方便调试。
+  for (const rule of config.redirects) {
+    if (normUrl(rule.from, config) === lookup) {
+      return { kind: 'redirect', location: rule.to };
+    }
+  }
+
   // 分类页：`/categories/<slug>`（默认语言）或 `/<lang>/categories/<slug>`
   for (const lang of Object.keys(config.content)) {
     const prefix = normUrl(

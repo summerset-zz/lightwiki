@@ -41,7 +41,7 @@ yarn wiki build <目录> [-o 输出目录]   # 产出静态站点
 
 产出是一组**可移植的静态文件**：`dist/` 里只有 html、`assets/` 和几个索引文件。没有服务器依赖、没有 SPA、没有外部 CDN——放任何静态托管、U 盘、光盘镜像里都能用。
 
-每次构建会先清空输出目录，然后依次写内容页、目录页、分类页、`404.html`，最后复制资源。
+每次构建会先清空输出目录，然后依次写内容页、目录页、分类页、`404.html`、重定向页，最后复制资源。
 
 ### 404 页 {#not-found}
 
@@ -64,6 +64,34 @@ GitHub Pages、Netlify、Cloudflare Pages、S3、OSS 都会在未命中时返回
 - 出现在导航、孤页、缺译统计里。
 
 只有**默认语言**的那份参与产物，因为 `404.html` 只能有一个。没有这个文件时，主题的 `not-found` 布局兜底。
+
+## 重定向 {#redirects}
+
+内容改名后旧链接会失效。要么让 404 页兜底，要么做重定向。
+
+```ts
+// wiki.config.ts
+redirects: [
+  { from: '/docs/old-macros', to: '/docs/macros' },
+],
+redirectMode: 'js',
+```
+
+`from` 与 `to` 都写**最终 URL**（含语言前缀），工具不做推断。
+
+两种输出：
+
+| `redirectMode` | 产物 | 适用 |
+|---|---|---|
+| `js`（默认） | 在 `from` 的位置生成一个跳转页 | 任何静态托管，包括 GitHub Pages |
+| `server` | 根目录 `_redirects`（Netlify / Cloudflare Pages 格式） | 托管方支持服务端重定向 |
+| `both` | 两者都生成 | 迁移期 |
+
+**默认为什么是 JS**：静态托管通常不给你服务端路由控制权，JS 跳转是唯一通用的办法。代价是搜索引擎看到的是 200 而不是 301，所以跳转页里带了 `<link rel="canonical">` 与 `noindex`。
+
+跳转页不靠 JS 也能工作——它有 `<meta http-equiv="refresh">` 和可点击链接兜底，锚点与查询串会被保留。
+
+`from` 撞到真实页面时会被跳过并给出警告。`wiki dev` 下直接返回 302，不生成跳转页。
 
 ## 放进 CI 的最小写法 {#ci}
 

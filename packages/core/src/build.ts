@@ -6,7 +6,7 @@ import { loadContent, type ContentProblem } from './content.js';
 import { createSiteInfo } from './context.js';
 import { buildLinkReport, type LinkReport } from './links.js';
 import { createRenderer } from './render.js';
-import { langPrefix, categoryOutputPath, normalizeBasePath } from './routes.js';
+import { categoryOutputPath, langPrefix, normalizeBasePath, urlToOutputPath } from './routes.js';
 import {
   createCategoryView,
   createIndexView,
@@ -106,6 +106,41 @@ export async function buildSite(
   const notFoundHtml = await renderer.renderLayout(notFound.layout, notFound.view);
   await writeFile(join(outputDir, '404.html'), notFoundHtml, 'utf8');
   written.push('404.html');
+
+  // 重定向：默认生成 JS 跳转页（用户可能只有 GitHub Pages 这类没有服务端的托管）
+  if (config.redirects.length > 0) {
+    const taken = new Set(written);
+
+    if (config.redirectMode !== 'server') {
+      for (const rule of config.redirects) {
+        const relative = urlToOutputPath(config, rule.from);
+        if (taken.has(relative)) {
+          warnings.push({
+            file: rule.from,
+            messages: [`重定向会覆盖已有页面，已跳过：${relative}`],
+          });
+          continue;
+        }
+
+        const html = await renderer.renderLayout('redirect', {
+          site: siteInfo,
+          from: rule.from,
+          to: rule.to,
+        });
+        const target = join(outputDir, relative);
+        await mkdir(dirname(target), { recursive: true });
+        await writeFile(target, html, 'utf8');
+        written.push(relative);
+        taken.add(relative);
+      }
+    }
+
+    if (config.redirectMode !== 'js') {
+      const lines = config.redirects.map((rule) => `${rule.from}  ${rule.to}  ${rule.status}`);
+      await writeFile(join(outputDir, '_redirects'), `${lines.join('\n')}\n`, 'utf8');
+      written.push('_redirects');
+    }
+  }
 
   // 根目录跳转到默认语言，方便 file:// 双击直接看
   const rootIndex = `<!doctype html><meta charset="utf-8"><title>${config.title}</title>` +
