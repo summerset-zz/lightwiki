@@ -3,7 +3,7 @@ title: 宏
 keywords: 宏, macro, 模板, 参数, template
 description: 宏是正文里 {{…}} 调用的片段，产出 markdown 文本，展开后继续被解析。
 section: syntax
-order: 3
+order: 5
 updated: 2026-11-15
 draft: false
 categories: [syntax]

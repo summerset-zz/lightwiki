@@ -3,7 +3,7 @@ title: 锚点
 keywords: 锚点, anchor, id, 标题
 description: 用 {#名字} 给标题指定稳定的 id，让链接不会因为改标题而断。
 section: syntax
-order: 1
+order: 3
 updated: 2026-11-15
 draft: false
 categories: [syntax]

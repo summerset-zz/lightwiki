@@ -3,7 +3,7 @@ title: 分类
 keywords: 分类, category, 侧栏, sidebar
 description: 分类的键是 ASCII slug，显示名放配置；分类页在构建时静态生成。
 section: syntax
-order: 5
+order: 7
 updated: 2026-11-15
 draft: false
 categories: [syntax]

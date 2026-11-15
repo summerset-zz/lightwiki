@@ -22,7 +22,7 @@
     <nav>
 <% for (const group of it.sidebar.groups) { %>
       <div class="nav-group">
-        <% if (group.section) { %><p class="nav-section"><%= group.section %></p><% } %>
+        <% if (group.section) { %><p class="nav-section"><%= group.label %></p><% } %>
         <ul>
 <% for (const item of group.pages) { %>
           <li><a href="<%= item.url %>"<% if (item.current) { %> class="current" aria-current="page"<% } %>><%= item.title %></a></li>

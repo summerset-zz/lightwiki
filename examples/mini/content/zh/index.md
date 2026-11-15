@@ -13,13 +13,17 @@ categories: [demo]
 
 ## 从哪开始 {#start}
 
+- [[structure|目录与文件]]：slug 与 URL 怎么推导
+- [[frontmatter|frontmatter]]：字段表与容错
 - [[anchors|锚点]]：让标题能被稳定引用
 - [[links|链接]]：站内链接与双链
 - [[macros|宏]]：`{{…}}` 的三种形态
 - [[directives|行内指令]]：术语提示与小节来源
 - [[categories|分类]]：页面归类与分类侧栏
 - [[context|模板上下文]]：`it.page` 与 `it.site`
+- [[html|在正文里写 HTML]]：内联 SVG 与颜色约定
 - [[layouts|布局]]：覆盖主题模板
+- [[commands|命令]]：dev / check / build
 - [[limits|已知限制]]
 
 ## 双链长什么样 {#wikilink}

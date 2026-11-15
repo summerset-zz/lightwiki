@@ -2,7 +2,7 @@
 
 版本化的静态知识库。内容用 markdown + frontmatter 写，git 管版本，编译成一组可移植的静态文件。
 
-设计与决策记录见 [`PROJECT_PLAN.md`](./PROJECT_PLAN.md)；内容与模板的写法约定见 [`docs/authoring.md`](./docs/authoring.md)。
+设计与决策记录见 [`PROJECT_PLAN.md`](./PROJECT_PLAN.md)；内容、模板与命令的写法见 **`examples/mini`**——那是一份用轻维基自己的语法写的手册，也是本仓库唯一的用户文档。
 
 ## 目录
 

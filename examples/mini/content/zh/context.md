@@ -3,7 +3,7 @@ title: 模板上下文
 keywords: 上下文, context, it.page, it.site, 魔术字, magic word
 description: it.page 与 it.site 是布局与宏共用的对象，相当于 MediaWiki 的魔术字。
 section: syntax
-order: 6
+order: 8
 updated: 2026-11-15
 draft: false
 categories: [syntax]

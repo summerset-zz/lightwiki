@@ -82,6 +82,8 @@ export const siteConfigSchema = z.object({
   assetsDir: z.string().default('assets'),
   /** 内容里允许出现的 section 取值与顺序；留空则不校验 */
   sections: z.array(z.string()).default([]),
+  /** section slug → 显示名；未声明的直接用 slug */
+  sectionLabels: z.record(z.string(), z.string()).default({}),
   /** 分类 slug → 显示名。未声明的分类用 slug 当显示名 */
   categories: z.record(z.string(), z.string()).default({}),
   theme: z.string().default('@lightwiki/theme-default'),

@@ -13,7 +13,7 @@
     <nav>
 <% for (const group of it.nav) { %>
       <div class="nav-group">
-        <% if (group.section) { %><p class="nav-section"><%= group.section %></p><% } %>
+        <% if (group.section) { %><p class="nav-section"><%= group.label %></p><% } %>
         <ul>
 <% for (const item of group.pages) { %>
           <li><a href="<%= item.url %>"><%= item.title %></a></li>

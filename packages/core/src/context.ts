@@ -67,6 +67,8 @@ export interface SiteInfo {
   languages: string[];
   urlStyle: string;
   sections: string[];
+  /** section slug → 显示名 */
+  sectionLabels: Record<string, string>;
   /** 分类 slug → 显示名，原样来自配置 */
   categories: Record<string, string>;
   /** 实际被页面使用的分类，按配置声明的顺序排，未声明的排在后面 */
@@ -189,6 +191,7 @@ export function createSiteInfo(
     languages: Object.keys(config.content),
     urlStyle: config.urlStyle,
     sections: config.sections,
+    sectionLabels: config.sectionLabels,
     categories: config.categories,
     categoryList,
     generatedAt: generatedAt.toISOString(),

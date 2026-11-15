@@ -29,7 +29,7 @@
       <h1><%= it.site.title %></h1>
 <% for (const group of it.groups) { %>
       <section>
-        <% if (group.section) { %><h2><%= group.section %></h2><% } %>
+        <% if (group.section) { %><h2><%= group.label %></h2><% } %>
         <ul class="index-list">
 <% for (const item of group.pages) { %>
           <li><a href="<%= item.url %>"><%= item.title %></a></li>

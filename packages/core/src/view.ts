@@ -10,7 +10,10 @@ export interface NavPage {
 }
 
 export interface NavGroup {
+  /** section 的 slug */
   section: string;
+  /** 显示名：配置里声明过就用声明值，否则等于 slug */
+  label: string;
   pages: NavPage[];
 }
 
@@ -53,6 +56,7 @@ function toGroups(config: LoadedConfig, list: Page[], currentUrl: string): NavGr
 
   return sections.map((section) => ({
     section,
+    label: config.sectionLabels[section] ?? section,
     pages: (groups.get(section) ?? []).map((p) => ({
       title: p.data.title,
       url: p.url,

@@ -13,6 +13,10 @@ const config: SiteConfigInput = {
     en: 'content/en',
   },
   sections: ['syntax', 'reference'],
+  sectionLabels: {
+    syntax: '语法',
+    reference: '参考',
+  },
   categories: {
     syntax: '语法',
     demo: '演示',

@@ -3,7 +3,7 @@ title: 链接
 keywords: 链接, link, 双链, wikilink, 内链
 description: 站内链接会自动补语言前缀，双链可以按 slug 或标题解析，外链自动加 nofollow。
 section: syntax
-order: 2
+order: 4
 updated: 2026-11-15
 draft: false
 categories: [syntax]

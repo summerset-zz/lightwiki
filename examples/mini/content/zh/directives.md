@@ -3,7 +3,7 @@ title: 行内指令
 keywords: 指令, hint, source, 术语, 来源, directive
 description: 两种写在 HTML 注释里的指令：术语提示与小节来源。
 section: syntax
-order: 4
+order: 6
 updated: 2026-11-15
 draft: false
 categories: [syntax]
