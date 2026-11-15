@@ -2,6 +2,7 @@ import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
 import type { LoadedConfig } from './config.js';
 import type { PageInfo, SiteInfo } from './context.js';
+import type { Highlighter } from './highlight.js';
 import type { MacroRegistry } from './macros.js';
 import type { LinkResolver } from './resolve.js';
 import { assetHref, localizeHref } from './routes.js';
@@ -149,11 +150,23 @@ export function extractDirectives(src: string): {
   return { markdown: kept.join('\n'), hints, sources };
 }
 
-export function createMarkdown(): MarkdownIt {
+export interface MarkdownOptions {
+  /** 代码块高亮；不传则原样输出 */
+  highlight?: Highlighter;
+  /** 站点级插件入口，拿到的是 markdown-it 实例 */
+  setup?: (md: unknown) => void;
+}
+
+export function createMarkdown(options: MarkdownOptions = {}): MarkdownIt {
+  const highlighter = options.highlight;
   const md = new MarkdownIt({
     html: true,
     linkify: true,
     typographer: false,
+    highlight:
+      highlighter && highlighter.enabled
+        ? (code: string, lang: string): string => highlighter.highlight(code, lang) ?? ''
+        : undefined,
   });
   md.use(attrs);
 
@@ -163,6 +176,9 @@ export function createMarkdown(): MarkdownIt {
   md.inline.ruler.before('link', 'lightwiki:macro', macroRule);
   // 整行只有一个宏时走块级，否则 `<div>` 会被包进 `<p>`
   md.block.ruler.before('paragraph', 'lightwiki:macro-block', macroBlockRule);
+
+  // 站点自己的插件放在最后注册，方便覆盖或追加规则
+  options.setup?.(md);
 
   // 站内链接按语言与 basePath 改写，外链统一加 nofollow。
   // 放在 core ruler 里做，而不是渲染后正则替换 —— token 结构是可靠的。
@@ -193,6 +209,9 @@ export function createMarkdown(): MarkdownIt {
 
     walk(asTokens(state.tokens));
   });
+
+  // 站点自己的插件放在最后注册，方便覆盖或追加规则
+  options.setup?.(md);
 
   return md;
 }

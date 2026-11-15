@@ -3,7 +3,7 @@ title: 已知限制
 keywords: 限制, limit, todo, 待办
 description: v0.1 还不支持的东西，以及为什么。
 section: reference
-order: 2
+order: 3
 updated: 2026-11-15
 draft: false
 categories: [official]

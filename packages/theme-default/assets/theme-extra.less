@@ -1,0 +1,43 @@
+// 宏用到的几个片段样式。
+// 用 Less 写是为了验证样式管线：这个文件会被编译成 theme-extra.css，
+// 产物里不会出现 .less。
+
+@radius: 8px;
+@pad: 0.85rem 1.1rem;
+
+.note {
+  margin: 1.25rem 0;
+  padding: @pad;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 @radius @radius 0;
+  background: var(--code-bg);
+  font-size: 0.95rem;
+
+  p { margin: 0; }
+}
+
+.card {
+  margin: 1.5rem 0;
+  padding: @pad;
+  border: 1px solid var(--line);
+  border-radius: @radius;
+
+  .card-title {
+    margin: 0 0 0.4rem;
+    font-weight: 600;
+  }
+
+  p { margin: 0; }
+}
+
+.glossary {
+  border-bottom: 1px dashed var(--fg-dim);
+  cursor: help;
+}
+
+// 双链解析失败时的占位
+.wikilink-missing {
+  color: var(--fg-dim);
+  border-bottom: 1px dotted var(--fg-dim);
+  cursor: help;
+}

@@ -109,10 +109,40 @@ export const siteConfigSchema = z.object({
     )
     .default([]),
   redirectMode: z.enum(['js', 'server', 'both']).default('js'),
+
+  /**
+   * 代码块高亮。
+   *
+   * 内置一批常用语言；要加别的就在 `languages` 里列 highlight.js 的语言名
+   * （如 `ruby`、`go`、`php`），构建时会按需加载。
+   */
+  highlight: z
+    .object({
+      enabled: z.boolean().default(true),
+      languages: z.array(z.string()).default([]),
+    })
+    .default({ enabled: true, languages: [] }),
+
+  /**
+   * 站点级 markdown-it 插件入口。
+   *
+   * ```ts
+   * markdown(md) { md.use(myPlugin, { ... }) }
+   * ```
+   */
+  markdown: z
+    .custom<MarkdownSetup>(
+      (value) => value === undefined || typeof value === 'function',
+      'markdown 必须是一个函数',
+    )
+    .optional(),
 });
 
 export type SiteConfig = z.infer<typeof siteConfigSchema>;
 export type SiteConfigInput = z.input<typeof siteConfigSchema>;
+
+/** 站点级的 markdown-it 插件入口：拿到的就是 markdown-it 实例 */
+export type MarkdownSetup = (md: unknown) => void;
 
 /** 把 zod 的报错整理成「文件: 字段 → 原因」，避免只丢一坨 JSON。 */
 export function describeIssues(issues: z.ZodIssue[]): string[] {

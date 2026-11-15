@@ -11,6 +11,7 @@
 <meta name="keywords" content="<%= it.page.keywords.join(', ') %>">
 <% } %>
 <link rel="stylesheet" href="<%= it.site.base %>/assets/theme/style.css">
+<link rel="stylesheet" href="<%= it.site.base %>/assets/theme/theme-extra.css">
 </head>
 <body>
 <div class="shell">

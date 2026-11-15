@@ -18,7 +18,8 @@ import {
   type SectionSource,
   type UnresolvedRef,
 } from './markdown.js';
-import { categoriesOf, createSiteInfo, keywordsOf, type PageInfo } from './context.js';
+import { createSiteInfo, categoriesOf, keywordsOf, type PageInfo } from './context.js';
+import { createHighlighter } from './highlight.js';
 import { loadMacros } from './macros.js';
 import { LinkResolver, type TitleConflict } from './resolve.js';
 import { outputPathFor, pageUrl } from './routes.js';
@@ -152,7 +153,8 @@ export interface PageSeed {
 }
 
 export async function loadContent(config: LoadedConfig): Promise<LoadedContent> {
-  const md = createMarkdown();
+  const highlighter = await createHighlighter(config);
+  const md = createMarkdown({ highlight: highlighter, setup: config.markdown });
   const macros = await loadMacros(config);
   const seeds: PageSeed[] = [];
   const problems: ContentProblem[] = [];

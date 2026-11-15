@@ -23,6 +23,7 @@ categories: [demo]
 - [[context|模板上下文]]：`it.page` 与 `it.site`
 - [[html|在正文里写 HTML]]：内联 SVG 与颜色约定
 - [[layouts|布局]]：覆盖主题模板
+- [[extend|扩展与样式]]：Less、代码高亮、markdown 插件
 - [[commands|命令]]：dev / check / build
 - [[limits|已知限制]]
 

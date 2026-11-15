@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { extname, join, resolve, sep } from 'node:path';
 import {
+  compileLess,
   createCategoryView,
   createIndexView,
   createNotFoundRender,
@@ -97,43 +98,53 @@ export function resolveDevRoute(
   pathname: string,
 ): DevRoute {
   const key = normUrl(pathname, config);
-  // 也接受从产物里直接复制来的真实文件路径，如 `/docs/macros/index.html`
-  const lookup = key.endsWith('/index') ? key.slice(0, -'/index'.length) || '/' : key;
+  const base = normalizeBasePath(config.basePath);
+  const langs = Object.keys(config.content);
 
-  if (lookup === '/') {
-    return { kind: 'redirect', location: indexUrlOf(config, config.defaultLanguage) };
-  }
+  // 从产物里复制来的真实文件路径也要能访问（`/docs/macros/index.html`）。
+  // 托管上 `xx/index.html` 就是 `xx/`，所以剥掉 `/index` 的版本优先试。
+  // 但 `/docs/index`（不带 .html）是真实页面的 slug，不能剥。
+  const candidates =
+    /\.html?$/i.test(pathname) && key.endsWith('/index')
+      ? [key.slice(0, -'/index'.length) || '/', key]
+      : [key];
 
-  for (const lang of Object.keys(config.content)) {
-    if (lookup === normUrl(indexUrlOf(config, lang), config)) {
-      return { kind: 'index', lang };
+  for (const candidate of candidates) {
+    if (candidate === '/') {
+      return { kind: 'redirect', location: indexUrlOf(config, config.defaultLanguage) };
     }
-  }
 
-  const page = state.byUrl.get(lookup);
-  if (page) return { kind: 'page', page };
-
-  // 重定向规则：页面优先，真实页面不会被规则盖掉。
-  // dev 下直接 302，比渲染一张 JS 跳转页更方便调试。
-  for (const rule of config.redirects) {
-    if (normUrl(rule.from, config) === lookup) {
-      return { kind: 'redirect', location: rule.to };
+    for (const lang of langs) {
+      if (candidate === normUrl(indexUrlOf(config, lang), config)) {
+        return { kind: 'index', lang };
+      }
     }
-  }
 
-  // 分类页：`/categories/<slug>`（默认语言）或 `/<lang>/categories/<slug>`
-  for (const lang of Object.keys(config.content)) {
-    const prefix = normUrl(
-      `${normalizeBasePath(config.basePath)}${langPrefix(config, lang)}/categories/`,
-      config,
-    );
-    if (!lookup.startsWith(`${prefix}/`)) continue;
+    const page = state.byUrl.get(candidate);
+    if (page) return { kind: 'page', page };
 
-    const slug = lookup.slice(prefix.length + 1);
-    const exists = state.pages.some(
-      (p) => p.lang === lang && !p.draft && p.categories.includes(slug),
-    );
-    if (exists) return { kind: 'category', lang, slug };
+    // 重定向规则：页面优先，真实页面不会被规则盖掉。
+    // dev 下直接 302，比渲染一张 JS 跳转页更方便调试。
+    for (const rule of config.redirects) {
+      if (normUrl(rule.from, config) === candidate) {
+        return { kind: 'redirect', location: rule.to };
+      }
+    }
+
+    // 分类页：`/categories/<slug>`（默认语言）或 `/<lang>/categories/<slug>`
+    for (const lang of langs) {
+      const prefix = normUrl(
+        `${base}${langPrefix(config, lang)}/categories/`,
+        config,
+      );
+      if (!candidate.startsWith(`${prefix}/`)) continue;
+
+      const slug = candidate.slice(prefix.length + 1);
+      const exists = state.pages.some(
+        (p) => p.lang === lang && !p.draft && p.categories.includes(slug),
+      );
+      if (exists) return { kind: 'category', lang, slug };
+    }
   }
 
   if (key.startsWith('/assets/')) {
@@ -272,18 +283,35 @@ export async function startDevServer(
 
         if (route.kind === 'asset') {
           const info = await stat(route.file).catch(() => null);
-          if (!info || !info.isFile()) {
-            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-            res.end('404');
+
+          if (info && info.isFile()) {
+            const body = await readFile(route.file);
+            res.writeHead(200, {
+              'Content-Type': MIME[extname(route.file).toLowerCase()] ?? 'application/octet-stream',
+              'Content-Length': body.byteLength,
+              'Cache-Control': 'no-store',
+            });
+            res.end(body);
             return;
           }
-          const body = await readFile(route.file);
-          res.writeHead(200, {
-            'Content-Type': MIME[extname(route.file).toLowerCase()] ?? 'application/octet-stream',
-            'Content-Length': body.byteLength,
-            'Cache-Control': 'no-store',
-          });
-          res.end(body);
+
+          // 请求 `.css` 但只有同名 `.less`：现编译再返回，与构建产物保持一致
+          if (route.file.endsWith('.css')) {
+            const lessFile = `${route.file.slice(0, -'.css'.length)}.less`;
+            const lessInfo = await stat(lessFile).catch(() => null);
+            if (lessInfo && lessInfo.isFile()) {
+              const css = await compileLess(lessFile);
+              res.writeHead(200, {
+                'Content-Type': 'text/css; charset=utf-8',
+                'Cache-Control': 'no-store',
+              });
+              res.end(css);
+              return;
+            }
+          }
+
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('404');
           return;
         }
 

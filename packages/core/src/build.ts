@@ -1,6 +1,6 @@
-import { existsSync } from 'node:fs';
-import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
+import { copyAssets } from './assets.js';
 import type { LoadedConfig } from './config.js';
 import { loadContent, type ContentProblem } from './content.js';
 import { createSiteInfo } from './context.js';
@@ -149,15 +149,9 @@ export async function buildSite(
   await writeFile(join(outputDir, 'index.html'), rootIndex, 'utf8');
   written.push('index.html');
 
-  // 资源：内容仓库的 assets/ 与主题的 assets/
-  const siteAssets = resolve(config.root, config.assetsDir);
-  if (existsSync(siteAssets)) {
-    await cp(siteAssets, join(outputDir, 'assets'), { recursive: true });
-  }
-  const themeAssets = join(config.themeDir, 'assets');
-  if (existsSync(themeAssets)) {
-    await cp(themeAssets, join(outputDir, 'assets', 'theme'), { recursive: true });
-  }
+  // 资源：内容仓库的 assets/ 与主题的 assets/。`.less` 在这里编译成同名 `.css`。
+  await copyAssets(resolve(config.root, config.assetsDir), join(outputDir, 'assets'));
+  await copyAssets(join(config.themeDir, 'assets'), join(outputDir, 'assets', 'theme'));
 
   // 归档追溯用：产物里要能看出它是用什么版本生成的
   await writeFile(

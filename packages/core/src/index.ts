@@ -9,8 +9,9 @@ export {
 export { buildSite, type BuildOptions, type BuildResult } from './build.js';
 export { checkSite, type CategoryIssue, type CheckResult, type MissingTranslation, type SectionIssue, type UnresolvedIssue } from './check.js';
 export { buildLinkReport, normUrl, type LinkReport, type RedLink } from './links.js';
-export {
-  loadMacros,
+export { compileLess, copyAssets } from './assets.js';
+export { createHighlighter, type Highlighter } from './highlight.js';
+export { loadMacros,
   listMacroNames,
   type MacroBase,
   type MacroContext,
