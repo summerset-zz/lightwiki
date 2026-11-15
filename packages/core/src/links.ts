@@ -72,10 +72,11 @@ export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport
     Object.keys(config.content).map((lang) => hrefToKey(`/${lang === config.defaultLanguage ? '' : lang + '/'}docs`.replace('//', '/'), config)),
   );
 
+  // 入口页：每种语言排序第一的那页。它靠导航到达，没人用正文链接指向它是正常的。
+  for (const key of entryPageKeys(config, published)) indexKeys.add(key);
+
   const orphans = published
     .filter((p) => {
-      // 入口页（slug 为 index）与目录页一样，靠导航到达，不参与孤页判定
-      if (p.slug === 'index') return false;
       const key = normUrl(p.url, config);
       if (indexKeys.has(key)) return false;
       return (inbound.get(key) ?? 0) === 0;
@@ -87,4 +88,27 @@ export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport
   for (const [key, count] of inbound) inboundCount[key] = count;
 
   return { redLinks, orphans, inboundCount };
+}
+
+/** 每种语言按「section 顺序 → order → slug」排序后的第一页 */
+function entryPageKeys(config: LoadedConfig, pages: Page[]): string[] {
+  const keys: string[] = [];
+  for (const lang of Object.keys(config.content)) {
+    const list = pages
+      .filter((p) => p.lang === lang)
+      .sort((a, b) => {
+        const sa = config.sections.indexOf(a.data.section ?? '');
+        const sb = config.sections.indexOf(b.data.section ?? '');
+        const na = sa === -1 ? Number.MAX_SAFE_INTEGER : sa;
+        const nb = sb === -1 ? Number.MAX_SAFE_INTEGER : sb;
+        if (na !== nb) return na - nb;
+        const oa = a.data.order ?? Number.MAX_SAFE_INTEGER;
+        const ob = b.data.order ?? Number.MAX_SAFE_INTEGER;
+        if (oa !== ob) return oa - ob;
+        return a.slug.localeCompare(b.slug, 'zh');
+      });
+    const first = list[0];
+    if (first) keys.push(normUrl(first.url, config));
+  }
+  return keys;
 }

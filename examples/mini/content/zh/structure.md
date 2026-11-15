@@ -45,3 +45,9 @@ my-wiki/
 ## 草稿 {#draft}
 
 `draft: true` 的页面不进导航、不参与孤页判定、构建时跳过，但 `wiki dev` 下仍可按地址打开——适合写一半先看效果。
+
+## 别用 index 当文件名 {#index}
+
+`/docs/` 是**自动生成的目录页**，不是某个 `.md` 文件。所以入口页别叫 `index.md`——那会得到 `/docs/index/`，跟目录页撞名。起个正常名字（`home.md`、`start.md`）就好。
+
+`404.md` 是例外：它会变成根目录的 `404.html`，见 [[commands#not-found]]。
