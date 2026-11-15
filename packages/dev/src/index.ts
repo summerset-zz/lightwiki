@@ -97,18 +97,20 @@ export function resolveDevRoute(
   pathname: string,
 ): DevRoute {
   const key = normUrl(pathname, config);
+  // 也接受从产物里直接复制来的真实文件路径，如 `/docs/macros/index.html`
+  const lookup = key.endsWith('/index') ? key.slice(0, -'/index'.length) || '/' : key;
 
-  if (key === '/') {
+  if (lookup === '/') {
     return { kind: 'redirect', location: indexUrlOf(config, config.defaultLanguage) };
   }
 
   for (const lang of Object.keys(config.content)) {
-    if (key === normUrl(indexUrlOf(config, lang), config)) {
+    if (lookup === normUrl(indexUrlOf(config, lang), config)) {
       return { kind: 'index', lang };
     }
   }
 
-  const page = state.byUrl.get(key);
+  const page = state.byUrl.get(lookup);
   if (page) return { kind: 'page', page };
 
   // 分类页：`/categories/<slug>`（默认语言）或 `/<lang>/categories/<slug>`
@@ -117,9 +119,9 @@ export function resolveDevRoute(
       `${normalizeBasePath(config.basePath)}${langPrefix(config, lang)}/categories/`,
       config,
     );
-    if (!key.startsWith(`${prefix}/`)) continue;
+    if (!lookup.startsWith(`${prefix}/`)) continue;
 
-    const slug = key.slice(prefix.length + 1);
+    const slug = lookup.slice(prefix.length + 1);
     const exists = state.pages.some(
       (p) => p.lang === lang && !p.draft && p.categories.includes(slug),
     );
