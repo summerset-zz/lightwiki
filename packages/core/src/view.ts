@@ -1,5 +1,6 @@
 import type { LoadedConfig } from './config.js';
 import type { Page } from './content.js';
+import { keywordsOf, type SiteInfo } from './context.js';
 import { langPrefix, normalizeBasePath } from './routes.js';
 
 export interface NavPage {
@@ -11,38 +12,6 @@ export interface NavPage {
 export interface NavGroup {
   section: string;
   pages: NavPage[];
-}
-
-/** 模板里 `it.site` 的形状。build 与 dev 共用，避免两处各写一份。 */
-export interface SiteBase {
-  title: string;
-  siteUrl: string;
-  base: string;
-  defaultLanguage: string;
-  languages: string[];
-  urlStyle: string;
-}
-
-export function createSiteBase(config: LoadedConfig): SiteBase {
-  return {
-    title: config.title,
-    siteUrl: config.siteUrl,
-    base: normalizeBasePath(config.basePath),
-    defaultLanguage: config.defaultLanguage,
-    languages: Object.keys(config.content),
-    urlStyle: config.urlStyle,
-  };
-}
-
-export function keywordsOf(value: unknown): string[] {
-  if (Array.isArray(value)) return value.map(String);
-  if (typeof value === 'string') {
-    return value
-      .split(',')
-      .map((k) => k.trim().replace(/^["']/, '').replace(/["']$/, ''))
-      .filter(Boolean);
-  }
-  return [];
 }
 
 function sortPages(a: Page, b: Page): number {
@@ -89,7 +58,7 @@ export function buildNav(
 }
 
 export interface PageView {
-  site: SiteBase;
+  site: SiteInfo;
   page: Record<string, unknown>;
   nav: NavGroup[];
   index: { url: string };
@@ -99,10 +68,11 @@ export function createPageView(
   config: LoadedConfig,
   pages: Page[],
   page: Page,
+  site: SiteInfo,
 ): PageView {
   const base = normalizeBasePath(config.basePath);
   return {
-    site: createSiteBase(config),
+    site,
     page: {
       lang: page.lang,
       title: page.data.title,
@@ -133,7 +103,7 @@ export function createPageView(
 }
 
 export interface IndexView {
-  site: SiteBase;
+  site: SiteInfo;
   page: Record<string, unknown>;
   nav: NavGroup[];
   groups: NavGroup[];
@@ -144,12 +114,13 @@ export function createIndexView(
   config: LoadedConfig,
   pages: Page[],
   lang: string,
+  site: SiteInfo,
 ): IndexView {
   const base = normalizeBasePath(config.basePath);
   const indexUrl = `${base}${langPrefix(config, lang)}/docs/`;
   const nav = buildNav(config, pages, lang, indexUrl);
   return {
-    site: createSiteBase(config),
+    site,
     page: {
       lang,
       title: config.title,

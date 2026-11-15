@@ -49,11 +49,17 @@ export {
   buildNav,
   createIndexView,
   createPageView,
-  createSiteBase,
-  keywordsOf,
   type IndexView,
   type NavGroup,
   type NavPage,
   type PageView,
-  type SiteBase,
 } from './view.js';
+export {
+  createSiteInfo,
+  keywordsOf,
+  summarize,
+  type PageInfo,
+  type PageSummary,
+  type SiteInfo,
+  type Summarizable,
+} from './context.js';

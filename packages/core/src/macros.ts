@@ -3,14 +3,17 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Eta } from 'eta';
 import type { LoadedConfig } from './config.js';
+import type { PageInfo, SiteInfo } from './context.js';
 
 export interface MacroBase {
   /** 位置参数，已解析成字符串或数字 */
   args: Array<string | number>;
   /** 命名参数（`k: v`）；v1 只解析不使用，留给后续 */
   named: Record<string, string>;
-  page: Record<string, unknown>;
-  site: Record<string, unknown>;
+  /** 当前页，与布局模板里的 `it.page` 是同一个对象 */
+  page: PageInfo;
+  /** 全站信息，与布局模板里的 `it.site` 是同一个对象 */
+  site: SiteInfo;
   lang: string;
   /** 让宏可以给当前页登记分类 */
   addCategory: (name: string) => void;
@@ -69,7 +72,9 @@ export async function loadMacros(config: LoadedConfig): Promise<MacroRegistry> {
     }
   }
 
-  const eta = new Eta({ autoEscape: true, cache: false });
+  // autoTrim 必须关掉：Eta 默认会吃掉标签后面的换行，
+  // 而宏产出的是 markdown —— 列表项、段落、表格全靠换行分组。
+  const eta = new Eta({ autoEscape: true, cache: false, autoTrim: false });
 
   return {
     problems,

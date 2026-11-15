@@ -1,0 +1,5 @@
+- 本页 slug：`<%= it.page.slug %>`，语言：`<%= it.page.lang %>`
+- 标题：<%= it.page.title %>（来自 frontmatter：<%= it.page.frontmatter.title %>）
+- section：`<%= it.page.section %>`，order：<%= it.page.order %>
+- 本站共 <%= it.site.pageCount %> 篇（zh <%= it.site.pageCounts.zh ?? 0 %> / en <%= it.site.pageCounts.en ?? 0 %>）
+- 构建于 <%= it.site.generatedAt %>

@@ -7,12 +7,14 @@ import {
   createIndexView,
   createPageView,
   createRenderer,
+  createSiteInfo,
   langPrefix,
   loadContent,
   normalizeBasePath,
   normUrl,
   type LoadedConfig,
   type Page,
+  type SiteInfo,
 } from '@lightwiki/core';
 
 export interface DevServerOptions {
@@ -33,6 +35,7 @@ export interface DevServerHandle {
 export interface DevState {
   pages: Page[];
   byUrl: Map<string, Page>;
+  siteInfo: SiteInfo;
 }
 
 export type DevRoute =
@@ -73,7 +76,7 @@ async function loadState(config: LoadedConfig): Promise<DevState> {
   const byUrl = new Map<string, Page>();
   // 草稿也在索引里：草稿不进导航，但在 dev 下应该能按地址打开
   for (const page of pages) byUrl.set(normUrl(page.url, config), page);
-  return { pages, byUrl };
+  return { pages, byUrl, siteInfo: createSiteInfo(config, pages) };
 }
 
 function indexUrlOf(config: LoadedConfig, lang: string): string {
@@ -173,7 +176,7 @@ export async function startDevServer(
     if (route.kind === 'page') {
       const html = await renderer.renderLayout(
         'doc',
-        createPageView(config, state.pages, route.page) as unknown as Record<string, unknown>,
+        createPageView(config, state.pages, route.page, state.siteInfo) as unknown as Record<string, unknown>,
       );
       return html.includes('</body>')
         ? html.replace('</body>', `${reloadSnippet(base)}</body>`)
@@ -182,7 +185,7 @@ export async function startDevServer(
     if (route.kind === 'index') {
       const html = await renderer.renderLayout(
         'index',
-        createIndexView(config, state.pages, route.lang) as unknown as Record<string, unknown>,
+        createIndexView(config, state.pages, route.lang, state.siteInfo) as unknown as Record<string, unknown>,
       );
       return html.includes('</body>')
         ? html.replace('</body>', `${reloadSnippet(base)}</body>`)

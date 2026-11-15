@@ -1,6 +1,7 @@
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
 import type { LoadedConfig } from './config.js';
+import type { PageInfo, SiteInfo } from './context.js';
 import type { MacroRegistry } from './macros.js';
 import type { LinkResolver } from './resolve.js';
 import { assetHref, localizeHref } from './routes.js';
@@ -66,10 +67,10 @@ export interface RenderEnv {
   resolver?: LinkResolver;
   /** 宏注册表（`{{...}}`） */
   macros?: MacroRegistry;
-  /** 当前页 frontmatter，供宏使用 */
-  pageMeta?: Record<string, unknown>;
-  /** 站点信息，供宏使用 */
-  siteMeta?: Record<string, unknown>;
+  /** 当前页信息，即宏里的 `it.page` */
+  pageInfo?: PageInfo;
+  /** 全站信息，即宏里的 `it.site` */
+  siteInfo?: SiteInfo;
   /** 渲染期收集：未解析的内链与未定义的宏 */
   unresolved?: UnresolvedRef[];
   /** 渲染期收集：宏登记的分类 */
@@ -351,11 +352,14 @@ function expandMacro(
     const text = registry.render(name, {
       args,
       named,
-      page: env.pageMeta ?? {},
-      site: env.siteMeta ?? {},
+      page: (env.pageInfo ?? {}) as PageInfo,
+      site: (env.siteInfo ?? {}) as SiteInfo,
       lang: env.lang,
       addCategory: (category: string) => {
         (env.categories ??= new Set<string>()).add(category);
+        // 立刻反映到 `it.page.categories`，宏里后续读取能看到自己刚加的分类
+        const list = env.pageInfo?.categories;
+        if (list && !list.includes(category)) list.push(category);
       },
     });
     return text;

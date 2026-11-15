@@ -40,6 +40,10 @@ draft: false
 
 {{chain}}
 
+宏能读到当前页与全站信息（相当于 MediaWiki 的魔术字）：
+
+{{meta}}
+
 嵌套在句子中间也可以，比如这里提到 {{glossary("em 方框")}}。
 
 ## 术语提示 {#hint}

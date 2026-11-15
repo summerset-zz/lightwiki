@@ -137,7 +137,7 @@ export default {
 
 - 宏定义放 `macros/<名字>.eta`，内容仓库优先、主题包次之；名字大小写不敏感；
 - 参数支持位置参数（`"字符串"`、`` `原样` ``、数字）与命名参数（`键: 值`，解析了但 v1 不强制）；
-- 宏里能拿到：`it.args`、`it.named`、`it.page`（当前页 frontmatter）、`it.site`、`it.lang`；
+- 宏里能拿到 `it.args`、`it.named`、`it.lang`，以及 `it.page` / `it.site`（完整字段见 §4.3）；
 - 宏必须是**同步**的（模板里不能有 `await`）；
 - 围栏代码块与行内代码里的 `{{…}}` 不会被展开。
 
@@ -206,26 +206,62 @@ export default {
 
 ### 4.3 模板上下文
 
-`doc.eta`：
+**`it.site`：布局与宏拿到的是同一个对象**
+
+| 字段 | 说明 |
+|---|---|
+| `title` `siteUrl` `base` | 站点名、站点地址、部署基路径（`basePath` 规范化后） |
+| `defaultLanguage` `languages[]` | 默认语言与全部语言 |
+| `urlStyle` `sections[]` | 链接形态、配置里声明的 section 顺序 |
+| `generatedAt` | 构建时间（ISO 8601）。**它让产物每次都不同**，别拿它做「内容是否变化」的判断 |
+| `pageCount` `pageCounts` | 已发布页数：总数与分语言 |
+| `pages[]` | 全部已发布页面的摘要：`{ lang, slug, url, title, section, order, updated, categories }` |
+| `config` | `wiki.config.ts` 的原始配置。里面有本机绝对路径（`root` / `themeDir`），别原样打出来 |
+
+**`it.page`：布局比宏多几项**
+
+布局（`doc.eta` / `index.eta`）拿到完整页：
+
+| 字段 | 说明 |
+|---|---|
+| `lang` `slug` `url` `outputPath` `relativePath` | 位置信息 |
+| `title` `description` `keywords[]` `updated` `section` `order` | 常用元信息 |
+| `html` | 已渲染的正文，用 `<%~ %>` 输出 |
+| `headings[]` | `{ level, text, id }` |
+| `hints[]` `sources[]` `source` | 术语提示、小节来源、整篇来源 |
+| `license` `licenseUrl` `authors` | 站点自有许可 |
+| 其余 frontmatter 字段 | **平铺**在同层，`it.page.自定义键` 直接可用 |
+| `frontmatter` | frontmatter 原对象 |
+
+宏拿到的元信息相同，但**没有 `html` / `headings` / `hints` / `sources`**——宏执行时这些还在生成中。所以宏里不要试图读本页正文，那是循环依赖。
+
+**其他上下文**
 
 ```
-it.site    { title, siteUrl, base, defaultLanguage, languages[], urlStyle }
-it.page    { lang, title, description, keywords[], updated, url,
-             html,                    // 已渲染的正文，用 <%~ %> 输出
-             headings[],              // { level, text, id }
-             hints[],                 // { title, body, anchor }
-             sources[],               // { site, title, revid, license, licenseUrl, changes, anchor }
-             source,                  // 整篇来源：{ site, title, url, revid, license, licenseUrl, changes }
-             license, licenseUrl, authors }
-it.nav     [ { section, pages: [ { title, url, current } ] } ]
-it.index   { url }                   // 该语言目录页地址
+it.nav     [ { section, pages: [ { title, url, current } ] } ]   // 侧栏
+it.index   { url }                                              // 该语言目录页
+it.groups  同 it.nav（只有 index.eta 有）
+it.args    宏的位置参数
+it.named   宏的命名参数
+it.lang    当前页语言
 ```
 
-`index.eta` 额外有：
+### 4.4 魔术字对照
 
-```
-it.groups  同 it.nav（内容一样，名字不同而已）
-```
+MediaWiki 的魔术字在这里不需要单独语法——`it` 就是普通对象，能跑任意表达式：
+
+| MediaWiki | 这里怎么写 |
+|---|---|
+| `{{PAGENAME}}` | `<%= it.page.slug %>` |
+| `{{FULLPAGENAME}}` | `<%= it.page.lang + "/" + it.page.slug %>` |
+| `{{SITENAME}}` | `<%= it.site.title %>` |
+| `{{NUMBEROFPAGES}}` | `<%= it.site.pageCount %>` |
+| `{{CURRENTYEAR}}` | `<%= it.site.generatedAt.slice(0, 4) %>` |
+| `{{#if: 条件 \| 甲 \| 乙}}` | `<% if (条件) { %>甲<% } else { %>乙<% } %>` |
+| `{{#expr: 1 + 2}}` | `<%= 1 + 2 %>` |
+| `{{#ifeq: a \| b \| …}}` | `<% if (a === b) { %>…<% } %>` |
+
+差别在于：魔术字是**语法层面的特例**，只能是有限的几种；这里是**模板里的普通代码**，能组合、能循环、能调 `it.site.pages.filter(...)`。
 
 ---
 

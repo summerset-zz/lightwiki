@@ -3,6 +3,7 @@ import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import type { LoadedConfig } from './config.js';
 import { loadContent, type ContentProblem } from './content.js';
+import { createSiteInfo } from './context.js';
 import { buildLinkReport, type LinkReport } from './links.js';
 import { createRenderer } from './render.js';
 import { langPrefix, normalizeBasePath } from './routes.js';
@@ -48,9 +49,12 @@ export async function buildSite(
   const base = normalizeBasePath(config.basePath);
 
   const published = pages.filter((p) => !p.draft);
+  // 全站信息只算一次：宏与布局看到的是同一个对象，而且 generatedAt 保持一致
+  const siteInfo = createSiteInfo(config, published);
 
   for (const page of published) {
-    const html = await renderer.renderLayout('doc', createPageView(config, pages, page) as unknown as Record<string, unknown>);
+    const view = createPageView(config, pages, page, siteInfo) as unknown as Record<string, unknown>;
+    const html = await renderer.renderLayout('doc', view);
     const target = join(outputDir, page.outputPath);
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, html, 'utf8');
@@ -60,7 +64,7 @@ export async function buildSite(
   // 每种语言一个目录页：既是导航入口，也是孤页判定的基准
   for (const lang of Object.keys(config.content)) {
     const indexPath = `${langPrefix(config, lang)}/docs/index.html`.replace(/^\//, '');
-    const view = createIndexView(config, pages, lang) as unknown as Record<string, unknown>;
+    const view = createIndexView(config, pages, lang, siteInfo) as unknown as Record<string, unknown>;
     const html = await renderer.renderLayout('index', view);
     const target = join(outputDir, indexPath);
     await mkdir(dirname(target), { recursive: true });

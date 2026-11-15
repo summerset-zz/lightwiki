@@ -18,9 +18,10 @@ import {
   type SectionSource,
   type UnresolvedRef,
 } from './markdown.js';
+import { createSiteInfo, keywordsOf, type PageInfo } from './context.js';
 import { loadMacros } from './macros.js';
 import { LinkResolver, type TitleConflict } from './resolve.js';
-import { normalizeBasePath, outputPathFor, pageUrl } from './routes.js';
+import { outputPathFor, pageUrl } from './routes.js';
 
 export interface Page {
   lang: string;
@@ -212,23 +213,18 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
   }
   resolver.finalize();
 
-  const siteMeta = {
-    title: config.title,
-    siteUrl: config.siteUrl,
-    base: normalizeBasePath(config.basePath),
-    languages: Object.keys(config.content),
-    defaultLanguage: config.defaultLanguage,
-  };
+  const siteInfo = createSiteInfo(config, seeds);
 
   // 阶段 3：渲染
   const pages: Page[] = seeds.map((seed) => {
+    const pageInfo = buildPageInfo(seed);
     const env: RenderEnv = {
       lang: seed.lang,
       config,
       resolver,
       macros,
-      pageMeta: seed.data as unknown as Record<string, unknown>,
-      siteMeta,
+      pageInfo,
+      siteInfo,
       unresolved: [],
       categories: new Set<string>(),
     };
@@ -249,11 +245,37 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
       outputPath: seed.outputPath,
       draft: seed.draft,
       unresolved: env.unresolved ?? [],
-      categories: [...(env.categories ?? [])],
+      categories: pageInfo.categories,
     };
   });
 
   return { pages, problems, warnings, conflicts: resolver.conflicts };
+}
+
+/**
+ * 构造宏与布局看到的 `it.page`。
+ *
+ * frontmatter 的字段会平铺上来，方便 `it.page.title` 这类直接访问；
+ * 结构化字段放在后面，确保内容里写了同名键时不会把位置信息覆盖掉。
+ */
+function buildPageInfo(seed: PageSeed): PageInfo {
+  return {
+    ...(seed.data as unknown as Record<string, unknown>),
+    lang: seed.lang,
+    slug: seed.slug,
+    url: seed.url,
+    outputPath: seed.outputPath,
+    relativePath: seed.relativePath,
+    draft: seed.draft,
+    title: seed.data.title,
+    description: seed.data.description ?? '',
+    keywords: keywordsOf(seed.data.keywords),
+    updated: seed.data.updated ?? '',
+    section: seed.data.section ?? '',
+    order: seed.data.order ?? null,
+    categories: [],
+    frontmatter: seed.data as unknown as Record<string, unknown>,
+  };
 }
 
 /** 文件名（不含扩展名），用于提示「你可能想要的是 xxx」 */
