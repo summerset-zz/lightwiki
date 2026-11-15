@@ -6,8 +6,8 @@ import { loadContent, type ContentProblem } from './content.js';
 import { createSiteInfo } from './context.js';
 import { buildLinkReport, type LinkReport } from './links.js';
 import { createRenderer } from './render.js';
-import { langPrefix, normalizeBasePath } from './routes.js';
-import { createIndexView, createPageView } from './view.js';
+import { langPrefix, categoryOutputPath, normalizeBasePath } from './routes.js';
+import { createCategoryView, createIndexView, createPageView } from './view.js';
 
 export interface BuildOptions {
   /** 覆盖 config.outputDir */
@@ -70,6 +70,28 @@ export async function buildSite(
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, html, 'utf8');
     written.push(indexPath);
+  }
+
+  // 分类页：每种语言、每个实际被用到的分类各一页
+  for (const lang of Object.keys(config.content)) {
+    const used = new Set<string>();
+    for (const page of published) {
+      if (page.lang !== lang) continue;
+      for (const category of page.categories) used.add(category);
+    }
+
+    for (const slug of [...used].sort()) {
+      const relative = categoryOutputPath(config, lang, slug);
+      const view = createCategoryView(config, pages, lang, slug, siteInfo) as unknown as Record<
+        string,
+        unknown
+      >;
+      const html = await renderer.renderLayout('category', view);
+      const target = join(outputDir, relative);
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, html, 'utf8');
+      written.push(relative);
+    }
   }
 
   // 根目录跳转到默认语言，方便 file:// 双击直接看

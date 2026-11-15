@@ -37,6 +37,8 @@ export default {
 | `order` | 数字 | 组内排序，小的在前 |
 | `updated` | `YYYY-MM-DD` | 只认这个格式，别写别的 |
 | `draft` | 布尔 | `true` = 不进导航、不参与孤页判定、构建时跳过；`wiki dev` 下仍可按地址打开 |
+| `categories` | 字符串或数组 | 分类的键（ASCII slug），见 §3.8 |
+| `sidebarCategory` | 字符串 | 用哪个分类的页面列表充当侧栏；不填则用全站导航 |
 | `sourceSite` `sourceTitle` `sourceUrl` `sourceRevid` `sourceLicense` `sourceLicenseUrl` `sourceChanges` | 字符串 | 整篇改编自他处时使用，见 §3.5 |
 | `license` `licenseUrl` `authors` | 字符串 / 数组 | 站点自有的内容许可，可选 |
 
@@ -169,6 +171,21 @@ export default {
 
 ---
 
+### 3.8 分类
+
+```yaml
+categories: [syntax, demo]
+sidebarCategory: syntax
+```
+
+- 分类的**键是 ASCII slug**，显示名放站点配置：`categories: { syntax: '语法' }`。理由：URL 要稳定、要能翻译；中文名直接进 URL 会同时带来编码和改名两个问题；
+- 没声明的分类会直接拿 slug 当显示名，`wiki check` 会提示；
+- 构建时给每个**实际被用到**的分类生成一页：`/categories/<slug>/`；
+- `sidebarCategory` 让这一页的侧栏换成该分类的页面列表（按 section 分组）；分类不存在或没成员时退回全站导航，侧栏不会空掉；
+- 宏里调用 `it.addCategory("slug")` 也能加分，效果与写 frontmatter 一样。
+
+---
+
 ## 4. 布局
 
 > 两个词固定下来：**布局**（`layouts/*.eta`，整页骨架）与**宏**（`macros/*.eta`，正文里的 `{{…}}`）。不单独用「模板」二字，避免指代不清。
@@ -189,6 +206,7 @@ export default {
 |---|---|
 | `doc` | 每一篇内容页 |
 | `index` | 每种语言的 `/docs/` 目录页 |
+| `category` | 每个分类页 `/categories/<slug>/` |
 
 覆盖方式就是建同名文件，只写你要改的部分（想全改就复制一份过来改）。**没覆盖的部分会随主题升级自动跟进**，这也是不要整份拷贝主题的原因。
 
@@ -215,6 +233,7 @@ export default {
 | `urlStyle` `sections[]` | 链接形态、配置里声明的 section 顺序 |
 | `generatedAt` | 构建时间（ISO 8601）。**它让产物每次都不同**，别拿它做「内容是否变化」的判断 |
 | `pageCount` `pageCounts` | 已发布页数：总数与分语言 |
+| `categories` `categoryList` | 分类显示名映射；实际被使用的分类与计数 |
 | `pages[]` | 全部已发布页面的摘要：`{ lang, slug, url, title, section, order, updated, categories }` |
 | `config` | `wiki.config.ts` 的原始配置。里面有本机绝对路径（`root` / `themeDir`），别原样打出来 |
 
@@ -226,6 +245,7 @@ export default {
 |---|---|
 | `lang` `slug` `url` `outputPath` `relativePath` | 位置信息 |
 | `title` `description` `keywords[]` `updated` `section` `order` | 常用元信息 |
+| `categories[]` | 当前页所属分类（含宏登记的） |
 | `html` | 已渲染的正文，用 `<%~ %>` 输出 |
 | `headings[]` | `{ level, text, id }` |
 | `hints[]` `sources[]` `source` | 术语提示、小节来源、整篇来源 |
@@ -238,9 +258,12 @@ export default {
 **其他上下文**
 
 ```
-it.nav     [ { section, pages: [ { title, url, current } ] } ]   // 侧栏
+it.nav     [ { section, pages: [ { title, url, current } ] } ]   // 侧栏（全站导航）
+it.sidebar { kind: 'site' | 'category', title, category?, groups[] }
+           // 实际侧栏：默认等于 it.nav；声明了 sidebarCategory 就是分类版
 it.index   { url }                                              // 该语言目录页
 it.groups  同 it.nav（只有 index.eta 有）
+it.categories  同 it.site.categoryList（只有 index.eta 有）
 it.args    宏的位置参数
 it.named   宏的命名参数
 it.lang    当前页语言
@@ -281,8 +304,8 @@ yarn wiki build <目录> [-o 输出目录] # 产出静态站点
 
 - **缺译会导致红链**：英文页链到只有中文存在的页面时，目标页确实 404。暂时没有「回退到默认语言」的行为。
 - **只有 `/docs` 会被补语言前缀**，其余站内路径原样输出。
-- **布局名固定为 `doc` / `index`**，还不能「按 section 选不同布局」。
-- **分类系统还没有**：宏可以调用 `addCategory()` 登记，但 frontmatter 的 `categories`、分类页、分类边栏都还没实现，登记了也没人消费。
+- **布局名固定为 `doc` / `index` / `category`**，还不能「按 section 选不同布局」。
+- **分类不能嵌套**，也没有「子分类」「分类的排序」这些能力；分类顺序跟站点配置里声明的顺序走。
 - **没有图片处理**：`assets/` 原样复制，不做缩放、不做哈希、不做 `<picture>`。
 - **没有搜索**：`hints` 只是数据，检索能力还没接。
 - **`basePath` 目前只适合部署在根路径**。要用 `file://` 直接打开产物，还需要等相对路径模式（`urlStyle: 'file'` 只实现了链接层）。

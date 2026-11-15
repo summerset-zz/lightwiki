@@ -42,6 +42,14 @@ export const frontmatterSchema = z
     updated: isoDate.optional(),
     draft: z.boolean().default(false),
 
+    /**
+     * 分类的键是 ASCII slug，显示名放站点配置的 `categories` 里。
+     * 理由是 URL 要稳定、要能翻译。
+     */
+    categories: z.union([z.string(), z.array(z.string())]).optional(),
+    /** 用哪个分类的页面列表充当侧栏；不填则用全站导航 */
+    sidebarCategory: z.string().optional(),
+
     // —— 术语提示（整篇只有一个时用） ——
     hintTitle: z.string().optional(),
     hint: z.string().optional(),
@@ -74,6 +82,8 @@ export const siteConfigSchema = z.object({
   assetsDir: z.string().default('assets'),
   /** 内容里允许出现的 section 取值与顺序；留空则不校验 */
   sections: z.array(z.string()).default([]),
+  /** 分类 slug → 显示名。未声明的分类用 slug 当显示名 */
+  categories: z.record(z.string(), z.string()).default({}),
   theme: z.string().default('@lightwiki/theme-default'),
   outputDir: z.string().default('dist'),
   /**

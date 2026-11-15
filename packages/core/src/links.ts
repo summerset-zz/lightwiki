@@ -1,6 +1,6 @@
 import type { LoadedConfig } from './config.js';
 import type { Page } from './content.js';
-import { normalizeBasePath } from './routes.js';
+import { categoryUrl, normalizeBasePath } from './routes.js';
 
 export interface RedLink {
   from: string;
@@ -42,6 +42,14 @@ function hrefToKey(href: string, config: LoadedConfig): string {
 export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport {
   const published = pages.filter((p) => !p.draft);
   const known = new Set(published.map((p) => normUrl(p.url, config)));
+
+  // 分类页是构建时生成的，也要算作已知目标，否则指向它们的链接会被误判为红链
+  for (const page of published) {
+    for (const category of page.categories) {
+      known.add(normUrl(categoryUrl(config, page.lang, category), config));
+    }
+  }
+
   const inbound = new Map<string, number>();
 
   const redLinks: RedLink[] = [];
@@ -65,6 +73,8 @@ export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport
 
   const orphans = published
     .filter((p) => {
+      // 入口页（slug 为 index）与目录页一样，靠导航到达，不参与孤页判定
+      if (p.slug === 'index') return false;
       const key = normUrl(p.url, config);
       if (indexKeys.has(key)) return false;
       return (inbound.get(key) ?? 0) === 0;

@@ -1,15 +1,25 @@
 ---
-title: Getting started
-keywords: 开始, intro, 入门
-description: Entry page of the minimal sample.
-section: guide
+title: Lightwiki syntax handbook
+keywords: syntax, handbook, index, 语法
+description: This site is written with Lightwiki and rendered by Lightwiki.
+section: syntax
 order: 0
 updated: 2026-11-15
 draft: false
+categories: [demo]
 ---
 
-See [the second page](/docs/second). On an English page the link keeps its default-language path.
+This site is its own documentation: every page is written with the syntax it demonstrates.
 
-## A heading {#another}
+## Where to start {#start}
 
-Anchors written as `{#anchor}` are stable across languages.
+The other pages are Chinese-only for now. That is allowed — a page simply shows 「暂无此语言」when the current language is missing.
+
+## Anchors {#anchors}
+
+Anchors written as `{#anchor}` stay stable across languages, so `/docs/x#counts` works on both sides.
+
+## Why there are no links here {#no-links}
+
+Linking from an English page to a Chinese-only page would 404, so this page deliberately links to nothing.
+

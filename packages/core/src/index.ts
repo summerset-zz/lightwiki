@@ -7,7 +7,7 @@ export {
   type PageSeed,
 } from './content.js';
 export { buildSite, type BuildOptions, type BuildResult } from './build.js';
-export { checkSite, type CheckResult, type MissingTranslation, type SectionIssue, type UnresolvedIssue } from './check.js';
+export { checkSite, type CategoryIssue, type CheckResult, type MissingTranslation, type SectionIssue, type UnresolvedIssue } from './check.js';
 export { buildLinkReport, normUrl, type LinkReport, type RedLink } from './links.js';
 export {
   loadMacros,
@@ -38,6 +38,8 @@ export {
 } from './markdown.js';
 export {
   assetHref,
+  categoryOutputPath,
+  categoryUrl,
   langPrefix,
   localizeHref,
   normalizeBasePath,
@@ -47,17 +49,23 @@ export {
 export { createRenderer, type Renderer } from './render.js';
 export {
   buildNav,
+  buildSidebar,
+  createCategoryView,
   createIndexView,
   createPageView,
+  type CategoryView,
   type IndexView,
   type NavGroup,
   type NavPage,
   type PageView,
+  type Sidebar,
 } from './view.js';
 export {
+  categoriesOf,
   createSiteInfo,
   keywordsOf,
   summarize,
+  type CategoryInfo,
   type PageInfo,
   type PageSummary,
   type SiteInfo,

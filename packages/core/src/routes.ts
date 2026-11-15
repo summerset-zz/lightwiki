@@ -25,6 +25,19 @@ export function outputPathFor(config: LoadedConfig, lang: string, slug: string):
   return config.urlStyle === 'file' ? `${dir}/${slug}.html` : `${dir}/${slug}/index.html`;
 }
 
+/** 分类页 URL */
+export function categoryUrl(config: LoadedConfig, lang: string, slug: string): string {
+  const base = normalizeBasePath(config.basePath);
+  const suffix = config.urlStyle === 'file' ? '.html' : '/';
+  return `${base}${langPrefix(config, lang)}/categories/${slug}${suffix}`;
+}
+
+/** 分类页输出路径（相对 outputDir） */
+export function categoryOutputPath(config: LoadedConfig, lang: string, slug: string): string {
+  const dir = `${langPrefix(config, lang)}/categories`.replace(/^\//, '');
+  return config.urlStyle === 'file' ? `${dir}/${slug}.html` : `${dir}/${slug}/index.html`;
+}
+
 /** 把一个站内绝对路径拆成 path / hash */
 function splitHash(href: string): { path: string; hash: string } {
   const idx = href.indexOf('#');

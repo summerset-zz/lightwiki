@@ -37,6 +37,16 @@
         </ul>
       </section>
 <% } %>
+<% if (it.categories.length > 0) { %>
+      <section>
+        <h2>分类</h2>
+        <ul class="index-list">
+<% for (const category of it.categories) { %>
+          <li><a href="<%= category.url %>"><%= category.label %></a>（<%= category.count %>）</li>
+<% } %>
+        </ul>
+      </section>
+<% } %>
     </article>
   </main>
 </div>

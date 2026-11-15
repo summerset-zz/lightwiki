@@ -21,6 +21,11 @@ export interface UnresolvedIssue {
   message: string;
 }
 
+export interface CategoryIssue {
+  file: string;
+  message: string;
+}
+
 export interface CheckResult {
   ok: boolean;
   pageCount: number;
@@ -37,6 +42,8 @@ export interface CheckResult {
   titleConflicts: TitleConflict[];
   /** 未解析的内链与未定义的宏 */
   unresolved: UnresolvedIssue[];
+  /** 分类的疑点（未声明显示名、sidebarCategory 没成员） */
+  categoryIssues: CategoryIssue[];
 }
 
 export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
@@ -81,6 +88,31 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     }
   }
 
+  const categoryIssues: CategoryIssue[] = [];
+  for (const page of pages) {
+    for (const category of page.categories) {
+      if (!(category in config.categories)) {
+        categoryIssues.push({
+          file: `${page.lang}/${page.slug}`,
+          message: `分类 ${category} 没在配置的 categories 里声明，会直接拿 slug 当显示名`,
+        });
+      }
+    }
+
+    const sidebar = page.data.sidebarCategory;
+    if (sidebar) {
+      const hasMember = pages.some(
+        (other) => other.lang === page.lang && other.categories.includes(sidebar),
+      );
+      if (!hasMember) {
+        categoryIssues.push({
+          file: `${page.lang}/${page.slug}`,
+          message: `sidebarCategory「${sidebar}」下没有任何页面，侧栏会退回全站导航`,
+        });
+      }
+    }
+  }
+
   // 未定义的宏会让产物里直接露出 `{{...}}` 原文，算错误；
   // 未解析的内链与红链同级，是「目标还没写」的正常状态。
   const macroErrors = unresolved.filter((item) => item.kind === 'macro').length;
@@ -99,5 +131,6 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     missingTranslations,
     titleConflicts: conflicts,
     unresolved,
+    categoryIssues,
   };
 }

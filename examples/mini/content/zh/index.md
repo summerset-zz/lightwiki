@@ -1,59 +1,43 @@
 ---
-title: 开始
-keywords: 开始, intro, 入门
-description: 最小样例的入口页，演示 frontmatter、锚点、术语提示与站内链接。
-section: guide
+title: 轻维基语法手册
+keywords: 语法, syntax, 首页, 索引
+description: 用轻维基自己写的语法手册，每一页都演示它正在讲的那个特性。
+section: syntax
 order: 0
 updated: 2026-11-15
 draft: false
+categories: [demo]
 ---
 
-这一页用来验证构建链路：frontmatter 能被读到，锚点能落到 `<h2>` 上，站内链接会补语言前缀。
+这个站点本身就是文档：内容用轻维基的语法写成，再由轻维基渲染。所以你在页面上看到的每个效果，都能在对应的源文件里找到写法。
 
-## 链接到另一页 {#another}
+## 从哪开始 {#start}
 
-见 [第二页](/docs/second)。英文页里这个链接不需要前缀，中文页会自动变成 `/zh/docs/second`。
+- [[anchors|锚点]]：让标题能被稳定引用
+- [[links|链接]]：站内链接与双链
+- [[macros|宏]]：`{{…}}` 的三种形态
+- [[directives|行内指令]]：术语提示与小节来源
+- [[categories|分类]]：页面归类与分类侧栏
+- [[context|模板上下文]]：`it.page` 与 `it.site`
+- [[layouts|布局]]：覆盖主题模板
+- [[limits|已知限制]]
 
-内链的三种写法：
+## 双链长什么样 {#wikilink}
 
-- 按 slug：[[second]]
-- 按标题：[[第二页]]
-- 带显示文字：[[第二页|换个说法]]
+上面那排链接用的不是 markdown 语法，而是双链。三种写法：
+
+- `[[anchors]]`：按 slug
+- `[[宏]]`：按标题
+- `[[macros|自己起个名字]]`：自定义显示文字
+
+它们在这个页面上都真实生效，效果就是上面那排链接。
 
 ## 宏 {#macro}
 
-位置参数：{{glossary("基线", "baseline")}}
+{{note("这段文字来自 note 宏，不是正文里手写的。")}}
 
-整行一个宏会走块级，不会被包进段落：
-
-{{note("这一块是宏生成的，不是 markdown 里的内容。")}}
-
-宏里可以调另一个宏（`it.macro(...)`），下面这个 card 内部就调用了 glossary：
-
-{{card("基线", "card 的正文。标题由 glossary 宏生成。")}}
-
-宏展开的结果会**再过一遍解析器**，所以可以直接写 markdown 和双链：
-
-{{md-demo}}
-
-宏的文本里再出现宏，也会继续展开：
-
-{{chain}}
-
-宏能读到当前页与全站信息（相当于 MediaWiki 的魔术字）：
+站点与页面的元信息也能从宏里取：
 
 {{meta}}
 
-嵌套在句子中间也可以，比如这里提到 {{glossary("em 方框")}}。
-
-## 术语提示 {#hint}
-
-<!-- hint: 术语提示 | 就是这种注释，构建时会被剥掉，只留下结构化数据。 -->
-
-上面那一行在产物里看不到，但会以 JSON 形式留在页面里，供前端弹窗使用。
-
-## 小节来源 {#source}
-
-<!-- source: zh.wikipedia.org | 示例条目 | 12345678 | CC BY-SA 4.0 | https://creativecommons.org/licenses/by-sa/4.0/ | 仅用于演示，删去了原文所有内容 -->
-
-这一节演示小节级的来源标注：产物里会在文末列出来源。
+具体写法见 [[macros]] 与 [[context]]。

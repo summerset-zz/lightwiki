@@ -18,7 +18,7 @@ import {
   type SectionSource,
   type UnresolvedRef,
 } from './markdown.js';
-import { createSiteInfo, keywordsOf, type PageInfo } from './context.js';
+import { categoriesOf, createSiteInfo, keywordsOf, type PageInfo } from './context.js';
 import { loadMacros } from './macros.js';
 import { LinkResolver, type TitleConflict } from './resolve.js';
 import { outputPathFor, pageUrl } from './routes.js';
@@ -273,7 +273,7 @@ function buildPageInfo(seed: PageSeed): PageInfo {
     updated: seed.data.updated ?? '',
     section: seed.data.section ?? '',
     order: seed.data.order ?? null,
-    categories: [],
+    categories: categoriesOf(seed.data.categories),
     frontmatter: seed.data as unknown as Record<string, unknown>,
   };
 }

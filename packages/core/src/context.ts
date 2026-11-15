@@ -52,6 +52,13 @@ export interface PageInfo {
   frontmatter: Record<string, unknown>;
 }
 
+/** 分类：键是 ASCII slug，显示名在站点配置里 */
+export interface CategoryInfo {
+  slug: string;
+  label: string;
+  count: number;
+}
+
 export interface SiteInfo {
   title: string;
   siteUrl: string;
@@ -60,6 +67,10 @@ export interface SiteInfo {
   languages: string[];
   urlStyle: string;
   sections: string[];
+  /** 分类 slug → 显示名，原样来自配置 */
+  categories: Record<string, string>;
+  /** 实际被页面使用的分类，按配置声明的顺序排，未声明的排在后面 */
+  categoryList: CategoryInfo[];
   /** 构建时间（ISO 8601）。注意它会让产物每次都不同 */
   generatedAt: string;
   /** 已发布页面数（不含草稿） */
@@ -86,6 +97,7 @@ export interface Summarizable {
     order?: number | undefined;
     updated?: string | undefined;
     keywords?: unknown;
+    categories?: unknown;
   };
 }
 
@@ -100,6 +112,23 @@ export function keywordsOf(value: unknown): string[] {
   return [];
 }
 
+export function categoriesOf(value: unknown): string[] {
+  const raw = Array.isArray(value)
+    ? value.map(String)
+    : typeof value === 'string'
+      ? value.split(',')
+      : [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of raw) {
+    const slug = item.trim();
+    if (!slug || seen.has(slug)) continue;
+    seen.add(slug);
+    out.push(slug);
+  }
+  return out;
+}
+
 export function summarize(page: Summarizable): PageSummary {
   return {
     lang: page.lang,
@@ -109,8 +138,7 @@ export function summarize(page: Summarizable): PageSummary {
     section: page.data.section ?? '',
     order: page.data.order ?? null,
     updated: page.data.updated ?? '',
-    // 分类目前只可能来自 frontmatter；宏登记的分类属于渲染期信息，不在这里
-    categories: [],
+    categories: categoriesOf(page.data.categories),
   };
 }
 
@@ -134,6 +162,25 @@ export function createSiteInfo(
     return a.slug.localeCompare(b.slug, 'zh');
   };
 
+  const summaries = published.map(summarize).sort(order);
+
+  const categoryCounts = new Map<string, number>();
+  for (const summary of summaries) {
+    for (const slug of summary.categories) {
+      categoryCounts.set(slug, (categoryCounts.get(slug) ?? 0) + 1);
+    }
+  }
+
+  const declared = Object.keys(config.categories);
+  const undeclared = [...categoryCounts.keys()].filter((slug) => !declared.includes(slug)).sort();
+  const categoryList: CategoryInfo[] = [...declared.filter((slug) => categoryCounts.has(slug)), ...undeclared].map(
+    (slug) => ({
+      slug,
+      label: config.categories[slug] ?? slug,
+      count: categoryCounts.get(slug) ?? 0,
+    }),
+  );
+
   return {
     title: config.title,
     siteUrl: config.siteUrl,
@@ -142,10 +189,12 @@ export function createSiteInfo(
     languages: Object.keys(config.content),
     urlStyle: config.urlStyle,
     sections: config.sections,
+    categories: config.categories,
+    categoryList,
     generatedAt: generatedAt.toISOString(),
     pageCount: published.length,
     pageCounts,
-    pages: published.map(summarize).sort(order),
+    pages: summaries,
     config,
   };
 }

@@ -1,15 +1,23 @@
 import type { SiteConfigInput } from '@lightwiki/schema';
 
-/** 仓库自带的最小样例：三篇内容、两种语言，CI 冒烟构建用它。 */
+/**
+ * 这个样例站就是轻维基的语法手册：内容用轻维基的语法写，再由轻维基渲染。
+ * 所以它同时也是冒烟测试——任何语法坏掉，这里第一眼就能看出来。
+ */
 const config: SiteConfigInput = {
-  title: 'Mini Wiki',
+  title: '轻维基 · 语法手册',
   siteUrl: 'https://example.com',
   defaultLanguage: 'zh',
   content: {
     zh: 'content/zh',
     en: 'content/en',
   },
-  sections: ['guide'],
+  sections: ['syntax', 'reference'],
+  categories: {
+    syntax: '语法',
+    demo: '演示',
+    official: '官方口径',
+  },
   outputDir: 'dist',
 };
 

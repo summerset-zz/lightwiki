@@ -111,6 +111,16 @@ async function run(args: string[]): Promise<number> {
       }
     }
 
+    if (result.categoryIssues.length > 0) {
+      section(`分类提示 ${result.categoryIssues.length} 处`);
+      for (const issue of result.categoryIssues.slice(0, 20)) {
+        line(`  · ${issue.file}：${issue.message}`);
+      }
+      if (result.categoryIssues.length > 20) {
+        line(`  …另有 ${result.categoryIssues.length - 20} 处`);
+      }
+    }
+
     if (result.titleConflicts.length > 0) {
       section(`标题重复 ${result.titleConflicts.length} 组（[[标题]] 这种内链会变得不明确）`);
       for (const conflict of result.titleConflicts) {

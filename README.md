@@ -28,4 +28,6 @@ yarn wiki build <内容目录> -o dist     # 产出静态站点
 ```
 
 `wiki dev` / `check` / `build` 都需要一个内容根目录，里面要有 `wiki.config.ts`。
-`examples/mini` 是仓库自带的冒烟样例。
+
+`examples/mini` 是仓库自带的**语法手册**：内容用轻维基自己的语法写，再由轻维基渲染。
+它同时充当冒烟测试——语法坏了，这份手册第一眼就能看出来。

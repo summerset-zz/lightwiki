@@ -1,7 +1,7 @@
 import type { LoadedConfig } from './config.js';
 import type { Page } from './content.js';
 import { keywordsOf, type SiteInfo } from './context.js';
-import { langPrefix, normalizeBasePath } from './routes.js';
+import { categoryUrl, langPrefix, normalizeBasePath } from './routes.js';
 
 export interface NavPage {
   title: string;
@@ -31,15 +31,19 @@ export function buildNav(
   lang: string,
   currentUrl: string,
 ): NavGroup[] {
-  const visible = pages.filter((p) => p.lang === lang && !p.draft).sort(sortPages);
+  return toGroups(config, pages.filter((p) => p.lang === lang && !p.draft), currentUrl);
+}
+
+/** 把一批页面按 section 分组；section 顺序听配置的 */
+function toGroups(config: LoadedConfig, list: Page[], currentUrl: string): NavGroup[] {
   const declared = config.sections;
   const groups = new Map<string, Page[]>();
 
-  for (const page of visible) {
+  for (const page of [...list].sort(sortPages)) {
     const section = page.data.section ?? '';
-    const list = groups.get(section) ?? [];
-    list.push(page);
-    groups.set(section, list);
+    const bucket = groups.get(section) ?? [];
+    bucket.push(page);
+    groups.set(section, bucket);
   }
 
   const sections = [
@@ -57,10 +61,51 @@ export function buildNav(
   }));
 }
 
+function pagesInCategory(pages: Page[], lang: string, slug: string): Page[] {
+  return pages.filter(
+    (p) => p.lang === lang && !p.draft && p.categories.includes(slug),
+  );
+}
+
+/** 侧栏：默认是全站导航；页面声明了 `sidebarCategory` 就换成该分类的页面 */
+export interface Sidebar {
+  kind: 'site' | 'category';
+  title: string;
+  category?: string;
+  groups: NavGroup[];
+}
+
+export function buildSidebar(
+  config: LoadedConfig,
+  pages: Page[],
+  page: Page,
+): Sidebar {
+  const wanted = page.data.sidebarCategory;
+  const nav = buildNav(config, pages, page.lang, page.url);
+
+  if (!wanted) {
+    return { kind: 'site', title: '', groups: nav };
+  }
+
+  const members = pagesInCategory(pages, page.lang, wanted);
+  if (members.length === 0) {
+    // 分类不存在或没成员：退回全站导航，至少侧栏不会空掉
+    return { kind: 'site', title: '', groups: nav };
+  }
+
+  return {
+    kind: 'category',
+    title: config.categories[wanted] ?? wanted,
+    category: wanted,
+    groups: toGroups(config, members, page.url),
+  };
+}
+
 export interface PageView {
   site: SiteInfo;
   page: Record<string, unknown>;
   nav: NavGroup[];
+  sidebar: Sidebar;
   index: { url: string };
 }
 
@@ -98,6 +143,7 @@ export function createPageView(
       authors: page.data.authors ?? '',
     },
     nav: buildNav(config, pages, page.lang, page.url),
+    sidebar: buildSidebar(config, pages, page),
     index: { url: `${base}${langPrefix(config, page.lang)}/docs/` },
   };
 }
@@ -107,6 +153,7 @@ export interface IndexView {
   page: Record<string, unknown>;
   nav: NavGroup[];
   groups: NavGroup[];
+  categories: Array<{ slug: string; label: string; url: string; count: number }>;
   index: { url: string };
 }
 
@@ -139,6 +186,50 @@ export function createIndexView(
     },
     nav,
     groups: nav,
+    categories: site.categoryList.map((c) => ({
+      slug: c.slug,
+      label: c.label,
+      url: categoryUrl(config, lang, c.slug),
+      count: c.count,
+    })),
     index: { url: indexUrl },
+  };
+}
+
+export interface CategoryView {
+  site: SiteInfo;
+  lang: string;
+  category: {
+    slug: string;
+    label: string;
+    url: string;
+    pages: NavPage[];
+  };
+  nav: NavGroup[];
+  index: { url: string };
+}
+
+export function createCategoryView(
+  config: LoadedConfig,
+  pages: Page[],
+  lang: string,
+  slug: string,
+  site: SiteInfo,
+): CategoryView {
+  const url = categoryUrl(config, lang, slug);
+  const base = normalizeBasePath(config.basePath);
+  const members = pagesInCategory(pages, lang, slug).sort(sortPages);
+
+  return {
+    site,
+    lang,
+    category: {
+      slug,
+      label: config.categories[slug] ?? slug,
+      url,
+      pages: members.map((p) => ({ title: p.data.title, url: p.url, current: false })),
+    },
+    nav: buildNav(config, pages, lang, url),
+    index: { url: `${base}${langPrefix(config, lang)}/docs/` },
   };
 }
