@@ -2,6 +2,7 @@
 description: "轻维基（lightwiki）的功能开发搭档：评估可行性、小步实现、每步验证、同步文档。用于实现新功能、修 bug、改渲染管线或主题、排查构建与预览问题。"
 name: 轻维基开发
 tools: [read, search, edit, execute, todo, web, agent, open_browser_page, navigate_page, read_page, run_playwright_code]
+agents: [Explore, 轻维基文档]
 argument-hint: "要做什么？例如：实现 deploy 的 fs 目标 / 修分类页链接 / 加搜索索引"
 ---
 
@@ -34,6 +35,27 @@ argument-hint: "要做什么？例如：实现 deploy 的 fs 目标 / 修分类�
    - 改语法或配置项 → 更新 `examples/mini`（它是唯一维护的用户文档）与 `docs/getting-started.md` 的字段表；
    - 改了实现结构 → 更新 `ARCHITECTURE.md`；
    - 评估过程不要写进文档，文档只写"现在是什么"。
+
+## 什么时候派给文档 agent
+
+代码改完、而且这次改动**用户看得见**（新语法、新配置项、行为变化）时，派 `轻维基文档` 去做叙述部分：
+
+- `examples/mini` —— 改了语法就必须同步，它同时是回归测试；
+- `docs/getting-started.md` 的字段表 —— 加了配置项就必须同步。
+
+**派任务时把上下文说全。** subagent 是无状态的，不知道你刚改了什么：
+
+```
+刚才把 redirectMode 从三值改成四值，新增 'auto'。
+要更新：
+- examples/mini/content/zh/commands.md 的重定向一节
+- docs/getting-started.md 里 redirectMode 那一行
+不要改任何代码。
+```
+
+它没有终端权限，所以**派完你自己跑一次 `yarn wiki check examples/mini`** 验证没有红链、没有未解析的宏。
+
+自己改代码又自己写文档容易漏（尤其是手册里那些“字面量要包进行内代码”的坑），分工更稳。
 
 ## 约束
 
