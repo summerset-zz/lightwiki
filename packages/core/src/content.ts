@@ -18,7 +18,7 @@ import {
   type SectionSource,
   type UnresolvedRef,
 } from './markdown.js';
-import { createSiteInfo, categoriesOf, keywordsOf, type PageInfo } from './context.js';
+import { createSiteInfo, pageInfoOf, type PageInfo } from './context.js';
 import { createHighlighter } from './highlight.js';
 import { loadMacros } from './macros.js';
 import { LinkResolver, type TitleConflict } from './resolve.js';
@@ -257,27 +257,10 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
 /**
  * 构造宏与布局看到的 `it.page`。
  *
- * frontmatter 的字段会平铺上来，方便 `it.page.title` 这类直接访问；
- * 结构化字段放在后面，确保内容里写了同名键时不会把位置信息覆盖掉。
+ * 统一走 `context.ts` 的 `pageInfoOf`，避免布局与宏拿到不同的字段集。
  */
 function buildPageInfo(seed: PageSeed): PageInfo {
-  return {
-    ...(seed.data as unknown as Record<string, unknown>),
-    lang: seed.lang,
-    slug: seed.slug,
-    url: seed.url,
-    outputPath: seed.outputPath,
-    relativePath: seed.relativePath,
-    draft: seed.draft,
-    title: seed.data.title,
-    description: seed.data.description ?? '',
-    keywords: keywordsOf(seed.data.keywords),
-    updated: seed.data.updated ?? '',
-    section: seed.data.section ?? '',
-    order: seed.data.order ?? null,
-    categories: categoriesOf(seed.data.categories),
-    frontmatter: seed.data as unknown as Record<string, unknown>,
-  };
+  return pageInfoOf(seed);
 }
 
 /** 文件名（不含扩展名），用于提示「你可能想要的是 xxx」 */

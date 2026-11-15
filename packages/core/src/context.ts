@@ -90,6 +90,52 @@ export interface SiteInfo {
   config: LoadedConfig;
 }
 
+/** pageInfoOf 需要的输入：Page 与 PageSeed 都满足 */
+export interface PageInfoInput {
+  lang: string;
+  slug: string;
+  url: string;
+  outputPath: string;
+  relativePath: string;
+  draft: boolean;
+  data: {
+    title: string;
+    description?: string | undefined;
+    keywords?: unknown;
+    updated?: string | undefined;
+    section?: string | undefined;
+    order?: number | undefined;
+    categories?: unknown;
+  };
+}
+
+/**
+ * 构造 `it.page`。
+ *
+ * **宏与布局必须用同一个构造器**：曾经布局那边是手写的字段子集，
+ * 导致 `it.page.slug` 在宏里能拿到、在布局里是 undefined。
+ * 布局额外拥有的只有渲染产物（`html` / `headings` / `hints` / `sources`）。
+ */
+export function pageInfoOf(input: PageInfoInput): PageInfo {
+  return {
+    ...(input.data as unknown as Record<string, unknown>),
+    lang: input.lang,
+    slug: input.slug,
+    url: input.url,
+    outputPath: input.outputPath,
+    relativePath: input.relativePath,
+    draft: input.draft,
+    title: input.data.title,
+    description: input.data.description ?? '',
+    keywords: keywordsOf(input.data.keywords),
+    updated: input.data.updated ?? '',
+    section: input.data.section ?? '',
+    order: input.data.order ?? null,
+    categories: categoriesOf(input.data.categories),
+    frontmatter: input.data as unknown as Record<string, unknown>,
+  };
+}
+
 /** createSiteInfo 需要的最小页面形状：Page 与 PageSeed 都满足 */
 export interface Summarizable {
   lang: string;

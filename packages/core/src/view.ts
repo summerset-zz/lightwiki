@@ -1,6 +1,6 @@
 import type { LoadedConfig } from './config.js';
 import type { Page } from './content.js';
-import { keywordsOf, NOT_FOUND_SLUG, type SiteInfo } from './context.js';
+import { keywordsOf, NOT_FOUND_SLUG, pageInfoOf, type SiteInfo } from './context.js';
 import { categoryUrl, langPrefix, normalizeBasePath } from './routes.js';
 
 export interface NavPage {
@@ -128,12 +128,9 @@ export function createPageView(
   return {
     site,
     page: {
-      lang: page.lang,
-      title: page.data.title,
-      description: page.data.description ?? '',
-      keywords: keywordsOf(page.data.keywords),
-      updated: page.data.updated ?? '',
-      url: page.url,
+      // 与宏共用的那套字段（含 slug / section / order / categories / frontmatter）
+      ...pageInfoOf(page),
+      // 布局额外拥有的：渲染产物
       html: page.html,
       headings: page.headings,
       hints: page.hints,
