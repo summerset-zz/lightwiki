@@ -200,6 +200,35 @@ export function createIndexView(
   };
 }
 
+export interface NotFoundView {
+  site: SiteInfo;
+  lang: string;
+  nav: NavGroup[];
+  index: { url: string };
+}
+
+/**
+ * 404 页。
+ *
+ * 静态托管只有一条约定：根目录的 `404.html`。GitHub Pages / Netlify /
+ * Cloudflare Pages / S3 / OSS 都会在未命中时返回它（带真实 404 状态码）。
+ * 因此这一页会在任意深度被打开，里面的资源必须是绝对路径。
+ */
+export function createNotFoundView(
+  config: LoadedConfig,
+  pages: Page[],
+  site: SiteInfo,
+): NotFoundView {
+  const lang = config.defaultLanguage;
+  const base = normalizeBasePath(config.basePath);
+  return {
+    site,
+    lang,
+    nav: buildNav(config, pages, lang, ''),
+    index: { url: `${base}${langPrefix(config, lang)}/docs/` },
+  };
+}
+
 export interface CategoryView {
   site: SiteInfo;
   lang: string;

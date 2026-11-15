@@ -7,7 +7,7 @@ import { createSiteInfo } from './context.js';
 import { buildLinkReport, type LinkReport } from './links.js';
 import { createRenderer } from './render.js';
 import { langPrefix, categoryOutputPath, normalizeBasePath } from './routes.js';
-import { createCategoryView, createIndexView, createPageView } from './view.js';
+import { createCategoryView, createIndexView, createNotFoundView, createPageView } from './view.js';
 
 export interface BuildOptions {
   /** 覆盖 config.outputDir */
@@ -93,6 +93,14 @@ export async function buildSite(
       written.push(relative);
     }
   }
+
+  // 静态托管的 404 约定：根目录的 404.html。file:// 下没有这个概念，但其他托管都会用它。
+  const notFoundHtml = await renderer.renderLayout(
+    'not-found',
+    createNotFoundView(config, pages, siteInfo) as unknown as Record<string, unknown>,
+  );
+  await writeFile(join(outputDir, '404.html'), notFoundHtml, 'utf8');
+  written.push('404.html');
 
   // 根目录跳转到默认语言，方便 file:// 双击直接看
   const rootIndex = `<!doctype html><meta charset="utf-8"><title>${config.title}</title>` +

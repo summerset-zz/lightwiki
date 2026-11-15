@@ -6,6 +6,7 @@ import { extname, join, resolve, sep } from 'node:path';
 import {
   createCategoryView,
   createIndexView,
+  createNotFoundView,
   createPageView,
   createRenderer,
   createSiteInfo,
@@ -225,6 +226,14 @@ export async function startDevServer(
       return inject(html);
     }
 
+    if (route.kind === 'notfound') {
+      const html = await renderer.renderLayout(
+        'not-found',
+        createNotFoundView(config, state.pages, state.siteInfo) as unknown as Record<string, unknown>,
+      );
+      return inject(html);
+    }
+
     return null;
   }
 
@@ -273,12 +282,12 @@ export async function startDevServer(
 
         const html = await render(route);
         if (!html) {
-          res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-          res.end(`<!doctype html><meta charset="utf-8"><h1>404</h1><p>${pathname}</p>`);
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('404');
           return;
         }
 
-        res.writeHead(200, {
+        res.writeHead(route.kind === 'notfound' ? 404 : 200, {
           'Content-Type': 'text/html; charset=utf-8',
           'Cache-Control': 'no-store',
         });

@@ -52,11 +52,13 @@ export {
   buildSidebar,
   createCategoryView,
   createIndexView,
+  createNotFoundView,
   createPageView,
   type CategoryView,
   type IndexView,
   type NavGroup,
   type NavPage,
+  type NotFoundView,
   type PageView,
   type Sidebar,
 } from './view.js';

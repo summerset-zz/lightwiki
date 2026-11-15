@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="<%= it.lang %>">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>页面不存在 · <%= it.site.title %></title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="<%= it.site.base %>/assets/theme/style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="<%= it.index.url %>"><%= it.site.title %></a>
+    <nav>
+<% for (const group of it.nav) { %>
+      <div class="nav-group">
+        <% if (group.section) { %><p class="nav-section"><%= group.label %></p><% } %>
+        <ul>
+<% for (const item of group.pages) { %>
+          <li><a href="<%= item.url %>"><%= item.title %></a></li>
+<% } %>
+        </ul>
+      </div>
+<% } %>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <article>
+      <h1>页面不存在</h1>
+      <p class="meta">请求的地址：<code id="lightwiki-not-found-path"></code></p>
+      <p>这个地址没有对应的内容。可能是链接写错了，或者这一页还没写。</p>
+      <p><a href="<%= it.index.url %>">回到目录</a></p>
+
+      <h2>可以从这些开始</h2>
+      <ul class="index-list">
+<% for (const group of it.nav) { %>
+<% for (const item of group.pages.slice(0, 4)) { %>
+        <li><a href="<%= item.url %>"><%= item.title %></a></li>
+<% } %>
+<% } %>
+      </ul>
+    </article>
+  </main>
+</div>
+<script>
+  document.getElementById('lightwiki-not-found-path').textContent = location.pathname;
+</script>
+</body>
+</html>
