@@ -113,29 +113,47 @@ flowchart LR
 
 ## 4. 内容模型
 
-frontmatter 由 `@scope/schema` 校验，错误信息必须人能看懂（指出文件、字段、期望值）。
+frontmatter 由 `@lightwiki/schema`（zod）校验，错误信息必须人能看懂（指出文件、字段、期望值）。
 
 ```yaml
 ---
-title: 页面标题
-type: doc                 # 决定套用哪个布局
-date: 2026-11-15
-updated: 2026-11-15
-tags: [示例]
-draft: false
-# —— 合规字段，见 §7 ——
+title: 页面标题              # 必填
+description: 一句话摘要      # 目录页文案 + <meta name="description">
+keywords: 关键词, keyword    # 逗号分隔字符串或数组，中英混写
+section: design              # 分组，取值由站点配置声明
+order: 0                     # 组内排序，小的在前
+updated: 2026-11-15          # 只接受 YYYY-MM-DD
+draft: false                 # true = 不进导航与搜索，dev 下仍可按地址打开
+
+# —— 整篇改编的来源（只借某几节时改用正文里的 source 注释，见 §7.3）——
+sourceSite: 维基百科
+sourceTitle: Typeface anatomy
+sourceUrl: https://en.wikipedia.org/w/index.php?oldid=1383441338
+sourceRevid: "1383441338"
+sourceLicense: CC BY-SA 4.0
+sourceLicenseUrl: https://creativecommons.org/licenses/by-sa/4.0/
+sourceChanges: 删去图片与图注，按本站口径重写
+
+# —— 站点自有的内容许可（可选）——
 license: CC-BY-SA-4.0
-source: https://zh.wikipedia.org/wiki/示例?oldid=12345678
+licenseUrl: https://creativecommons.org/licenses/by-sa/4.0/
 authors: ["原作者A", "译者B"]
-modified: true
 ---
 ```
 
 约定：
 
-- `schemaVersion` 放在 `wiki.config.ts`（站点级），页面可覆盖；
-- 新增字段走**弃用期**而非直接报错，保证内容仓库与工具版本脱钩时不至于一次全红；
-- `license` 保持**自由字符串**，不做枚举——除 CC 家族外还有 GFDL、ODbL、专有授权等合法场景，枚举会挡住真实需求。
+- **未知字段放行**（zod `passthrough`）。新增字段走弃用期而非直接报错，内容仓库与工具版本脱钩时不至于一次全红。
+- **`section` 不做枚举**。站点在 `wiki.config.ts` 的 `sections` 里声明取值与顺序，core 负责比对并指出错在哪个文件。
+- **`license` 保持自由字符串**。除 CC 家族外还有 GFDL、ODbL、专有授权等合法场景，枚举会挡住真实需求。
+- **日期只接受 `YYYY-MM-DD`**。它同时用于页面「最后更新」与 sitemap 的 `<lastmod>`，混入其他写法两处都会坏。
+- 没有 `type` / `date` / `tags` 这三个字段：布局由页面所处的 `section` 与站点模板决定，时间只有 `updated`，检索只认 `keywords`。
+
+### 4.1 宽容解析
+
+真实内容里会出现 `keywords: "@font-face", src, local` 这种非法 YAML（漏了方括号）。严格解析会让整站构建失败，而这个修复该由作者在方便时做，不该阻塞发布。
+
+因此：YAML 解析失败时回退到逐行读取（`key: 行内剩余内容`，按布尔/数字/字符串降级），并在 `wiki check` 里报一条**警告**。警告必须可见——降级可以，静默吞掉不行。
 
 ## 5. 构建能力（core 的职责）
 

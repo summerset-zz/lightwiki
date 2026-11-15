@@ -7,7 +7,7 @@ export {
 } from './content.js';
 export { buildSite, type BuildOptions, type BuildResult } from './build.js';
 export { checkSite, type CheckResult, type MissingTranslation, type SectionIssue } from './check.js';
-export { buildLinkReport, type LinkReport, type RedLink } from './links.js';
+export { buildLinkReport, normUrl, type LinkReport, type RedLink } from './links.js';
 export {
   createMarkdown,
   extractDirectives,
@@ -28,3 +28,15 @@ export {
   pageUrl,
 } from './routes.js';
 export { createRenderer, type Renderer } from './render.js';
+export {
+  buildNav,
+  createIndexView,
+  createPageView,
+  createSiteBase,
+  keywordsOf,
+  type IndexView,
+  type NavGroup,
+  type NavPage,
+  type PageView,
+  type SiteBase,
+} from './view.js';

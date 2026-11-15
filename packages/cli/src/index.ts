@@ -6,11 +6,14 @@ import { buildSite, checkSite, loadConfig } from '@lightwiki/core';
 const USAGE = `轻维基 CLI
 
 用法：
+  wiki dev [目录] [-p 端口]   启动本地预览（改动自动刷新）
   wiki check [目录]            校验 frontmatter、section、红链、孤页、缺译
   wiki build [目录] [-o 目录]  构建静态站点
 
 参数：
   [目录]        含 wiki.config.ts 的内容仓库根目录，默认当前目录
+  -p, --port    dev 端口，默认 5173
+  --host        dev 监听地址，默认 127.0.0.1
   -o, --out     构建输出目录，默认取配置里的 outputDir
   --strict      红链与孤页也视为失败
 
@@ -37,6 +40,8 @@ async function run(args: string[]): Promise<number> {
     allowPositionals: true,
     options: {
       out: { type: 'string', short: 'o' },
+      port: { type: 'string', short: 'p' },
+      host: { type: 'string' },
       strict: { type: 'boolean', default: false },
     },
   });
@@ -44,6 +49,34 @@ async function run(args: string[]): Promise<number> {
   const root = resolve(positionals[0] ?? '.');
   const started = Date.now();
   const config = await loadConfig(root);
+
+  if (command === 'dev') {
+    const { startDevServer } = await import('@lightwiki/dev');
+    const port = values.port ? Number(values.port) : undefined;
+    if (port !== undefined && (!Number.isInteger(port) || port <= 0 || port > 65535)) {
+      line(`端口不合法：${values.port}`);
+      return 2;
+    }
+
+    const server = await startDevServer(config, {
+      port,
+      host: values.host,
+      onRebuild: (info) => line(`  重建 · ${info.pages} 篇 · ${info.ms} ms`),
+    });
+
+    line(`预览地址：${server.url}`);
+    line(`  内容：${Object.entries(config.content).map(([lang, dir]) => `${lang}=${dir}`).join(' · ')}`);
+    line('  改动内容或模板会自动刷新；按 Ctrl+C 退出。');
+
+    await new Promise<void>((done) => {
+      const stop = (): void => {
+        void server.close().then(() => done());
+      };
+      process.once('SIGINT', stop);
+      process.once('SIGTERM', stop);
+    });
+    return 0;
+  }
 
   if (command === 'check') {
     const result = await checkSite(config);

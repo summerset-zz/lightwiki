@@ -201,6 +201,7 @@ __metadata:
   resolution: "@lightwiki/cli@workspace:packages/cli"
   dependencies:
     "@lightwiki/core": "workspace:*"
+    "@lightwiki/dev": "workspace:*"
     "@lightwiki/schema": "workspace:*"
   bin:
     wiki: ./src/index.ts
@@ -218,6 +219,14 @@ __metadata:
     gray-matter: "npm:^4.0.3"
     markdown-it: "npm:^14.1.0"
     markdown-it-attrs: "npm:^4.3.1"
+  languageName: unknown
+  linkType: soft
+
+"@lightwiki/dev@workspace:*, @lightwiki/dev@workspace:packages/dev":
+  version: 0.0.0-use.local
+  resolution: "@lightwiki/dev@workspace:packages/dev"
+  dependencies:
+    "@lightwiki/core": "workspace:*"
   languageName: unknown
   linkType: soft
 

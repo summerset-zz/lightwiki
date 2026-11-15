@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@lightwiki/core": "workspace:*",
+    "@lightwiki/dev": "workspace:*",
     "@lightwiki/schema": "workspace:*"
   }
 }
