@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { extname, join, resolve, sep } from 'node:path';
 import {
+  createCategoryView,
   createIndexView,
   createPageView,
   createRenderer,
@@ -41,6 +42,7 @@ export interface DevState {
 export type DevRoute =
   | { kind: 'page'; page: Page }
   | { kind: 'index'; lang: string }
+  | { kind: 'category'; lang: string; slug: string }
   | { kind: 'asset'; file: string }
   | { kind: 'redirect'; location: string }
   | { kind: 'notfound' };
@@ -108,6 +110,21 @@ export function resolveDevRoute(
   const page = state.byUrl.get(key);
   if (page) return { kind: 'page', page };
 
+  // 分类页：`/categories/<slug>`（默认语言）或 `/<lang>/categories/<slug>`
+  for (const lang of Object.keys(config.content)) {
+    const prefix = normUrl(
+      `${normalizeBasePath(config.basePath)}${langPrefix(config, lang)}/categories/`,
+      config,
+    );
+    if (!key.startsWith(`${prefix}/`)) continue;
+
+    const slug = key.slice(prefix.length + 1);
+    const exists = state.pages.some(
+      (p) => p.lang === lang && !p.draft && p.categories.includes(slug),
+    );
+    if (exists) return { kind: 'category', lang, slug };
+  }
+
   if (key.startsWith('/assets/')) {
     const rest = key.slice('/assets/'.length);
     if (rest.startsWith('theme/')) {
@@ -173,24 +190,41 @@ export async function startDevServer(
   }
 
   async function render(route: DevRoute): Promise<string | null> {
+    const inject = (html: string): string =>
+      html.includes('</body>')
+        ? html.replace('</body>', `${reloadSnippet(base)}</body>`)
+        : html + reloadSnippet(base);
+
     if (route.kind === 'page') {
       const html = await renderer.renderLayout(
         'doc',
         createPageView(config, state.pages, route.page, state.siteInfo) as unknown as Record<string, unknown>,
       );
-      return html.includes('</body>')
-        ? html.replace('</body>', `${reloadSnippet(base)}</body>`)
-        : html + reloadSnippet(base);
+      return inject(html);
     }
+
     if (route.kind === 'index') {
       const html = await renderer.renderLayout(
         'index',
         createIndexView(config, state.pages, route.lang, state.siteInfo) as unknown as Record<string, unknown>,
       );
-      return html.includes('</body>')
-        ? html.replace('</body>', `${reloadSnippet(base)}</body>`)
-        : html + reloadSnippet(base);
+      return inject(html);
     }
+
+    if (route.kind === 'category') {
+      const html = await renderer.renderLayout(
+        'category',
+        createCategoryView(
+          config,
+          state.pages,
+          route.lang,
+          route.slug,
+          state.siteInfo,
+        ) as unknown as Record<string, unknown>,
+      );
+      return inject(html);
+    }
+
     return null;
   }
 

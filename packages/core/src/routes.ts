@@ -49,9 +49,10 @@ function splitHash(href: string): { path: string; hash: string } {
 /**
  * 改写正文里的站内链接。
  *
- * 作者写的是「默认语言视角」的路径：`/docs/gsub-gpos`。
- * 非默认语言的页面需要补上语言前缀，否则中文站会跳到英文页。
- * 只处理 `/docs` 这一棵路径 —— 其他入口（工具页、字体页）与语言无关。
+ * 作者写的是「默认语言视角」的路径：`/docs/gsub-gpos`、`/categories/syntax`。
+ * 两件事在构建期补上：
+ * - 非默认语言要加语言前缀，否则中文站会跳到英文页；
+ * - directory 模式下补尾斜杠，静态托管不必依赖 301 重定向。
  */
 export function localizeHref(href: string, lang: string, config: LoadedConfig): string {
   if (!href.startsWith('/') || href.startsWith('//')) return href;
@@ -59,16 +60,23 @@ export function localizeHref(href: string, lang: string, config: LoadedConfig): 
   const { path, hash } = splitHash(href);
   let next = path;
 
-  if (path === '/docs' || path.startsWith('/docs/')) {
+  // 只有这两棵路径是按语言分叉的；其他站内路径（工具页、字体页）与语言无关
+  const localized =
+    path === '/docs' ||
+    path.startsWith('/docs/') ||
+    path === '/categories' ||
+    path.startsWith('/categories/');
+
+  if (localized) {
     next = `${langPrefix(config, lang)}${path}`;
   }
 
   if (config.urlStyle === 'file') {
-    if (next === '/docs' || next.endsWith('/docs')) {
-      next = `${next}.html`;
-    } else if (next.startsWith('/docs/') && !/\.[a-z0-9]+$/i.test(next)) {
+    if (localized && !/\.[a-z0-9]+$/i.test(next)) {
       next = `${next.replace(/\/+$/, '')}.html`;
     }
+  } else if (localized && !next.endsWith('/')) {
+    next = `${next}/`;
   }
 
   return `${normalizeBasePath(config.basePath)}${next}${hash}`;
