@@ -48,7 +48,9 @@
 | `LinkResolver` | `resolve.ts` | slug 与标题索引，`resolve(target, lang)` |
 | `MacroRegistry` | `macros.ts` | 宏的加载与同步渲染，内部维护展开栈 |
 
-`it.page` 在布局与宏里**不完全相同**：宏没有 `html` / `headings`（执行时还在生成）。`it.site` 是同一个对象。
+`it.page` 由 `context.ts` 的 `pageInfoOf()` **唯一构造**：布局与宏拿到的是同一套字段。差别只有一处——布局 `doc` 额外有渲染产物（`html` / `headings` / `hints` / `sources`），因为宏执行时这些还在生成。`it.site` 两边是同一个对象。
+
+曾踩过的坑：这块以前是布局、宏各写一份字段集，导致 `it.page.slug` 在宏里能用、在布局里是 `undefined`。**新增字段只改 `pageInfoOf` 一处。**
 
 ## 5. 路由
 
@@ -153,7 +155,7 @@ dist/
 | 加一个 frontmatter 字段 | `schema` → `content.ts` 的 `buildPageInfo` / `summarize` → `docs/getting-started.md` 的字段表 |
 | 加一个校验项 | `check.ts` 的 `CheckResult` → `cli` 的打印 → `examples/mini/commands.md` |
 | 加一种页面类型（新 URL） | `routes.ts` → `view.ts` 的 `create*View` → `build.ts` → `dev` 的 `resolveDevRoute` → 主题新布局 |
-| 加一个模板变量 | `context.ts`（`SiteInfo`/`PageInfo`）→ `view.ts`（传给布局）→ `macros.ts` 的 `MacroBase` |
+| 加一个模板变量 | `context.ts`（`PageInfo` / `SiteInfo` + `pageInfoOf`）→ `view.ts` 与 `macros.ts` 自动继承 |
 | 加一种行内语法 | `markdown.ts` 的 ruler 注册 + 实现 → `examples/mini` 加一节 |
 | 改资源管线 | `assets.ts` → `build.ts` 的调用处 → `dev` 的 asset 分支 |
 

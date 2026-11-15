@@ -41,6 +41,7 @@ categories: [syntax]
 | `title` `siteUrl` `base` `languages` `defaultLanguage` | 站点信息 |
 | `urlStyle` | `'directory'` 或 `'file'`，决定地址与产物路径的形态 |
 | `sections` `categories` `categoryList` | 分组与分类 |
+| `sectionLabels` | section slug → 显示名，如 `{ syntax: '语法' }`；没声明的 section 直接用 slug 当显示名。侧栏与目录页的分组标题按它渲染 |
 | `pageCount` `pageCounts` | 页数：总数与分语言 |
 | `pages` | 全部页面摘要，可以在模板里 filter 出想要的部分 |
 | `generatedAt` | 构建时间 |

@@ -56,7 +56,8 @@ categories: [official]
 字段含义见 [[context]]。几点要注意：
 
 - `category`、`not-found`、`redirect` 没有 `page`。`category` 与 `not-found` 用 `lang`，`redirect` 只有 `from` 和 `to`。
-- `index` 的 `page` 是占位对象：`title` 是站点标题，`html` 是空串；同一页里 `groups` 与 `nav` 是同一份数据。
+- `index` 的 `page` 是占位对象：只有 `lang`、`title`（站点标题）、`description`、`keywords`、`updated`、`url`，其余字段是空串、空数组或空对象（`html` 是空串）。它**没有**内容页那套 `slug` / `section` / `order` / `categories` / `frontmatter`，不能照 `doc` 的写法用。
+- `index` 里 `groups` 与 `nav` 是同一份数据，用哪个都行。
 - 宏执行时正文还在生成，所以宏里没有 `html` / `headings`——**这几个字段只有布局 `doc` 的 `page` 才有**。
 
 ## 为什么回避「模板」二字 {#naming}
