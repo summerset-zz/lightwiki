@@ -15,8 +15,8 @@
 |---|---|
 | 写内容、改配置、建站 | `docs/getting-started.md` → `examples/mini/content/zh/*.md` |
 | 改主题或布局 | `packages/theme-default/layouts/*.eta` → 手册里的「布局」一页 |
-| 改核心（解析、路由、构建） | `PROJECT_PLAN.md` → `docs/template-language.md` → `packages/core/src/` |
-| 想知道某个语法为什么这么定 | `docs/template-language.md`（需求原文 + 评估 + 决定） |
+| 改核心（解析、路由、构建） | `ARCHITECTURE.md` → `packages/core/src/` |
+| 想知道某项设计为什么这么定 | `ARCHITECTURE.md` 的对应章节 |
 
 **`examples/mini` 读源文件**，不要先构建再读产物——源文件才是语法本身。
 
@@ -24,9 +24,10 @@
 
 - 开发期不编译：包的 `exports` 指向 `src/*.ts`，用 `tsx` 直接跑，没有 build 步骤。
 - **页面身份是文件名（slug）**，不是标题。标题只用于双链 `[[标题]]` 的便利解析，改标题会断链。
-- 内容语法以 `examples/mini` 为准，它是唯一维护的用户文档；`docs/` 里放的是设计决策，不是用法。
+- 内容语法以 `examples/mini` 为准，它是唯一维护的用户文档；`ARCHITECTURE.md` 是开发规格，不是用法。
 - 给用户新增配置项时，必须同时更新 `docs/getting-started.md` 的字段表。
 - 渲染分三段：扫描 → 建索引（slug / 标题）→ 渲染。改其中一段要考虑另外两段。
+- 改路由、产物形态这类东西时，`routes.ts` / `build.ts` / `dev` 三处必须同步，否则预览与产物不一致。
 
 ## 命令
 

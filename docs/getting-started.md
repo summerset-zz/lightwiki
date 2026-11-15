@@ -162,7 +162,7 @@ dist/
 2. **`examples/mini/content/zh/*.md`** —— 语法手册的**源文件**（直接读 markdown，不需要构建；产物里的 HTML 反而不好读）
 3. **`docs/getting-started.md`** —— 就是这一页，配置与目录约定
 
-要改工具本身（不是内容）才需要读 `PROJECT_PLAN.md` 与 `docs/template-language.md`。
+要改工具本身（不是内容）才需要读 `ARCHITECTURE.md`。
 
 ## 9. 文档地图
 
@@ -173,8 +173,7 @@ dist/
 | `examples/mini/` | 语法手册（16 页，用轻维基自己写） | 内容作者 |
 | `templates/starter/` | 可复制的起始模板 | 新用户 |
 | `AGENTS.md` | AI 的阅读顺序与项目约定 | AI / 贡献者 |
-| `docs/template-language.md` | 内容语法的设计决策 | 开发者 |
-| `PROJECT_PLAN.md` | 架构与长期决策 | 开发者 |
+| `ARCHITECTURE.md` | 开发文档：实现规格与改动指引 | 开发者 |
 
 ## 10. 卡住了怎么办
 

@@ -54,6 +54,5 @@ yarn wiki dev examples/mini         # 本地预览，改内容或模板自动刷
 |---|---|---|
 | `docs/getting-started.md` | 上手：配置、目录、构建、发布 | 新用户 |
 | `examples/mini/` | 语法手册（用轻维基自己写） | 内容作者 |
+| `ARCHITECTURE.md` | 开发文档：实现规格、已实现/未实现、改动指引 | 改代码的人 |
 | `AGENTS.md` | AI 的阅读顺序与项目约定 | AI / 贡献者 |
-| `docs/template-language.md` | 内容语法的设计决策 | 开发者 |
-| `PROJECT_PLAN.md` | 架构与长期决策 | 开发者 |
