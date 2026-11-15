@@ -19,7 +19,7 @@ categories: [official]
 3. 找不到就报错
 ```
 
-当前有三个布局名：
+当前有五个布局名：
 
 | 布局 | 用于 |
 |---|---|
@@ -27,6 +27,7 @@ categories: [official]
 | `index` | 每种语言的目录页 |
 | `category` | 分类页 |
 | `not-found` | 没有 `404.md` 时的兜底页（见 [[commands#not-found]]） |
+| `redirect` | 重定向跳转页，每条重定向生成一份（见 [[commands#redirects]]） |
 
 覆盖就是建同名文件，只写要改的部分。**没覆盖的部分会随主题升级自动跟进**——这也是不要整份拷贝主题的原因。
 
@@ -42,8 +43,22 @@ categories: [official]
 
 ## 上下文 {#context}
 
-字段见 [[context]]。要点是：宏里没有 `html` / `headings`，布局里有。
+每个布局拿到的变量不一样，`it.` 后面能写什么以这张表为准：
 
-## 为什么会话「模板」二字 {#naming}
+| 布局 | 可用变量 |
+|---|---|
+| `doc` | `site`、`page`（含 `html`、`headings`、`hints`、`sources`）、`nav`、`sidebar`、`index` |
+| `index` | `site`、`page`、`nav`、`groups`、`categories`、`index` |
+| `category` | `site`、`lang`、`category`、`nav`、`index` |
+| `not-found` | `site`、`lang`、`nav`、`index` |
+| `redirect` | `site`、`from`、`to` |
+
+字段含义见 [[context]]。几点要注意：
+
+- `category`、`not-found`、`redirect` 没有 `page`。`category` 与 `not-found` 用 `lang`，`redirect` 只有 `from` 和 `to`。
+- `index` 的 `page` 是占位对象：`title` 是站点标题，`html` 是空串；同一页里 `groups` 与 `nav` 是同一份数据。
+- 宏执行时正文还在生成，所以宏里没有 `html` / `headings`——**这几个字段只有布局 `doc` 的 `page` 才有**。
+
+## 为什么回避「模板」二字 {#naming}
 
 MediaWiki 用户说「模板」指的是正文里 `{{…}}` 那个东西，而这里它已经被布局占了。所以文档里一律用「布局」和「宏」两个词，任何地方都不单独说「模板」。
