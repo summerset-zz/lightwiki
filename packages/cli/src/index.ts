@@ -1,20 +1,22 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { buildSite, checkSite, loadConfig } from '@lightwiki/core';
+import { buildSite, checkSite, deploySite, loadConfig, type BuildResult } from '@lightwiki/core';
 
 const USAGE = `轻维基 CLI
 
 用法：
-  wiki dev [目录] [-p 端口]   启动本地预览（改动自动刷新）
-  wiki check [目录]            校验 frontmatter、section、红链、孤页、缺译
-  wiki build [目录] [-o 目录]  构建静态站点
+  wiki dev [目录] [-p 端口]           启动本地预览（改动自动刷新）
+  wiki check [目录]                    校验 frontmatter、section、红链、孤页、缺译
+  wiki build [目录] [-o 目录] [--inline]   构建静态站点
+  wiki deploy [目录] [-o 目录] [--inline]  构建可部署产物（目前只输出到本地目录）
 
 参数：
   [目录]        含 wiki.config.ts 的内容仓库根目录，默认当前目录
   -p, --port    dev 端口，默认 5173
   --host        dev 监听地址，默认 127.0.0.1
   -o, --out     构建输出目录，默认取配置里的 outputDir
+  --inline      内联 CSS/JS/图片，产物里只剩 .html（不产 assets/ 与 meta.json）
   --strict      红链与孤页也视为失败
 
 退出码：0 正常；1 有错误；2 用法错误`;
@@ -26,6 +28,52 @@ function line(text = ''): void {
 function section(title: string): void {
   line('');
   line(title);
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+/** 产物统计：体积与形态用同一套口径，build 与 deploy 都打印它 */
+function printArtifact(result: BuildResult, elapsed: number): void {
+  line(
+    `  页面 ${result.pageCount} 篇 · 文件 ${result.written.length} 个 · ${formatBytes(
+      result.bytes,
+    )} · 用时 ${elapsed} ms`,
+  );
+
+  if (result.inline) {
+    const stats = result.inlineStats;
+    line(
+      `  形态：单文件 HTML（已内联 样式表 ${stats?.css ?? 0} 个 / 脚本 ${stats?.scripts ?? 0} 个 / 资源 ${stats?.media ?? 0} 处）`,
+    );
+  } else {
+    line('  形态：HTML + assets/（加 --inline 可改成单文件）');
+  }
+}
+
+function printOutcome(result: BuildResult): number {
+  if (result.warnings.length > 0) {
+    line(`  警告 ${result.warnings.length} 处（wiki check 可看详情）`);
+  }
+
+  if (result.problems.length > 0) {
+    section(`有 ${result.problems.length} 篇因 frontmatter 错误被跳过`);
+    for (const problem of result.problems) {
+      line(`  ✗ ${problem.file}`);
+      for (const message of problem.messages) line(`      - ${message}`);
+    }
+    return 1;
+  }
+
+  if (result.report.redLinks.length > 0) {
+    line(
+      `  提示：${result.report.redLinks.length} 处红链、${result.report.orphans.length} 篇孤页，用 wiki check 查看`,
+    );
+  }
+  return 0;
 }
 
 async function run(args: string[]): Promise<number> {
@@ -42,6 +90,7 @@ async function run(args: string[]): Promise<number> {
       out: { type: 'string', short: 'o' },
       port: { type: 'string', short: 'p' },
       host: { type: 'string' },
+      inline: { type: 'boolean', default: false },
       strict: { type: 'boolean', default: false },
     },
   });
@@ -186,27 +235,25 @@ async function run(args: string[]): Promise<number> {
   }
 
   if (command === 'build') {
-    const result = await buildSite(config, { outDir: values.out });
+    const result = await buildSite(config, {
+      outDir: values.out,
+      // 没给 --inline 时不动配置里的值：站点可能本来就要单文件产物
+      inline: values.inline ? true : undefined,
+    });
     line(`构建完成 → ${result.outputDir}`);
-    line(`  页面 ${result.pageCount} 篇 · 文件 ${result.written.length} 个 · 用时 ${Date.now() - started} ms`);
+    printArtifact(result, Date.now() - started);
+    return printOutcome(result);
+  }
 
-    if (result.warnings.length > 0) {
-      line(`  警告 ${result.warnings.length} 处（wiki check 可看详情）`);
-    }
-
-    if (result.problems.length > 0) {
-      section(`有 ${result.problems.length} 篇因 frontmatter 错误被跳过`);
-      for (const problem of result.problems) {
-        line(`  ✗ ${problem.file}`);
-        for (const message of problem.messages) line(`      - ${message}`);
-      }
-      return 1;
-    }
-
-    if (result.report.redLinks.length > 0) {
-      line(`  提示：${result.report.redLinks.length} 处红链、${result.report.orphans.length} 篇孤页，用 wiki check 查看`);
-    }
-    return 0;
+  if (command === 'deploy') {
+    const result = await deploySite(config, {
+      outDir: values.out,
+      inline: values.inline ? true : undefined,
+    });
+    line(`部署产物就绪 → ${result.outputDir}`);
+    line('  目标：本地目录 · remote 未接入，没有推送任何东西');
+    printArtifact(result, Date.now() - started);
+    return printOutcome(result);
   }
 
   line(`未知命令：${command}`);

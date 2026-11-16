@@ -1,18 +1,19 @@
 ---
 title: 命令
-keywords: 命令, cli, build, check, dev, 校验
-description: wiki dev / check / build 三个子命令分别做什么。
+keywords: 命令, cli, build, check, dev, deploy, inline, 校验
+description: wiki dev / check / build / deploy 四个子命令分别做什么。
 section: reference
 order: 1
-updated: 2026-11-15
+updated: 2026-11-16
 draft: false
 categories: [official]
 ---
 
 ```bash
-yarn wiki dev <目录> [-p 端口]        # 本地预览
-yarn wiki check <目录> [--strict]     # 只校验，不产出
-yarn wiki build <目录> [-o 输出目录]   # 产出静态站点
+yarn wiki dev <目录> [-p 端口]         # 本地预览
+yarn wiki check <目录> [--strict]      # 只校验，不产出
+yarn wiki build <目录> [-o 输出目录]    # 产出静态站点
+yarn wiki deploy <目录> [-o 输出目录]   # 为发布产出（目前只到本地目录）
 ```
 
 ## dev {#dev}
@@ -43,6 +44,24 @@ yarn wiki build <目录> [-o 输出目录]   # 产出静态站点
 
 每次构建会先清空输出目录，然后依次写内容页、目录页、分类页、`404.html`、重定向页，最后复制资源。
 
+### 单文件产物 {#inline}
+
+加 `--inline`（或在配置里写 `inline: true`），产物就只剩 `.html`：
+
+| 原本 | 变成 |
+|---|---|
+| `<link rel="stylesheet" href="/assets/theme/style.css">` | `<style>` 内联 |
+| `<script src="/assets/app.js">` | `<script>` 内联 |
+| `<img src="/assets/a.png">`、CSS 里的 `url()` | `data:` URI |
+
+所以没有 `assets/`、也没有 `meta.json`——**一个页面文件就是完整的页面**，能单独发出去、当邮件附件、打进 CHM。
+
+要和 `urlStyle: 'file'` 一起用才有「双击就能全站导航」的效果：两个开关都开，产物是一堆相对链接的单文件页面，不需要服务器也不需要同目录的 `assets/`。
+
+代价是每页都带一份样式，全站体积随页数线性增长。要发给别人一个页面时用它，做站时不要用。
+
+内联是在 HTML 生成之后做的，所以你覆盖的布局照常写 `<link>` 就行，不需要为它改模板。找不到的资源（比如布局引用了不存在的脚本）会在构建时警告，并在产物里保持原样。
+
 ### 404 页 {#not-found}
 
 静态托管没有服务端路由，但有一条通用约定：**根目录的 `404.html`**。
@@ -64,6 +83,18 @@ GitHub Pages、Netlify、Cloudflare Pages、S3、OSS 都会在未命中时返回
 - 出现在导航、孤页、缺译统计里。
 
 只有**默认语言**的那份参与产物，因为 `404.html` 只能有一个。没有这个文件时，主题的 `not-found` 布局兜底。
+
+## deploy {#deploy}
+
+产物和 `build` 一字不差，差别在语义：`build` 是「我想看看产物」，`deploy` 是「这个要发出去」。
+
+现在只做本地这一段：构建到 `dist/` 就停下，**不推送任何东西**。远端形态（push 到仓库、生成 GitHub Pages）要等 remote 接入——它们九成的复杂度在认证与远端状态，跟编译链无关。
+
+```bash
+yarn wiki deploy <目录> --inline    # 给「一个文件就能看」的场景
+```
+
+远端做完之后，两者会变成：`build` 留在本地，`deploy` 负责发出去。
 
 ## 重定向 {#redirects}
 

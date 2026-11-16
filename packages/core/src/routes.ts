@@ -38,6 +38,17 @@ export function categoryOutputPath(config: LoadedConfig, lang: string, slug: str
   return config.urlStyle === 'file' ? `${dir}/${slug}.html` : `${dir}/${slug}/index.html`;
 }
 
+/**
+ * 目录页（`/docs/`）的输出路径。
+ *
+ * file 模式下必须与 `urlToOutputPath()` / `localizeHref()` 算出来的一致（`docs.html`），
+ * 否则链接会指向一个不存在的文件 —— 以前就出过这个错。
+ */
+export function indexOutputPath(config: LoadedConfig, lang: string): string {
+  const dir = `${langPrefix(config, lang)}/docs`.replace(/^\//, '');
+  return config.urlStyle === 'file' ? `${dir}.html` : `${dir}/index.html`;
+}
+
 /** 把站内 URL 映射成产物里的相对文件路径（相对 outputDir） */
 export function urlToOutputPath(config: LoadedConfig, url: string): string {
   const base = normalizeBasePath(config.basePath);

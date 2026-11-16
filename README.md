@@ -45,6 +45,7 @@ docs/               上手文档与设计决策
 yarn type:check                     # 类型检查，不产出文件
 yarn wiki check examples/mini       # 校验 frontmatter / 红链 / 孤页 / 缺译
 yarn wiki build examples/mini       # 构建，产物在 examples/mini/dist
+yarn wiki deploy examples/mini      # 为发布构建（目前只输出到本地目录；--inline 出单文件）
 yarn wiki dev examples/mini         # 本地预览，改内容或模板自动刷新
 ```
 

@@ -7,9 +7,10 @@ export {
   type PageSeed,
 } from './content.js';
 export { buildSite, type BuildOptions, type BuildResult } from './build.js';
+export { deploySite, type DeployOptions, type DeployResult, type DeployTarget } from './deploy.js';
 export { checkSite, type CategoryIssue, type CheckResult, type MissingTranslation, type SectionIssue, type UnresolvedIssue } from './check.js';
 export { buildLinkReport, normUrl, type LinkReport, type RedLink } from './links.js';
-export { compileLess, copyAssets } from './assets.js';
+export { compileLess, collectAssets, copyAssets, type AssetFile } from './assets.js';
 export { createHighlighter, type Highlighter } from './highlight.js';
 export { loadMacros,
   listMacroNames,
@@ -41,6 +42,7 @@ export {
   assetHref,
   categoryOutputPath,
   categoryUrl,
+  indexOutputPath,
   langPrefix,
   localizeHref,
   normalizeBasePath,
@@ -48,6 +50,7 @@ export {
   pageUrl,
 } from './routes.js';
 export { createRenderer, type Renderer } from './render.js';
+export { rewriteRelativeLinks } from './relative.js';
 export {
   buildNav,
   buildSidebar,

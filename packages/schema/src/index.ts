@@ -94,6 +94,14 @@ export const siteConfigSchema = z.object({
   urlStyle: z.enum(['directory', 'file']).default('directory'),
 
   /**
+   * 单文件产物：CSS / JS / 图片全部塞进页面，产物里只剩 `.html`。
+   *
+   * 用于「一个文件就能看」的场景（分享单页、邮件附件、打包成 CHM）；
+   * 代价是每页都带一份样式，全站体积随页数线性增长。
+   */
+  inline: z.boolean().default(false),
+
+  /**
    * 旧地址 → 新地址。`from` / `to` 都写**最终 URL**（含语言前缀），工具不做推断。
    *
    * 默认生成 JS 跳转页，因为用户可能只有 GitHub Pages 这类没有服务端的托管；

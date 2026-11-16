@@ -82,7 +82,8 @@ export default {
 | `assetsDir` | `assets` | 图片与样式所在目录 |
 | `outputDir` | `dist` | 构建输出目录（相对内容根） |
 | `basePath` | `/` | 部署基路径。放到 `example.com/wiki/` 就写 `/wiki/` |
-| `urlStyle` | `directory` | `directory` → `/docs/a/`；`file` → `/docs/a.html`（给 `file://` 与 CHM 用） |
+| `urlStyle` | `directory` | `directory` → `/docs/a/`；`file` → `/docs/a.html`，且站内链接写成相对路径（给 `file://` 与 CHM 用） |
+| `inline` | `false` | 单文件产物：CSS/JS/图片全部塞进页面，产物里只剩 `.html` |
 | `theme` | `@lightwiki/theme-default` | 主题包名、git 地址或相对路径 |
 | `highlight` | `{ enabled: true, languages: [] }` | 代码高亮；`languages` 里加 highlight.js 的语言名 |
 | `markdown` | — | 函数，拿到 markdown-it 实例，见「扩展与样式」 |
@@ -116,6 +117,7 @@ export default {
 ```bash
 yarn wiki check <内容目录>     # 只校验，不写盘
 yarn wiki build <内容目录>     # 产出到 <内容目录>/dist
+yarn wiki deploy <内容目录>    # 同上，但走「为发布而构建」的入口（目前只输出到本地目录）
 ```
 
 `build` 产物：
@@ -130,9 +132,22 @@ dist/
 └── meta.json                       构建时间与工具信息
 ```
 
+加 `--inline`（或在配置里写 `inline: true`）会得到**单文件产物**：
+
+```
+dist/
+├── index.html
+├── 404.html
+├── docs/<slug>/index.html          <style> 里带着样式，图片换成 data URI
+└── categories/<slug>/index.html
+```
+
+只剩 `.html`，没有 `assets/` 也没有 `meta.json`，一个页面文件双击就能看。
+代价是每页各带一份样式，全站体积随页数线性增长。
+
 `dist/` 是**一组可移植的静态文件**：没有服务器依赖、没有 SPA、没有外部 CDN。扔到任何静态托管、U 盘、光盘镜像里都能用。
 
-构建完会打印页面数与耗时；有警告会提示用 `check` 看详情。
+构建完会打印页面数、产物体积与形态；有警告会提示用 `check` 看详情。
 
 ## 7. 发布
 

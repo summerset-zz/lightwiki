@@ -35,6 +35,17 @@ categories: [official]
 
 `assets/` 原样复制，不做缩放、不做哈希、不做 `<picture>`。
 
-## basePath 只适合根路径 {#basepath}
+## basePath 不适合 file:// {#basepath}
 
-要用 `file://` 直接打开产物，还需要等相对路径模式。
+`basePath` 是给子目录托管用的；`file://` 下它没有意义，用 `urlStyle: 'file'` 时保持默认 `/`。
+
+## file:// 下不处理的东西 {#file}
+
+`urlStyle: 'file'` 会把站内链接写成相对路径，双击产物能全站导航。下面几类不在改写范围内：
+
+| 不处理 | 理由 |
+|---|---|
+| `404.html` 里的链接 | 它需要在任意深度被打开，只能绝对路径 |
+| `srcset`、表单 `action` | 少见，且部分场景需要绝对地址 |
+| 自定义布局里手写的 `<meta http-equiv="refresh">` | 主题自带的 `redirect` 布局已经改用相对地址 |
+| `<script>` 里的字符串 | 工具不去猜代码里哪些字符串是地址 |

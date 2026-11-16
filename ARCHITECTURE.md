@@ -67,7 +67,9 @@
 规则：
 
 - `urlStyle: 'directory'` → `a/b/`；`'file'` → `a/b.html`（给 `file://` 与 CHM）。
+- **file 模式下目录页是 `{lang}/docs.html`**，不是 `docs/index.html` —— 必须与 `urlToOutputPath()` / `localizeHref()` 算出来的一致，否则链接指向不存在的文件（踩过）。产物路径统一由 `indexOutputPath()` / `categoryOutputPath()` / `outputPathFor()` 给出。
 - `localizeHref()` 只改写 `/docs` 与 `/categories` 两棵路径（补语言前缀 + 尾斜杠），其余站内路径原样。
+- **file 模式下链接是相对的**：`relative.ts` 在 HTML 生成后把站内绝对路径改写成相对当前页面的路径。理由：`file://` 下 `/docs/a.html` 指到盘符根，双击产物等于全站导航全废。相对路径在托管下同样成立，所以两种环境共用一套产物。
 - **slug 为 `404` 的页面**不按普通页面输出，只生成 `/404.html`。
 - dev 额外接受产物里的真实文件路径（`/docs/x/index.html`），但 `/docs/index` 这种**不带 `.html`** 的不能剥。
 
@@ -100,6 +102,8 @@ markdown-it (html, linkify)
 
 引擎是 Eta。**`autoTrim` 必须关闭**——宏产出的是 markdown，标签后的换行是语义的一部分。
 
+**内联模式由后处理完成，不靠布局判断**：`inline: true` 时，`inline.ts` 在 HTML 生成后把 `<link rel="stylesheet">` 换成 `<style>`、`<script src>` 换成内联脚本、其余资源换成 data URI。布局照常写 `<link>`——用户覆盖的布局也能享受内联，不需要主题配合。
+
 ## 8. 产物
 
 ```
@@ -114,9 +118,13 @@ dist/
 └── meta.json                  构建时间、工具版本
 ```
 
-资源走 `assets.ts` 的 `copyAssets()`：`.less` 编译成同名 `.css`，**产物里不留 `.less`**。
+资源走 `assets.ts` 的 `collectAssets()` / `copyAssets()`：`.less` 编译成同名 `.css`，**产物里不留 `.less`**。
 
 `outputDir` 每次构建前被 `rm -rf`。
+
+**单文件产物（`inline: true`）**：产物里只有 `.html`（加上 `_redirects`，如果业务需要），没有 `assets/`、没有 `meta.json`。`collectAssets()` 把资源留在内存里供 `inline.ts` 使用，一个字节都不落盘 —— 「只有 .html」是硬约束，不是副作用。
+
+已知边界（`relative.ts` 有意不处理的）：`404.html` 保持绝对路径（它要在任意深度被打开）、`srcset` / 表单 `action`、自定义布局里的 `<meta http-equiv="refresh">`。重定向页的跳转地址由构建器算出 `href` 字段传进模板，所以是相对化的。
 
 ## 9. 校验（`wiki check`）
 
@@ -131,20 +139,19 @@ dist/
 
 ## 10. 已实现 / 未实现
 
-**已实现**：三阶段渲染、双链（slug/标题/锚点）、宏（三种形态、组合、循环检测、行内与块级）、`it.page`/`it.site`、分类与分类页、404、重定向（js/server/both）、代码高亮、Less、markdown 插件钩子、dev server（SSE 热刷新）、全部 check 项、可移植产物。
+**已实现**：三阶段渲染、双链（slug/标题/锚点）、宏（三种形态、组合、循环检测、行内与块级）、`it.page`/`it.site`、分类与分类页、404、重定向（js/server/both）、代码高亮、Less、markdown 插件钩子、dev server（SSE 热刷新）、全部 check 项、可移植产物、单文件产物（`inline`）、`urlStyle: 'dir'` 与 `'file'` 两种形态（含相对链接）、`deploy` 的本地目录目标。
 
 **未实现**：
 
 | 项 | 备注 |
 |---|---|
-| `deploy` 子命令 | 路线图里唯一的构建侧缺口 |
+| `deploy` 的 remote 目标 | 目前只有 `dir`（构建到本地目录）。push 到仓库 / 生成 Pages 等接入 remote 后做 |
 | npm 发布 + 官方 GitHub Action | 现在只能 clone 本仓库用 |
 | 搜索索引 | `hints` 只是数据，检索没接 |
 | sitemap / RSS | 产物里没有 |
 | 语言切换 UI | 模板里没有切换器 |
 | 按 section 选布局 | 当前布局名固定 |
 | 图片处理 | 不做缩放/哈希/`<picture>` |
-| `urlStyle: 'file'` 端到端 | 只实现了链接层 |
 | Electron 客户端 | 计划 v0.2 |
 | 分类嵌套 | — |
 
@@ -158,6 +165,8 @@ dist/
 | 加一个模板变量 | `context.ts`（`PageInfo` / `SiteInfo` + `pageInfoOf`）→ `view.ts` 与 `macros.ts` 自动继承 |
 | 加一种行内语法 | `markdown.ts` 的 ruler 注册 + 实现 → `examples/mini` 加一节 |
 | 改资源管线 | `assets.ts` → `build.ts` 的调用处 → `dev` 的 asset 分支 |
+| 改内联规则（哪些标签、哪种 data URI） | `inline.ts` 的 `inlineHtml` / `MIME` 表 |
+| 改相对链接改写规则 | `relative.ts` 的 `relativeUrl` / `isPageUrl` |
 
 改完至少跑：`yarn type:check`、`yarn wiki check examples/mini`、`yarn wiki build examples/mini`。
 
@@ -186,7 +195,10 @@ dist/
 
 | 阶段 | 内容 | 状态 |
 |---|---|---|
-| v0.1 | 内容管线、双链、宏、分类、404、重定向、高亮、Less、dev、check | 基本完成，剩 `deploy` |
+| v0.1 | 内容管线、双链、宏、分类、404、重定向、高亮、Less、dev、check | 完成 |
+| v0.1 | `deploy` 本地目录目标 + 单文件产物（`inline`） | 完成 |
+| v0.1 | `urlStyle: 'file'` 端到端（相对链接、目录页路径、重定向地址） | 完成 |
+| v0.1 | `deploy` 的 remote 目标（push、Pages） | 等 remote 接入 |
 | v0.1 | npm 发布 + 官方 Action | 未开始 |
 | v0.2 | Electron 客户端（连接仓库、编辑预览、commit + push） | 未开始 |
 | v0.3+ | 搜索、sitemap/RSS、语言切换、主题生态、按 section 分派布局 | 未开始 |
