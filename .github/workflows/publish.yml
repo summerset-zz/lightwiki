@@ -50,13 +50,17 @@ jobs:
           for p in schema theme-default core dev cli; do
             name="@lightwiki/$p"
             ver=$(node -p "require('./packages/$p/package.json').version")
+            echo "=== $name@[$ver] ==="
 
             # workspace:* 要由 yarn 替换成具体版本，所以先 pack 再用 npm 发
             yarn workspace "$name" pack --out "$PWD/dist-pkg/$p.tgz"
+            echo "tarball: $(du -h "$PWD/dist-pkg/$p.tgz" | cut -f1)"
 
             if npm view "$name@$ver" version >/dev/null 2>&1; then
               echo "::notice::$name@$ver 已存在，跳过"
             else
+              echo "publishing $name@$ver ..."
               npm publish "$PWD/dist-pkg/$p.tgz" --access public
+              echo "published: $(npm view "$name@$ver" version 2>&1)"
             fi
           done
