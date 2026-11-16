@@ -21,6 +21,17 @@ export interface UnresolvedIssue {
   message: string;
 }
 
+/** 语言 → 页数。口径与 `pageCount` 一致：含草稿。 */
+function countByLanguage(
+  config: LoadedConfig,
+  pages: Array<{ lang: string }>,
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const lang of Object.keys(config.content)) counts[lang] = 0;
+  for (const page of pages) counts[page.lang] = (counts[page.lang] ?? 0) + 1;
+  return counts;
+}
+
 export interface CategoryIssue {
   file: string;
   message: string;
@@ -29,6 +40,8 @@ export interface CategoryIssue {
 export interface CheckResult {
   ok: boolean;
   pageCount: number;
+  /** 语言 → 页数（含草稿，与 pageCount 同口径） */
+  pageCounts: Record<string, number>;
   problems: ContentProblem[];
   warnings: ContentProblem[];
   report: LinkReport;
@@ -126,6 +139,7 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
       conflicts.length === 0 &&
       macroErrors === 0,
     pageCount: pages.length,
+    pageCounts: countByLanguage(config, pages),
     problems,
     warnings,
     report,

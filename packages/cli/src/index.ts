@@ -131,9 +131,11 @@ async function run(args: string[]): Promise<number> {
     const result = await checkSite(config);
 
     line(`内容检查 · ${root}`);
-    line(`  页面 ${result.pageCount} 篇（${Object.keys(config.content)
-      .map((lang) => `${lang} ${result.pageCount > 0 ? '' : ''}`.trim())
-      .join(' / ')}）`);
+    line(
+      `  页面 ${result.pageCount} 篇（${Object.keys(config.content)
+        .map((lang) => `${lang} ${result.pageCounts[lang] ?? 0}`)
+        .join(' / ')}）`,
+    );
 
     if (result.problems.length > 0) {
       section(`frontmatter 错误 ${result.problems.length} 处`);

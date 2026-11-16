@@ -1,6 +1,6 @@
 {
   "name": "@lightwiki/theme-default",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "轻维基的默认主题（布局、样式、搜索与源码面板）",
   "license": "MIT",
   "repository": {
