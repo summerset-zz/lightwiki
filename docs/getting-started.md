@@ -35,24 +35,26 @@ yarn wiki dev examples/mini
 
 内容仓库只需要两样东西：`wiki.config.ts` 和 `content/<语言>/*.md`。不需要 `package.json`，也没有构建脚本。
 
-### 方式 A：复制起始模板（推荐）
-
-`templates/starter` 里已经备好：配置、一页示例内容、`.gitignore`，以及**开箱能用的 Pages workflow** —— 改内容就能部署。
-
-三种拿法，按你的情况挑：
-
-| 情况 | 怎么做 |
-|---|---|
-| 只想看看 | 打开 [templates/starter](https://github.com/summerset-zz/lightwiki/tree/main/templates/starter)，把目录下载下来 |
-| 已经 clone 了工具仓库 | `cp -r lightwiki/templates/starter ../my-wiki` |
-| 要长期维护 | 用**模板仓库**：[lightwiki-starter](https://github.com/summerset-zz/lightwiki-starter) → 点 **Use this template** → 起个名字，得到一个干净的仓库 |
-
-拿到之后：
+### 方式 A：一条命令生成（推荐）
 
 ```bash
+npx @lightwiki/cli init my-wiki
 cd my-wiki
 npx @lightwiki/cli dev .
 ```
+
+生成的内容：配置、一页示例内容、`AGENTS.md`（给 AI 助手看的写作说明）、`.gitignore`，以及**开箱能用的 Pages workflow** —— 改内容就能部署。
+
+目录已存在也不会覆盖你的文件，只补缺的；加 `--force` 才覆盖。
+
+不想用命令行的话，同样的东西还有两处拿法：
+
+| 情况 | 怎么做 |
+|---|---|
+| 要用 GitHub 建仓 | 用**模板仓库**：[lightwiki-starter](https://github.com/summerset-zz/lightwiki-starter) → 点 **Use this template** → 起个名字 |
+| 已经 clone 了工具仓库 | `cp -r lightwiki/packages/cli/templates/starter ../my-wiki` |
+
+模板源文件就在 `packages/cli/templates/starter/` —— 它就是 `wiki init` 复制的那一份，不存在两份代码维护。
 
 ### 方式 B：手写最小配置
 
@@ -152,9 +154,10 @@ export default {
 | 在自己的仓库里构建 | 建议 `npm i -D @lightwiki/cli`（版本可复现、离线可用） | `npx wiki build .` |
 | CI 里构建 | 一段 workflow（起始模板已带） | `npx @lightwiki/cli@^0.1.0 build .` |
 
-三个子命令：
+四个子命令：
 
 ```bash
+npx @lightwiki/cli init <目录>          # 生成新站点（配置 + 示例内容 + Pages workflow）
 npx @lightwiki/cli check <内容目录>     # 只校验，不写盘
 npx @lightwiki/cli build <内容目录>     # 产出到 <内容目录>/dist
 npx @lightwiki/cli deploy <内容目录>    # 同上，但走「为发布而构建」的入口（目前只输出到本地目录）
@@ -247,7 +250,7 @@ dist/
 | `README.md` | 是什么、快速开始 | 所有人 |
 | `docs/getting-started.md` | 本文：上手与配置 | 新用户 |
 | `examples/mini/` | 语法手册（16 页，用轻维基自己写） | 内容作者 |
-| `templates/starter/` | 可复制的起始模板 | 新用户 |
+| `packages/cli/templates/starter/` | `wiki init` 复制的起始模板 | 新用户 |
 | `AGENTS.md` | AI 的阅读顺序与项目约定 | AI / 贡献者 |
 | `ARCHITECTURE.md` | 开发文档：实现规格与改动指引 | 开发者 |
 

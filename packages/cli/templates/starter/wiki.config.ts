@@ -15,7 +15,7 @@ const env =
 
 export default {
   /** 站点名：出现在浏览器标题与侧栏顶部 */
-  title: '我的知识库',
+  title: '__SITE_NAME__',
   /** 站点完整地址：用于拼绝对链接（canonical 等） */
   siteUrl: 'https://example.com',
   /** 站点所在的子路径；本地是 `/`，GitHub Pages 项目站点是 `/<仓库名>/` */

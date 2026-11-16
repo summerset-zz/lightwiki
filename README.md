@@ -11,7 +11,16 @@
 
 ## 快速开始
 
-最快的方式是**用模板建一个仓库**：打开 [lightwiki-starter](https://github.com/summerset-zz/lightwiki-starter)，点 **Use this template**，得到一个带示例内容与 Pages workflow 的干净仓库，改内容就能发布。
+最快的方式是**一条命令生成一个站点**：
+
+```bash
+npx @lightwiki/cli init my-wiki
+cd my-wiki && npx @lightwiki/cli dev .
+```
+
+生成的是配置 + 一页示例内容 + 给 AI 看的 `AGENTS.md` + 开箱能用的 Pages workflow，不需要 `npm install`。
+
+不想用命令行就在 GitHub 上用模板仓库：[lightwiki-starter](https://github.com/summerset-zz/lightwiki-starter) → **Use this template**。
 
 手上已经有内容目录的话，在里面跑（要有 `wiki.config.ts` 和 `content/`）：
 
@@ -27,7 +36,7 @@ npm i -D @lightwiki/cli
 npx wiki dev .                # 装完之后的命令名是 wiki
 ```
 
-完整步骤（配置字段、目录约定、部署）见 **`docs/getting-started.md`**；`templates/starter` 就是模板仓库的来源。
+完整步骤（配置字段、目录约定、部署）见 **`docs/getting-started.md`**；`packages/cli/templates/starter` 就是 `wiki init` 复制的模板，也是模板仓库的来源。
 
 `examples/mini` 是用轻维基自己的语法写的**语法手册**，17 页，每页演示它正在讲的那个语法 —— 在线版：https://summerset-zz.github.io/lightwiki/
 
@@ -38,10 +47,10 @@ packages/
   schema/           frontmatter 与站点配置的 zod schema
   core/             扫描 → 解析 → 渲染 → 链接图 → 输出（不认识任何托管平台）
   dev/              本地预览服务器（node:http + SSE，不写盘）
-  cli/              wiki dev / check / build
+  cli/              wiki init / dev / check / build / deploy
   theme-default/    默认主题（layouts / macros / assets）
 examples/mini/      语法手册，同时是冒烟测试
-templates/starter/  可复制的起始内容仓库
+packages/cli/templates/starter/  wiki init 用的起始内容仓库
 docs/               上手文档与设计决策
 ```
 

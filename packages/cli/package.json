@@ -14,7 +14,8 @@
   },
   "files": [
     "bin",
-    "src"
+    "src",
+    "templates"
   ],
   "publishConfig": {
     "access": "public"

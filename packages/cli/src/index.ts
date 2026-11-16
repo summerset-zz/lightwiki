@@ -6,6 +6,7 @@ import { buildSite, checkSite, deploySite, loadConfig, type BuildResult } from '
 const USAGE = `轻维基 CLI
 
 用法：
+  wiki init [目录]                     生成新站点（配置 + 示例内容 + Pages workflow）
   wiki dev [目录] [-p 端口]           启动本地预览（改动自动刷新）
   wiki check [目录]                    校验 frontmatter、section、红链、孤页、缺译
   wiki build [目录] [-o 目录] [--inline]   构建静态站点
@@ -18,6 +19,8 @@ const USAGE = `轻维基 CLI
   -o, --out     构建输出目录，默认取配置里的 outputDir
   --inline      内联 CSS/JS/图片，产物里只剩 .html（不产 assets/ 与 meta.json）
   --strict      红链与孤页也视为失败
+  --name        init 时的站点名，默认取目录名
+  --force       init 时覆盖已存在的文件（默认跳过）
 
 退出码：0 正常；1 有错误；2 用法错误`;
 
@@ -92,11 +95,32 @@ async function run(args: string[]): Promise<number> {
       host: { type: 'string' },
       inline: { type: 'boolean', default: false },
       strict: { type: 'boolean', default: false },
+      name: { type: 'string' },
+      force: { type: 'boolean', default: false },
     },
   });
 
   const root = resolve(positionals[0] ?? '.');
   const started = Date.now();
+
+  // init 必须在读配置之前：这时候目录里还没有 wiki.config.ts
+  if (command === 'init') {
+    const { initSite } = await import('./init.js');
+    const result = initSite(root, { name: values.name, force: values.force });
+
+    line(`已生成站点 → ${result.dir}`);
+    for (const file of result.written) line(`  + ${file}`);
+    for (const file of result.skipped) line(`  = ${file}（已存在，跳过）`);
+
+    if (result.written.length > 0) {
+      section('下一步');
+      line(`  cd ${positionals[0] ?? '.'}`);
+      line('  npx @lightwiki/cli dev .        # 本地预览，改内容会自动刷新');
+      line('  发布到 GitHub Pages：见 README 的「发布」一节');
+    }
+    return 0;
+  }
+
   const config = await loadConfig(root);
 
   if (command === 'dev') {
