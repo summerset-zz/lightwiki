@@ -10,7 +10,7 @@ draft: false
 
 这一页在 `content/zh/start.md`。
 
-改一下这段文字，如果 `yarn wiki dev` 开着，浏览器会自动刷新。
+改一下这段文字，如果 `npx @lightwiki/cli dev` 开着，浏览器会自动刷新。
 
 ## 注意首页不是这一页 {#home}
 

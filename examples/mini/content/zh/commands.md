@@ -10,11 +10,13 @@ categories: [official]
 ---
 
 ```bash
-yarn wiki dev <目录> [-p 端口]         # 本地预览
-yarn wiki check <目录> [--strict]      # 只校验，不产出
-yarn wiki build <目录> [-o 输出目录]    # 产出静态站点
-yarn wiki deploy <目录> [-o 输出目录]   # 为发布产出（目前只到本地目录）
+npx @lightwiki/cli dev    <目录> [-p 端口]       # 本地预览
+npx @lightwiki/cli check  <目录> [--strict]      # 只校验，不产出
+npx @lightwiki/cli build  <目录> [-o 输出目录]    # 产出静态站点
+npx @lightwiki/cli deploy <目录> [-o 输出目录]    # 为发布产出（目前只到本地目录）
 ```
+
+工具还没装的话 `npx` 会自动下载。装了开发依赖（`npm i -D @lightwiki/cli`）之后，`npx wiki` 就是同一组命令。
 
 ## dev {#dev}
 
@@ -91,7 +93,7 @@ GitHub Pages、Netlify、Cloudflare Pages、S3、OSS 都会在未命中时返回
 现在只做本地这一段：构建到 `dist/` 就停下，**不推送任何东西**。远端形态（push 到仓库、生成 GitHub Pages）要等 remote 接入——它们九成的复杂度在认证与远端状态，跟编译链无关。
 
 ```bash
-yarn wiki deploy <目录> --inline    # 给「一个文件就能看」的场景
+npx @lightwiki/cli deploy <目录> --inline    # 给「一个文件就能看」的场景
 ```
 
 远端做完之后，两者会变成：`build` 留在本地，`deploy` 负责发出去。
@@ -127,9 +129,10 @@ redirectMode: 'js',
 ## 放进 CI 的最小写法 {#ci}
 
 ```bash
-yarn install
-yarn wiki check . --strict
-yarn wiki build . -o dist
+npx @lightwiki/cli check . --strict
+npx @lightwiki/cli build . -o dist
 ```
+
+不需要 `install` 步骤 —— 内容仓库没有依赖，工具由 `npx` 现取。想固定版本就在内容仓库 `npm i -D @lightwiki/cli`，CI 里改成 `npm ci` + `npx wiki`。
 
 构建完成后 `dist/` 交给部署步骤即可（GitHub Pages 用 artifact 上传，或推到 `gh-pages` 分支）。

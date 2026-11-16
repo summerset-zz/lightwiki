@@ -11,24 +11,23 @@
 
 ## 快速开始
 
-```bash
-git clone <本仓库地址> lightwiki
-cd lightwiki && yarn install
-yarn wiki dev examples/mini
-```
-
-打开输出里的地址（默认 `http://127.0.0.1:5173`）。`examples/mini` 是用轻维基自己的语法写的**语法手册**，17 页，每页演示它正在讲的那个语法。
-
-想建自己的站：
+在**内容仓库**里跑（目录里要有 `wiki.config.ts` 和 `content/`）：
 
 ```bash
-cp -r templates/starter sites/my-wiki
-yarn wiki dev sites/my-wiki
+npx @lightwiki/cli dev .      # 本地预览，默认 http://127.0.0.1:5173
+npx @lightwiki/cli build .    # 产物在 ./dist
 ```
 
-完整步骤——配 `wiki.config.ts`、目录约定、构建产物、发布、怎么让 AI 帮忙——见 **`docs/getting-started.md`**。
+第一次运行会下载工具，之后走 npm 缓存。想固定在项目里：
 
-> 工具还没发布到 npm，所以现在只能 clone 本仓库使用。
+```bash
+npm i -D @lightwiki/cli
+npx wiki dev .                # 装完之后的命令名是 wiki
+```
+
+从零建站的完整步骤（配置字段、目录约定、发布）见 **`docs/getting-started.md`**；起点模板在 `templates/starter`，复制过去改就行。
+
+`examples/mini` 是用轻维基自己的语法写的**语法手册**，17 页，每页演示它正在讲的那个语法 —— 在线版：https://summerset-zz.github.io/lightwiki/
 
 ## 仓库结构
 

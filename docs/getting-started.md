@@ -1,59 +1,77 @@
 # 从零开始
 
-> **当前状态**：轻维基还是开发中，**没有发布到 npm**。所以"用起来"的唯一方式是把本仓库 clone 下来。
-> 工具发布之后，这一页的第一节会换成 `yarn add -D @lightwiki/cli`，其余步骤不变。
+## 1. 装工具
 
----
-
-## 1. 把仓库拉下来
+不用装 —— 直接用 `npx`：
 
 ```bash
-git clone <本仓库地址> lightwiki
-cd lightwiki
-yarn install
+npx @lightwiki/cli --help
 ```
 
-`yarn install` 会装好工具链（TypeScript、markdown-it、highlight.js、less 等）。开发期不需要编译任何东西，TypeScript 源码直接被 `tsx` 执行。
+第一次运行会从 npm 下载，之后走缓存。想固定在项目里（版本可复现）：
+
+```bash
+npm i -D @lightwiki/cli
+npx wiki --help
+```
+
+> 装了依赖之后，`wiki.config.ts` 里可以 `import type { SiteConfigInput } from '@lightwiki/schema'` 拿到补全；只用 `npx` 时写纯对象就行（起始模板就是纯对象写法，能直接搬来搬去）。
 
 ## 2. 先看它能做什么
 
+在线语法手册：**https://summerset-zz.github.io/lightwiki/** —— 17 页，每页演示它正在讲的那个语法。
+
+本仓库里也能本地跑（这是开发者视角，要 clone 工具本身）：
+
 ```bash
+git clone https://github.com/summerset-zz/lightwiki.git
+cd lightwiki && yarn install
 yarn wiki dev examples/mini
 ```
 
-打开输出里的地址（默认 `http://127.0.0.1:5173`）。那是**用轻维基自己的语法写的语法手册**，16 页，每页演示它正在讲的那个语法。
-
-看够了按 `Ctrl+C` 关掉。
+打开输出里的地址（默认 `http://127.0.0.1:5173`），看够了按 `Ctrl+C` 关掉。
 
 ## 3. 建你自己的内容仓库
 
-### 方式 A：放在 lightwiki 目录里（最省事）
+内容仓库只需要两样东西：`wiki.config.ts` 和 `content/<语言>/*.md`。没有 `package.json`，也没有构建脚本。
+
+**方式 A：从模板开始**
 
 ```bash
-cp -r templates/starter sites/my-wiki
-yarn wiki dev sites/my-wiki
-```
-
-适合先试试。缺点是和工具混在一个仓库里。
-
-### 方式 B：独立仓库（长期用这个）
-
-```bash
-cp -r lightwiki/templates/starter ../my-wiki
+cp -r lightwiki/templates/starter ../my-wiki    # 前提是已经 clone 了工具仓库
 cd ../my-wiki
-git init
+npx @lightwiki/cli dev .
 ```
 
-之后每次构建都要回到 lightwiki 目录、把内容目录作为参数传进去：
+没 clone 工具仓库的话，从 GitHub 页面直接把 `templates/starter` 下载下来也一样。
+
+**方式 B：手写最小配置**
 
 ```bash
-cd ../lightwiki
-yarn wiki dev   ../my-wiki
-yarn wiki build ../my-wiki
+mkdir my-wiki && cd my-wiki
 ```
 
-> ⚠️ **独立仓库时，`wiki.config.ts` 不要 `import` 类型。**
-> 它解析不到 `@lightwiki/schema`（那个包没发布），会直接加载失败。起始模板里用的是纯对象写法，就是为了能搬来搬去。
+建一个 `wiki.config.ts`：
+
+```ts
+export default {
+  title: '我的知识库',
+  siteUrl: 'https://example.com',
+  content: { zh: 'content/zh' },
+};
+```
+
+再建 `content/zh/start.md`：
+
+```md
+---
+title: 首页
+---
+
+你好，这是第一页。
+```
+
+然后 `npx @lightwiki/cli dev .`。
 
 ## 4. 配 `wiki.config.ts`
 
@@ -116,10 +134,12 @@ export default {
 ## 6. 本地构建
 
 ```bash
-yarn wiki check <内容目录>     # 只校验，不写盘
-yarn wiki build <内容目录>     # 产出到 <内容目录>/dist
-yarn wiki deploy <内容目录>    # 同上，但走「为发布而构建」的入口（目前只输出到本地目录）
+npx @lightwiki/cli check <内容目录>     # 只校验，不写盘
+npx @lightwiki/cli build <内容目录>     # 产出到 <内容目录>/dist
+npx @lightwiki/cli deploy <内容目录>    # 同上，但走「为发布而构建」的入口（目前只输出到本地目录）
 ```
+
+（装了 `@lightwiki/cli` 作为开发依赖的话，把 `npx @lightwiki/cli` 换成 `npx wiki` 就行。）
 
 `build` 产物：
 
@@ -160,15 +180,20 @@ dist/
 | Netlify / Cloudflare Pages | 发布目录填 `dist`；想用真 301 就把 `redirectMode` 设成 `server` |
 | 对象存储（S3 / OSS） | 开静态网站模式，错误文档指向 `404.html` |
 
-> **还没有官方的 GitHub Action。** 在那之前，CI 里只能自己 clone 本仓库再构建：
+> **还没有官方的 GitHub Action。** 但这不代表要自己搭——CI 里一行 `npx` 就够了：
 >
 > ```yaml
-> - run: git clone --depth 1 <本仓库地址> lightwiki
-> - run: cd lightwiki && yarn install
-> - run: cd lightwiki && yarn wiki build ../my-wiki
+> - uses: actions/checkout@v4
+> - uses: actions/setup-node@v4
+>   with:
+>     node-version: 22
+> - run: npx --yes @lightwiki/cli build .
+> - uses: actions/upload-pages-artifact@v3
+>   with:
+>     path: dist
 > ```
 >
-> 这个写法能用但不优雅，等工具发布 npm 之后会换成一行 `uses:`。
+> 完整能跑的例子：[​lightwiki-demo-fontcover](https://github.com/summerset-zz/lightwiki-demo-fontcover/blob/main/.github/workflows/pages.yml)。
 
 ## 8. 让 AI 帮你
 
@@ -193,7 +218,7 @@ dist/
 
 ## 10. 卡住了怎么办
 
-- **`yarn wiki build` 说找不到配置** → 内容目录里没有 `wiki.config.ts`，或者目录传错了
+- **`npx @lightwiki/cli build` 说找不到配置** → 内容目录里没有 `wiki.config.ts`，或者目录传错了
 - **页面地址不对** → 地址由 slug 推导，没有单独的配置项；非默认语言会带 `/<lang>` 前缀
 - **样式没了** → 检查模板里的 CSS 路径是否带 `basePath`；主题样式在 `/assets/theme/`
 - **代码块没颜色** → 语言名可能拼错，或不在 `highlight.languages` 里；`xml` 覆盖 html/svg/eta

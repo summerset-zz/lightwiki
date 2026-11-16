@@ -9,20 +9,16 @@ content/zh/index.md   第一篇内容
 
 ## 用法
 
+复制到你自己的目录，然后在这个目录里跑：
+
 ```bash
-# 复制到别处
 cp -r templates/starter ~/my-wiki
-
-# 在 lightwiki 仓库里构建它
-yarn wiki dev   ~/my-wiki
-yarn wiki build ~/my-wiki -o ~/my-wiki/dist
+cd ~/my-wiki
+npx @lightwiki/cli dev .      # 预览，默认 http://127.0.0.1:5173
+npx @lightwiki/cli build .    # 产物在 ./dist
 ```
 
-也可以直接原地试：
-
-```bash
-yarn wiki dev templates/starter
-```
+> 在 lightwiki 仓库里开发工具时，用 `yarn wiki dev <目录>` 效果一样 —— 跑的是仓库里的源码而不是 npm 上的版本。
 
 ## 往里加东西
 
