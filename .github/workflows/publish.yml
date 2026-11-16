@@ -1,0 +1,62 @@
+# 打 tag 即发版：v0.1.0 → npm 上 5 个包各发一个 0.1.0。
+#
+# 认证走 npm 的 Trusted Publishing（OIDC），**不需要任何 token** ——
+# 前提是在每个包的 Settings → Trusted publishing 里配置过这个仓库与这个文件名。
+# 首次配置后必须 2 天内完成一次成功发布，否则配置会过期。
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write # OIDC 必需
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # Trusted Publishing 要求 npm CLI >= 11.5.1（Node 24 自带 npm 11）
+          registry-url: https://registry.npmjs.org
+
+      - run: npm --version
+      - run: corepack enable
+      - run: yarn install --immutable
+
+      - name: 类型检查与校验
+        run: |
+          yarn type:check
+          yarn wiki check examples/mini --strict
+
+      - name: 校验 tag 与所有包的版本一致
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          for p in schema core dev cli theme-default; do
+            v=$(node -p "require('./packages/$p/package.json').version")
+            if [ "$v" != "$tag" ]; then
+              echo "::error::packages/$p 的版本是 $v，tag 是 $tag"
+              exit 1
+            fi
+          done
+
+      - name: 逐个发布（依赖顺序）
+        run: |
+          mkdir -p dist-pkg
+          for p in schema theme-default core dev cli; do
+            name="@lightwiki/$p"
+            ver=$(node -p "require('./packages/$p/package.json').version")
+
+            # workspace:* 要由 yarn 替换成具体版本，所以先 pack 再用 npm 发
+            yarn workspace "$name" pack --out "$PWD/dist-pkg/$p.tgz"
+
+            if npm view "$name@$ver" version >/dev/null 2>&1; then
+              echo "::notice::$name@$ver 已存在，跳过"
+            else
+              npm publish "$PWD/dist-pkg/$p.tgz" --access public
+            fi
+          done
