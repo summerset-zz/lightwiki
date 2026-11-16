@@ -7,6 +7,8 @@
 
 在线预览：**https://summerset-zz.github.io/lightwiki/**（就是 `examples/mini` 这份语法手册）
 
+真实站点示例：**[字体百科](https://summerset-zz.github.io/fontcover-docs/)** —— [fontcover.com](https://fontcover.com) 的文档中心，110 页中英双语，也是用轻维基构建的。
+
 ## 快速开始
 
 ```bash
