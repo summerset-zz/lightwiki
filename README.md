@@ -1,6 +1,11 @@
 # 轻维基（lightwiki）
 
+[![CI](https://github.com/summerset-zz/lightwiki/actions/workflows/ci.yml/badge.svg)](https://github.com/summerset-zz/lightwiki/actions/workflows/ci.yml)
+[![Pages](https://github.com/summerset-zz/lightwiki/actions/workflows/pages.yml/badge.svg)](https://github.com/summerset-zz/lightwiki/actions/workflows/pages.yml)
+
 版本化的静态知识库。内容用 markdown + frontmatter 写，git 管版本，编译成**一组可移植的静态文件**——没有服务器依赖、没有 SPA、没有外部 CDN。
+
+在线预览：**https://summerset-zz.github.io/lightwiki/**（就是 `examples/mini` 这份语法手册）
 
 ## 快速开始
 

@@ -4,6 +4,14 @@
   "private": true,
   "description": "把 markdown + frontmatter 编译成一组可移植静态文件的知识库工具",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/summerset-zz/lightwiki.git"
+  },
+  "homepage": "https://summerset-zz.github.io/lightwiki/",
+  "bugs": {
+    "url": "https://github.com/summerset-zz/lightwiki/issues"
+  },
   "type": "module",
   "packageManager": "yarn@4.9.2",
   "workspaces": [
