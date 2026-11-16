@@ -7,7 +7,7 @@
 
 在线预览：**https://summerset-zz.github.io/lightwiki/**（就是 `examples/mini` 这份语法手册）
 
-部署示例：**[字体百科](https://summerset-zz.github.io/fontcover-docs/)** —— [fontcover.com](https://fontcover.com) 的文档快照，110 页中英双语；内容仓库独立、CI 零凭据构建、部署在子路径下。
+部署示例：**[字体百科](https://summerset-zz.github.io/lightwiki-demo-fontcover/)** —— [fontcover.com](https://fontcover.com) 的文档快照，110 页中英双语；内容仓库独立、CI 零凭据构建、部署在子路径下。
 
 ## 快速开始
 
