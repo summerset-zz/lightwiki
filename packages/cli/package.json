@@ -1,14 +1,28 @@
 {
   "name": "@lightwiki/cli",
   "version": "0.1.0",
-  "private": true,
+  "description": "轻维基的命令行：wiki dev / check / build / deploy",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/summerset-zz/lightwiki.git",
+    "directory": "packages/cli"
+  },
   "type": "module",
   "bin": {
-    "wiki": "./src/index.ts"
+    "wiki": "./bin/wiki.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@lightwiki/core": "workspace:*",
     "@lightwiki/dev": "workspace:*",
-    "@lightwiki/schema": "workspace:*"
+    "@lightwiki/schema": "workspace:*",
+    "tsx": "^4.19.2"
   }
 }

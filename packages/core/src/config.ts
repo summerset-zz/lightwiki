@@ -16,8 +16,20 @@ export interface LoadedConfig extends SiteConfig {
   themeDir: string;
 }
 
-/** monorepo 内自带的默认主题，作为包解析失败时的兜底 */
-const BUNDLED_THEME = fileURLToPath(new URL('../../theme-default', import.meta.url));
+/**
+ * 默认主题的位置。
+ *
+ * 优先从自己的依赖里解析 `@lightwiki/theme-default` —— 发布到 npm 后靠的是这条；
+ * 解析不到才落回 monorepo 的相对路径（开发期、以及包解析失败时的兵底）。
+ */
+const BUNDLED_THEME = ((): string => {
+  try {
+    const require = createRequire(import.meta.url);
+    return dirname(require.resolve('@lightwiki/theme-default/package.json'));
+  } catch {
+    return fileURLToPath(new URL('../../theme-default', import.meta.url));
+  }
+})();
 
 const CONFIG_FILES = [
   'wiki.config.ts',

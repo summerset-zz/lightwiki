@@ -1,7 +1,13 @@
 {
   "name": "@lightwiki/core",
   "version": "0.1.0",
-  "private": true,
+  "description": "轻维基的核心：扫描、渲染、链接图、构建",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/summerset-zz/lightwiki.git",
+    "directory": "packages/core"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -9,8 +15,15 @@
       "default": "./src/index.ts"
     }
   },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@lightwiki/schema": "workspace:*",
+    "@lightwiki/theme-default": "workspace:*",
     "eta": "^3.5.0",
     "fast-glob": "^3.3.2",
     "gray-matter": "^4.0.3",
