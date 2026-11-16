@@ -74,22 +74,33 @@ function splitHash(href: string): { path: string; hash: string } {
  * 两件事在构建期补上：
  * - 非默认语言要加语言前缀，否则中文站会跳到英文页；
  * - directory 模式下补尾斜杠，静态托管不必依赖 301 重定向。
+ *
+ * **必须幂等**：双链解析出来的已经是带 basePath 的产物 URL（`page.url`），
+ * 若再加一次 basePath 就会变成 `/wiki/wiki/docs/x`。部署在子路径时才会显形，
+ * 以前一直是 `/` 所以没暴露过。
  */
 export function localizeHref(href: string, lang: string, config: LoadedConfig): string {
   if (!href.startsWith('/') || href.startsWith('//')) return href;
 
+  const base = normalizeBasePath(config.basePath);
   const { path, hash } = splitHash(href);
+
+  // 先剥掉可能已经存在的 basePath，后面统一加回去
   let next = path;
+  if (base && (next === base || next.startsWith(`${base}/`))) {
+    next = next.slice(base.length);
+  }
+  if (!next.startsWith('/')) next = `/${next}`;
 
   // 只有这两棵路径是按语言分叉的；其他站内路径（工具页、字体页）与语言无关
   const localized =
-    path === '/docs' ||
-    path.startsWith('/docs/') ||
-    path === '/categories' ||
-    path.startsWith('/categories/');
+    next === '/docs' ||
+    next.startsWith('/docs/') ||
+    next === '/categories' ||
+    next.startsWith('/categories/');
 
   if (localized) {
-    next = `${langPrefix(config, lang)}${path}`;
+    next = `${langPrefix(config, lang)}${next}`;
   }
 
   if (config.urlStyle === 'file') {
@@ -100,7 +111,7 @@ export function localizeHref(href: string, lang: string, config: LoadedConfig): 
     next = `${next}/`;
   }
 
-  return `${normalizeBasePath(config.basePath)}${next}${hash}`;
+  return `${base}${next}${hash}`;
 }
 
 /** 搜索索引文件名（产物根目录） */
