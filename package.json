@@ -1,7 +1,9 @@
 {
   "name": "lightwiki",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
+  "description": "把 markdown + frontmatter 编译成一组可移植静态文件的知识库工具",
+  "license": "MIT",
   "type": "module",
   "packageManager": "yarn@4.9.2",
   "workspaces": [

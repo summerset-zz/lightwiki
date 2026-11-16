@@ -212,7 +212,7 @@ dist/
 
 ## 13. 版本与兼容
 
-- 用 changesets 管版本；
+- **发布前**引入 changesets 管版本。现在还没发布，维护一堆 changeset 文件只是噪音；包版本统一跟仓库走（`0.1.0`），全部 `private: true`；
 - frontmatter **放行未知字段**（zod `passthrough`）：内容仓库与工具版本会脱钩，多一个不认识的键不该让整站失败；新增字段走弃用期；
 - `examples/mini` 每次都必须构建成功——它是唯一的语法回归测试；
 - 内容文件与产物都不带 tool 版本信息，`meta.json` 是唯一记录。
