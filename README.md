@@ -11,7 +11,9 @@
 
 ## 快速开始
 
-在**内容仓库**里跑（目录里要有 `wiki.config.ts` 和 `content/`）：
+最快的方式是**用模板建一个仓库**：打开 [lightwiki-starter](https://github.com/summerset-zz/lightwiki-starter)，点 **Use this template**，得到一个带示例内容与 Pages workflow 的干净仓库，改内容就能发布。
+
+手上已经有内容目录的话，在里面跑（要有 `wiki.config.ts` 和 `content/`）：
 
 ```bash
 npx @lightwiki/cli dev .      # 本地预览，默认 http://127.0.0.1:5173
@@ -25,7 +27,7 @@ npm i -D @lightwiki/cli
 npx wiki dev .                # 装完之后的命令名是 wiki
 ```
 
-从零建站的完整步骤（配置字段、目录约定、发布）见 **`docs/getting-started.md`**；起点模板在 `templates/starter`，复制过去改就行。
+完整步骤（配置字段、目录约定、部署）见 **`docs/getting-started.md`**；`templates/starter` 就是模板仓库的来源。
 
 `examples/mini` 是用轻维基自己的语法写的**语法手册**，17 页，每页演示它正在讲的那个语法 —— 在线版：https://summerset-zz.github.io/lightwiki/
 

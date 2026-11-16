@@ -33,19 +33,28 @@ yarn wiki dev examples/mini
 
 ## 3. 建你自己的内容仓库
 
-内容仓库只需要两样东西：`wiki.config.ts` 和 `content/<语言>/*.md`。没有 `package.json`，也没有构建脚本。
+内容仓库只需要两样东西：`wiki.config.ts` 和 `content/<语言>/*.md`。不需要 `package.json`，也没有构建脚本。
 
-**方式 A：从模板开始**
+### 方式 A：复制起始模板（推荐）
+
+`templates/starter` 里已经备好：配置、一页示例内容、`.gitignore`，以及**开箱能用的 Pages workflow** —— 改内容就能部署。
+
+三种拿法，按你的情况挑：
+
+| 情况 | 怎么做 |
+|---|---|
+| 只想看看 | 打开 [templates/starter](https://github.com/summerset-zz/lightwiki/tree/main/templates/starter)，把目录下载下来 |
+| 已经 clone 了工具仓库 | `cp -r lightwiki/templates/starter ../my-wiki` |
+| 要长期维护 | 用**模板仓库**：[lightwiki-starter](https://github.com/summerset-zz/lightwiki-starter) → 点 **Use this template** → 起个名字，得到一个干净的仓库 |
+
+拿到之后：
 
 ```bash
-cp -r lightwiki/templates/starter ../my-wiki    # 前提是已经 clone 了工具仓库
-cd ../my-wiki
+cd my-wiki
 npx @lightwiki/cli dev .
 ```
 
-没 clone 工具仓库的话，从 GitHub 页面直接把 `templates/starter` 下载下来也一样。
-
-**方式 B：手写最小配置**
+### 方式 B：手写最小配置
 
 ```bash
 mkdir my-wiki && cd my-wiki
@@ -86,7 +95,7 @@ export default {
 };
 ```
 
-全部字段：
+全部字段（新站通常只改 `title`、`siteUrl`、`content` 三个；`basePath` 只在部署到子路径时才动）：
 
 | 字段 | 默认 | 说明 |
 |---|---|---|
@@ -132,6 +141,18 @@ export default {
 唯一的例外是 **`404.md`**：slug 为 `404` 的页面会被输出成根目录的 `404.html`，不会生成 `/docs/404/`。
 
 ## 6. 本地构建
+
+## 6. 构建
+
+三种场景，区别只在「工具从哪来」：
+
+| 场景 | 要准备什么 | 命令 |
+|---|---|---|
+| 本地看一眼 | 什么都不装 | `npx @lightwiki/cli dev .` |
+| 在自己的仓库里构建 | 建议 `npm i -D @lightwiki/cli`（版本可复现、离线可用） | `npx wiki build .` |
+| CI 里构建 | 一段 workflow（起始模板已带） | `npx @lightwiki/cli@^0.1.0 build .` |
+
+三个子命令：
 
 ```bash
 npx @lightwiki/cli check <内容目录>     # 只校验，不写盘
@@ -179,6 +200,20 @@ dist/
 | GitHub Pages | 上传 `dist/` 作为 artifact 部署；`404.html` 会自动生效 |
 | Netlify / Cloudflare Pages | 发布目录填 `dist`；想用真 301 就把 `redirectMode` 设成 `server` |
 | 对象存储（S3 / OSS） | 开静态网站模式，错误文档指向 `404.html` |
+
+### GitHub Pages
+
+起始模板已经带了 `.github/workflows/pages.yml`，你只需要做一次设置：
+
+1. 仓库 **Settings → Pages**
+2. **Source** 选 **GitHub Actions**
+3. push 到 `main`，等一分钟
+
+地址是 `https://<用户名>.github.io/<仓库名>/`。
+
+**这里唯一的坑是子路径**：项目站点挂在 `/<仓库名>/` 下，产物里的链接必须带这个前缀，否则整站 404。模板的做法是让 CI 把仓库名通过 `LIGHTWIKI_BASE_PATH` 注入给 `wiki.config.ts`，所以你不用手改配置。
+
+如果你自己写的 `wiki.config.ts` 不读这个环境变量，那就把 `basePath` 写死成 `/<仓库名>/`。
 
 > **还没有官方的 GitHub Action。** 但这不代表要自己搭——CI 里一行 `npx` 就够了：
 >
