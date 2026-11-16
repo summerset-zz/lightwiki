@@ -170,7 +170,7 @@ dist/
 | 项 | 备注 |
 |---|---|
 | `deploy` 的 remote 目标 | 目前只有 `dir`（构建到本地目录）。push 到仓库 / 生成 Pages 等接入 remote 后做 |
-| npm 发布 + 官方 GitHub Action | 现在只能 clone 本仓库用 |
+| 官方 GitHub Action（`uses:` 一行） | 现在内容仓库用 `npx @lightwiki/cli build .`，效果一样 |
 | 搜索的分词与高亮 | 现在是子串匹配，命中词不标亮 |
 | sitemap / RSS | 产物里没有 |
 | 语言切换 UI | 模板里没有切换器 |
@@ -212,7 +212,11 @@ dist/
 
 ## 13. 版本与兼容
 
-- **发布前**引入 changesets 管版本。现在还没发布，维护一堆 changeset 文件只是噪音；包版本统一跟仓库走（`0.1.0`），全部 `private: true`；
+- 五个包的版本号**必须一致，且等于 git tag**（`v0.1.1` ↔ `0.1.1`）—— `publish.yml` 会逐个校验，不一致直接失败；
+- 发版流程：改版本号 → commit + push → `git tag vX.Y.Z && git push origin vX.Y.Z`，剩下的交给 workflow；
+- 认证走 **Trusted Publishing（OIDC）**，仓库里没有任何 npm token。每个包在 npm 上各配过一次 trusted publisher（workflow 文件名必须是 `publish.yml`）；配置后 2 天内必须完成一次成功发布，否则配置过期；
+- **首次配 TP 后的发布可能进暂存区**（配置处于 `pending validation`），需要在 npm 网页上批准一次。暂存版本不进 registry 的 `versions`，`npm view` 会 404，别据此判断「没发出去」；
+- 还没上 changesets：版本号手工改，等包多到需要独立发版时再引入；
 - frontmatter **放行未知字段**（zod `passthrough`）：内容仓库与工具版本会脱钩，多一个不认识的键不该让整站失败；新增字段走弃用期；
 - `examples/mini` 每次都必须构建成功——它是唯一的语法回归测试；
 - 内容文件与产物都不带 tool 版本信息，`meta.json` 是唯一记录。
@@ -226,7 +230,8 @@ dist/
 | v0.1 | `urlStyle: 'file'` 端到端（相对链接、目录页路径、重定向地址） | 完成 |
 | v0.1 | 站内搜索（索引 + 主题搜索框）与查看源码 | 完成 |
 | v0.1 | `deploy` 的 remote 目标（push、Pages） | 等 remote 接入 |
-| v0.1 | npm 发布 + 官方 Action | 未开始 |
+| v0.1 | npm 发布（五包 @ 0.1.1，Trusted Publishing + provenance） | 完成 |
+| v0.1 | `publish.yml`：打 tag 即发版，零 token | 完成 |
 | v0.2 | Electron 客户端（连接仓库、编辑预览、commit + push） | 未开始 |
 | v0.3+ | sitemap/RSS、语言切换、主题生态、按 section 分派布局 | 未开始 |
 
