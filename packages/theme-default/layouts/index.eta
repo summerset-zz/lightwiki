@@ -10,6 +10,12 @@
 <div class="shell">
   <aside class="sidebar">
     <a class="brand" href="<%= it.index.url %>"><%= it.site.title %></a>
+<% if (it.site.search) { %>
+    <div class="search" data-lightwiki-search data-index="<%= it.site.search.url ?? '' %>">
+      <input type="search" class="search-input" placeholder="搜索…" aria-label="搜索" autocomplete="off">
+      <ul class="search-results" hidden></ul>
+    </div>
+<% } %>
     <nav>
 <% for (const group of it.nav) { %>
       <div class="nav-group">
@@ -50,5 +56,8 @@
     </article>
   </main>
 </div>
+<% if (it.site.search) { %>
+<script src="<%= it.site.base %>/assets/theme/search.js" defer></script>
+<% } %>
 </body>
 </html>

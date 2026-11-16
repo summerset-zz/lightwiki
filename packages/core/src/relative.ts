@@ -70,24 +70,30 @@ export function rewriteRelativeLinks(
   pagePath: string,
   config: LoadedConfig,
 ): string {
-  const rewriteAttrs = (chunk: string): string =>
-    // 逐个标签处理：canonical / alternate 是给爬虫的绝对地址，不能相对化
-    chunk.replace(/<[a-z][^>]*>/gi, (tag) => {
-      if (/^<link\b/i.test(tag) && /\brel\s*=\s*["']?(canonical|alternate)/i.test(tag)) return tag;
+  // 逐个标签处理：canonical / alternate 是给爬虫的绝对地址，不能相对化
+  const rewriteTag = (tag: string): string => {
+    if (/^<link\b/i.test(tag) && /\brel\s*=\s*["']?(canonical|alternate)/i.test(tag)) return tag;
 
-      return tag.replace(
-        /\b(href|src|poster)\s*=\s*("([^"]*)"|'([^']*)')/gi,
-        (match, name: string, _quoted: string, dq?: string, sq?: string) => {
-          const url = dq ?? sq ?? '';
-          const next = relativeUrl(url, pagePath, config);
-          return next === url ? match : `${name}="${next}"`;
-        },
-      );
-    });
+    return tag.replace(
+      /\b(href|src|poster)\s*=\s*("([^"]*)"|'([^']*)')/gi,
+      (match, name: string, _quoted: string, dq?: string, sq?: string) => {
+        const url = dq ?? sq ?? '';
+        const next = relativeUrl(url, pagePath, config);
+        return next === url ? match : `${name}="${next}"`;
+      },
+    );
+  };
 
-  // 只改写普通 HTML 片段：`<script>` 与 `<style>` 的正文原样保留
+  const rewriteMarkup = (chunk: string): string =>
+    chunk.replace(/<[a-z][^>]*>/gi, (tag) => rewriteTag(tag));
+
+  // 拆开 `<script>` / `<style>` 块：**开标签要改写**（`<script src>` 在 file:// 下同样会坏），
+  // 块里的内容一个字都不能动（那是代码，不是标记）。
   return html
     .split(/(<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>)/i)
-    .map((chunk, index) => (index % 2 === 1 ? chunk : rewriteAttrs(chunk)))
+    .map((chunk, index) => {
+      if (index % 2 === 0) return rewriteMarkup(chunk);
+      return chunk.replace(/^<[a-z][^>]*>/i, (tag) => rewriteTag(tag));
+    })
     .join('');
 }

@@ -104,6 +104,30 @@ markdown-it (html, linkify)
 
 **内联模式由后处理完成，不靠布局判断**：`inline: true` 时，`inline.ts` 在 HTML 生成后把 `<link rel="stylesheet">` 换成 `<style>`、`<script src>` 换成内联脚本、其余资源换成 data URI。布局照常写 `<link>`——用户覆盖的布局也能享受内联，不需要主题配合。
 
+### 7.1 搜索与「查看源码」的边界
+
+这两个功能只有一条线：**数据在 core，UI 在主题**。
+
+| 谁 | 负责什么 |
+|---|---|
+| `core` 的 `search.ts` | 生成索引（`u`/`t`/`s`/`k`/`x`），决定它放哪里 |
+| `core` 的 `context.ts` | `it.site.search` 只给**位置**（`url` 或 `null`）；`it.page.markdown` 给整篇原文 |
+| `theme-default` | 搜索框、结果列表、键盘交互（`assets/search.js`）、源码折叠面板（`<details>`）、样式 |
+| 内容仓库 | `search.enabled` 开关；**覆盖了布局就要自己写 UI** |
+
+为什么不把索引塞进模板上下文：那会让每页的 `it.site` 多几百 KB，而布局实际只用 `search.url` 一个字段。
+
+**索引的两种形态**（由 `shouldInlineSearch()` 决定，主题不用关心）：
+
+| 模式 | 索引在哪 | 主题怎么拿 |
+|---|---|---|
+| directory | 产物根的 `search-index.json` | 容器的 `data-index` → `fetch` |
+| file / inline | 内联进每页的 `<script type="application/json" id="lightwiki-search-index">` | 直接读 DOM |
+
+`file://` 下 fetch 被浏览器挡掉，所以 file 模式必须内联；代价是每页都带一份全量索引，站点越大越明显（用 `search.excerpt` 缩摘要）。内联时索引里的 `u` 会按页面相对化 —— 与链接层同一套规则。
+
+**源码**不分模式，一律内联进页面（`it.page.markdown`，含 frontmatter），用 `<details>` 展开，**不需要 JS**。
+
 ## 8. 产物
 
 ```
@@ -139,7 +163,7 @@ dist/
 
 ## 10. 已实现 / 未实现
 
-**已实现**：三阶段渲染、双链（slug/标题/锚点）、宏（三种形态、组合、循环检测、行内与块级）、`it.page`/`it.site`、分类与分类页、404、重定向（js/server/both）、代码高亮、Less、markdown 插件钩子、dev server（SSE 热刷新）、全部 check 项、可移植产物、单文件产物（`inline`）、`urlStyle: 'dir'` 与 `'file'` 两种形态（含相对链接）、`deploy` 的本地目录目标。
+**已实现**：三阶段渲染、双链（slug/标题/锚点）、宏（三种形态、组合、循环检测、行内与块级）、`it.page`/`it.site`、分类与分类页、404、重定向（js/server/both）、代码高亮、Less、markdown 插件钩子、dev server（SSE 热刷新）、全部 check 项、可移植产物、单文件产物（`inline`）、`urlStyle: 'dir'` 与 `'file'` 两种形态（含相对链接）、站内搜索（索引 + 默认主题的搜索框）、查看源码、`deploy` 的本地目录目标。
 
 **未实现**：
 
@@ -147,7 +171,7 @@ dist/
 |---|---|
 | `deploy` 的 remote 目标 | 目前只有 `dir`（构建到本地目录）。push 到仓库 / 生成 Pages 等接入 remote 后做 |
 | npm 发布 + 官方 GitHub Action | 现在只能 clone 本仓库用 |
-| 搜索索引 | `hints` 只是数据，检索没接 |
+| 搜索的分词与高亮 | 现在是子串匹配，命中词不标亮 |
 | sitemap / RSS | 产物里没有 |
 | 语言切换 UI | 模板里没有切换器 |
 | 按 section 选布局 | 当前布局名固定 |
@@ -167,6 +191,8 @@ dist/
 | 改资源管线 | `assets.ts` → `build.ts` 的调用处 → `dev` 的 asset 分支 |
 | 改内联规则（哪些标签、哪种 data URI） | `inline.ts` 的 `inlineHtml` / `MIME` 表 |
 | 改相对链接改写规则 | `relative.ts` 的 `relativeUrl` / `isPageUrl` |
+| 改搜索命中策略或结果样式 | `theme-default/assets/search.js` 的 `score`、`style.css` 的 `.search-*` |
+| 改索引里放什么 | `search.ts` 的 `buildSearchIndex` → `site.search.excerpt` 配置 |
 
 改完至少跑：`yarn type:check`、`yarn wiki check examples/mini`、`yarn wiki build examples/mini`。
 
@@ -198,9 +224,10 @@ dist/
 | v0.1 | 内容管线、双链、宏、分类、404、重定向、高亮、Less、dev、check | 完成 |
 | v0.1 | `deploy` 本地目录目标 + 单文件产物（`inline`） | 完成 |
 | v0.1 | `urlStyle: 'file'` 端到端（相对链接、目录页路径、重定向地址） | 完成 |
+| v0.1 | 站内搜索（索引 + 主题搜索框）与查看源码 | 完成 |
 | v0.1 | `deploy` 的 remote 目标（push、Pages） | 等 remote 接入 |
 | v0.1 | npm 发布 + 官方 Action | 未开始 |
 | v0.2 | Electron 客户端（连接仓库、编辑预览、commit + push） | 未开始 |
-| v0.3+ | 搜索、sitemap/RSS、语言切换、主题生态、按 section 分派布局 | 未开始 |
+| v0.3+ | sitemap/RSS、语言切换、主题生态、按 section 分派布局 | 未开始 |
 
 Electron 后置的理由：它 90% 的工作量在认证与 git 状态，与编译链无关，早做会拖慢核心迭代。

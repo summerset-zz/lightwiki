@@ -32,6 +32,8 @@ export interface Page {
   /** 相对内容目录的路径，用于报错 */
   relativePath: string;
   data: Frontmatter;
+  /** 整篇原文（含 frontmatter）。「查看源码」用的就是它 */
+  raw: string;
   html: string;
   headings: Heading[];
   links: LinkRef[];
@@ -147,6 +149,8 @@ export interface PageSeed {
   data: Frontmatter;
   /** 去掉 frontmatter 之后的 markdown 正文 */
   body: string;
+  /** 整篇原文（含 frontmatter） */
+  raw: string;
   url: string;
   outputPath: string;
   draft: boolean;
@@ -200,6 +204,7 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
         relativePath,
         data,
         body: parsed.content,
+        raw,
         url: pageUrl(config, lang, slug),
         outputPath: outputPathFor(config, lang, slug),
         draft: data.draft,
@@ -238,6 +243,7 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
       file: seed.file,
       relativePath: seed.relativePath,
       data: seed.data,
+      raw: seed.raw,
       html: rendered.html,
       headings: rendered.headings,
       links: rendered.links,

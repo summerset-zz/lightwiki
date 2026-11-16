@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { extname, join, resolve, sep } from 'node:path';
 import {
+  buildSearchIndex,
   compileLess,
   createCategoryView,
   createIndexView,
@@ -11,10 +12,13 @@ import {
   createPageView,
   createRenderer,
   createSiteInfo,
+  injectSearchIndex,
   langPrefix,
   loadContent,
   normalizeBasePath,
   normUrl,
+  SEARCH_INDEX_FILE,
+  shouldInlineSearch,
   type LoadedConfig,
   type Page,
   type SiteInfo,
@@ -46,6 +50,7 @@ export type DevRoute =
   | { kind: 'index'; lang: string }
   | { kind: 'category'; lang: string; slug: string }
   | { kind: 'asset'; file: string }
+  | { kind: 'search-index' }
   | { kind: 'redirect'; location: string }
   | { kind: 'notfound' };
 
@@ -147,6 +152,8 @@ export function resolveDevRoute(
     }
   }
 
+  if (key === `/${SEARCH_INDEX_FILE}`) return { kind: 'search-index' };
+
   if (key.startsWith('/assets/')) {
     const rest = key.slice('/assets/'.length);
     if (rest.startsWith('theme/')) {
@@ -212,10 +219,18 @@ export async function startDevServer(
   }
 
   async function render(route: DevRoute): Promise<string | null> {
-    const inject = (html: string): string =>
-      html.includes('</body>')
-        ? html.replace('</body>', `${reloadSnippet(base)}</body>`)
-        : html + reloadSnippet(base);
+    const searchInline = config.search.enabled && shouldInlineSearch(config);
+
+    const inject = (html: string): string => {
+      // file / inline 模式下浏览器拿不到 json（fetch 被 file:// 挡），索引跟着页面走
+      const withSearch = searchInline
+        ? injectSearchIndex(html, buildSearchIndex(config, state.pages))
+        : html;
+
+      return withSearch.includes('</body>')
+        ? withSearch.replace('</body>', `${reloadSnippet(base)}</body>`)
+        : withSearch + reloadSnippet(base);
+    };
 
     if (route.kind === 'page') {
       const html = await renderer.renderLayout(
@@ -278,6 +293,16 @@ export async function startDevServer(
         if (route.kind === 'redirect') {
           res.writeHead(302, { Location: route.location });
           res.end();
+          return;
+        }
+
+        if (route.kind === 'search-index') {
+          const body = JSON.stringify(buildSearchIndex(config, state.pages));
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+          });
+          res.end(body);
           return;
         }
 

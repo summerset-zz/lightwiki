@@ -24,7 +24,8 @@ categories: [demo]
 - [[html|在正文里写 HTML]]：内联 SVG 与颜色约定
 - [[layouts|布局]]：覆盖主题模板
 - [[extend|扩展与样式]]：Less、代码高亮、markdown 插件
-- [[commands|命令]]：dev / check / build
+- [[commands|命令]]：dev / check / build / deploy
+- [[search|搜索与源码]]：索引由工具生成、界面由主题实现
 - [[limits|已知限制]]
 
 ## 双链长什么样 {#wikilink}

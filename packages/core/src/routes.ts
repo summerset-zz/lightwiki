@@ -103,6 +103,24 @@ export function localizeHref(href: string, lang: string, config: LoadedConfig): 
   return `${normalizeBasePath(config.basePath)}${next}${hash}`;
 }
 
+/** 搜索索引文件名（产物根目录） */
+export const SEARCH_INDEX_FILE = 'search-index.json';
+
+/** 搜索索引的站点路径（已含 basePath） */
+export function searchIndexUrl(config: LoadedConfig): string {
+  return `${normalizeBasePath(config.basePath)}/${SEARCH_INDEX_FILE}`;
+}
+
+/**
+ * 索引要不要内联进页面。
+ *
+ * 两种模式都必须内联：`file://` 下 fetch 不到 json，inline 模式下产物里根本没有别的文件。
+ * 主题据此拿 `it.site.search.url`（null = 读页面里的内联索引）。
+ */
+export function shouldInlineSearch(config: LoadedConfig): boolean {
+  return config.inline || config.urlStyle === 'file';
+}
+
 /** 资源路径（图片等）只加 basePath，不改语言、不改扩展名 */
 export function assetHref(src: string, config: LoadedConfig): string {
   if (!src.startsWith('/') || src.startsWith('//')) return src;

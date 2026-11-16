@@ -48,9 +48,20 @@ export {
   normalizeBasePath,
   outputPathFor,
   pageUrl,
+  SEARCH_INDEX_FILE,
+  searchIndexUrl,
+  shouldInlineSearch,
 } from './routes.js';
 export { createRenderer, type Renderer } from './render.js';
-export { rewriteRelativeLinks } from './relative.js';
+export { rewriteRelativeLinks, relativeUrl } from './relative.js';
+export {
+  buildSearchIndex,
+  injectSearchIndex,
+  plainText,
+  SEARCH_INDEX_ID,
+  type SearchEntry,
+  type SearchOptions,
+} from './search.js';
 export {
   buildNav,
   buildSidebar,

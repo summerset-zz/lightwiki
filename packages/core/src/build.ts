@@ -8,7 +8,8 @@ import { createInlineBundle, inlineHtml, type InlineBundle } from './inline.js';
 import { buildLinkReport, type LinkReport } from './links.js';
 import { createRenderer } from './render.js';
 import { relativeUrl, rewriteRelativeLinks } from './relative.js';
-import { categoryOutputPath, indexOutputPath, langPrefix, normalizeBasePath, urlToOutputPath } from './routes.js';
+import { categoryOutputPath, indexOutputPath, langPrefix, normalizeBasePath, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath } from './routes.js';
+import { buildSearchIndex, injectSearchIndex } from './search.js';
 import {
   createCategoryView,
   createIndexView,
@@ -79,6 +80,8 @@ export async function buildSite(
   const inlineTotals = { css: 0, scripts: 0, media: 0 };
   // file 模式下站内链接一律相对：`file://` 下的 `/docs/a.html` 会指到盘符根
   const relativeMode = config.urlStyle === 'file';
+  // 索引内联（file / inline 模式）：每页一份，url 相对当前页
+  const searchInline = config.search.enabled && shouldInlineSearch(config);
 
   /**
    * 所有 HTML 的唯一出口：内联与相对化在这里改写，顺便统计体积。
@@ -111,6 +114,14 @@ export async function buildSite(
 
     if (relativeMode && !options.absolute) {
       content = rewriteRelativeLinks(content, relative, config);
+    }
+
+    // 索引最后注入：不参与内联与相对化，它自己已经按页面算好了地址
+    if (searchInline) {
+      content = injectSearchIndex(
+        content,
+        buildSearchIndex(config, published, { fromPath: relative }),
+      );
     }
 
     const target = join(outputDir, relative);
@@ -217,6 +228,14 @@ export async function buildSite(
   if (!bundle) {
     await copyAssets(resolve(config.root, config.assetsDir), join(outputDir, 'assets'));
     await copyAssets(join(config.themeDir, 'assets'), join(outputDir, 'assets', 'theme'));
+  }
+
+  // 搜索索引：能 fetch 就写 json，不能（file / inline）就跟着页面走，已在 emit 里注入。
+  if (config.search.enabled && !searchInline) {
+    const body = `${JSON.stringify(buildSearchIndex(config, published))}\n`;
+    await writeFile(join(outputDir, SEARCH_INDEX_FILE), body, 'utf8');
+    written.push(SEARCH_INDEX_FILE);
+    bytes += Buffer.byteLength(body, 'utf8');
   }
 
   // 归档追溯用：产物里要能看出它是用什么版本生成的。

@@ -17,6 +17,12 @@
 <div class="shell">
   <aside class="sidebar">
     <a class="brand" href="<%= it.index.url %>"><%= it.site.title %></a>
+<% if (it.site.search) { %>
+    <div class="search" data-lightwiki-search data-index="<%= it.site.search.url ?? '' %>">
+      <input type="search" class="search-input" placeholder="搜索…" aria-label="搜索" autocomplete="off">
+      <ul class="search-results" hidden></ul>
+    </div>
+<% } %>
 <% if (it.sidebar.kind === 'category') { %>
     <p class="nav-section">分类 · <%= it.sidebar.title %></p>
 <% } %>
@@ -68,6 +74,14 @@
         </ul>
       </section>
 <% } %>
+
+<% if (it.page.markdown) { %>
+      <details class="source-view">
+        <summary>查看源码</summary>
+        <p class="meta">本页的 markdown 源文件（含 frontmatter）。</p>
+        <pre><code><%= it.page.markdown %></code></pre>
+      </details>
+<% } %>
     </article>
   </main>
 
@@ -85,6 +99,9 @@
 
 <% if (it.page.hints.length > 0) { %>
 <script type="application/json" id="lightwiki-hints"><%~ JSON.stringify(it.page.hints).replace(/</g, '\\u003c') %></script>
+<% } %>
+<% if (it.site.search) { %>
+<script src="<%= it.site.base %>/assets/theme/search.js" defer></script>
 <% } %>
 </body>
 </html>

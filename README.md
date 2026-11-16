@@ -10,7 +10,7 @@ cd lightwiki && yarn install
 yarn wiki dev examples/mini
 ```
 
-打开输出里的地址（默认 `http://127.0.0.1:5173`）。`examples/mini` 是用轻维基自己的语法写的**语法手册**，16 页，每页演示它正在讲的那个语法。
+打开输出里的地址（默认 `http://127.0.0.1:5173`）。`examples/mini` 是用轻维基自己的语法写的**语法手册**，17 页，每页演示它正在讲的那个语法。
 
 想建自己的站：
 

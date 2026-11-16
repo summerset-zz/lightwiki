@@ -132,6 +132,20 @@ export const siteConfigSchema = z.object({
     .default({ enabled: true, languages: [] }),
 
   /**
+   * 站内搜索。工具只负责**生成索引**（`search-index.json`，或内联进页面）；
+   * 搜索框、结果列表、跳转都在主题里 —— 那是 UI，不是数据。
+   *
+   * file 模式与 inline 模式下索引会自动内联（`file://` 下 fetch 不到 json）。
+   */
+  search: z
+    .object({
+      enabled: z.boolean().default(true),
+      /** 每页索引里保留的正文摘要长度（字符）；0 表示只要标题 */
+      excerpt: z.number().int().min(0).default(300),
+    })
+    .default({ enabled: true, excerpt: 300 }),
+
+  /**
    * 站点级 markdown-it 插件入口。
    *
    * ```ts

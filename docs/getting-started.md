@@ -84,6 +84,7 @@ export default {
 | `basePath` | `/` | 部署基路径。放到 `example.com/wiki/` 就写 `/wiki/` |
 | `urlStyle` | `directory` | `directory` → `/docs/a/`；`file` → `/docs/a.html`，且站内链接写成相对路径（给 `file://` 与 CHM 用） |
 | `inline` | `false` | 单文件产物：CSS/JS/图片全部塞进页面，产物里只剩 `.html` |
+| `search` | `{ enabled: true, excerpt: 300 }` | 站内搜索。`excerpt` 是每页索引里的正文摘要长度（字符），`enabled: false` 连索引都不产出 |
 | `theme` | `@lightwiki/theme-default` | 主题包名、git 地址或相对路径 |
 | `highlight` | `{ enabled: true, languages: [] }` | 代码高亮；`languages` 里加 highlight.js 的语言名 |
 | `markdown` | — | 函数，拿到 markdown-it 实例，见「扩展与样式」 |

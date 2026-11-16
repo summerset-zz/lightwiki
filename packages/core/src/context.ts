@@ -1,5 +1,5 @@
 import type { LoadedConfig } from './config.js';
-import { normalizeBasePath } from './routes.js';
+import { normalizeBasePath, searchIndexUrl, shouldInlineSearch } from './routes.js';
 
 /**
  * 模板上下文（布局与宏共用）。
@@ -50,6 +50,11 @@ export interface PageInfo {
   categories: string[];
   /** frontmatter 原样 */
   frontmatter: Record<string, unknown>;
+  /**
+   * 整篇 markdown 原文（含 frontmatter），供布局做「查看源码」。
+   * 注意它**不是** `source` —— 那个是「改编来源」。
+   */
+  markdown: string;
 }
 
 /** 约定：slug 为 `404` 的页面不进导航，也不按普通页面输出，只负责生成根目录的 404.html */
@@ -60,6 +65,12 @@ export interface CategoryInfo {
   slug: string;
   label: string;
   count: number;
+}
+
+/** 搜索索引对模板暴露的部分：只要位置，不要数据（数据在页面里或 json 里） */
+export interface SearchInfo {
+  /** 索引 json 的站点路径；索引内联进页面时为 null */
+  url: string | null;
 }
 
 export interface SiteInfo {
@@ -83,6 +94,8 @@ export interface SiteInfo {
   pageCounts: Record<string, number>;
   /** 所有已发布页面的摘要，按语言 + section + order 排好 */
   pages: PageSummary[];
+  /** 站内搜索；配置里关掉就是 null，模板据此决定要不要渲染搜索框 */
+  search: SearchInfo | null;
   /**
    * `wiki.config.ts` 的原始配置，只读。
    * 里面有绝对路径（root / themeDir），打印出来时注意别泄露本机路径。
@@ -98,6 +111,7 @@ export interface PageInfoInput {
   outputPath: string;
   relativePath: string;
   draft: boolean;
+  raw: string;
   data: {
     title: string;
     description?: string | undefined;
@@ -133,6 +147,7 @@ export function pageInfoOf(input: PageInfoInput): PageInfo {
     order: input.data.order ?? null,
     categories: categoriesOf(input.data.categories),
     frontmatter: input.data as unknown as Record<string, unknown>,
+    markdown: input.raw,
   };
 }
 
@@ -247,6 +262,9 @@ export function createSiteInfo(
     pageCount: published.length,
     pageCounts,
     pages: summaries,
+    search: config.search.enabled
+      ? { url: shouldInlineSearch(config) ? null : searchIndexUrl(config) }
+      : null,
     config,
   };
 }
