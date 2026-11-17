@@ -105,8 +105,8 @@ export default {
 |---|---|---|
 | `title` | **必填** | 站点名，进页面 `<title>` 与侧栏顶部 |
 | `siteUrl` | **必填** | 站点完整地址，用于拼接绝对链接 |
-| `defaultLanguage` | `zh` | 默认语言。**默认语言的地址不带语言前缀** |
-| `content` | **必填** | 语言 → 内容目录，`{ zh: 'content/zh', en: 'content/en' }` |
+| `defaultLanguage` | `zh` | 默认语言。**默认语言的地址不带语言前缀**；值必须是 `content` 的某个键，否则配置加载失败 |
+| `content` | **必填** | 语言 → 内容目录，`{ zh: 'content/zh', en: 'content/en' }`。只用一个语言就只写一项 |
 | `sections` | `[]` | 分组顺序，就是侧栏的顺序；页面 `section` 不在列表里会报错 |
 | `sectionLabels` | `{}` | 分组显示名，`{ syntax: '语法' }`；不写就显示 slug |
 | `categories` | `{}` | 分类显示名，`{ syntax: '语法' }` |

@@ -36,6 +36,54 @@ export default {
 
 `siteUrl` 写成 `example.com` 不算完整地址，校验会拦下来。页面模板里也能拿到它。
 
+## 只用一个语言 {#one-language}
+
+大多数站只用一种语言。这时 `content` 只写一项，`defaultLanguage` 写**同一个键**：
+
+```ts
+content: { zh: 'content/zh' },
+defaultLanguage: 'zh',
+```
+
+页面地址就是 `/docs/xxx/`，不带语言前缀。`content/zh/index.md` 就是首页。
+
+改成纯英文站只改这两处，目录名跟着改：
+
+```ts
+content: { en: 'content/en' },
+defaultLanguage: 'en',
+```
+
+语言代码不受 zh / en 限制，`ja`、`fr`、`zh-CN` 都行，它直接变成 URL 里的一段。目录名与语言代码不用一致，`{ fr: 'content/french' }` 也是合法的。
+
+`defaultLanguage` 必须是 `content` 里的某个键。写错了配置直接加载失败：
+
+```
+defaultLanguage -> "zh" is not a key of content (available: en)
+```
+
+> 为什么要拦：默认语言的页面不带前缀，根目录那张跳转页也是按它算的。两者对不上时构建照样成功，但入口会指向一个不存在的 `/docs/`，打开就是 404。
+
+## 加第二门语言 {#languages}
+
+`content` 加一行就行，其余字段不用动：
+
+```ts
+content: { zh: 'content/zh', en: 'content/en' },
+defaultLanguage: 'zh',
+```
+
+默认语言的地址不带前缀，其余语言带 `/<语言>/`：
+
+| 语言 | 页面地址 | 产物 |
+|---|---|---|
+| `zh`（默认） | `/docs/a/` | `docs/a/index.html` |
+| `en` | `/en/docs/a/` | `en/docs/a/index.html` |
+
+每种语言都必须有 `index.md`，缺了 `wiki check` 判失败。某页只在一门语言里有只是提示（`missing translation(s)`），不算错误。
+
+`assets/` 不分语言，同一份图片在任何语言的页面里都是同一个地址。分类页按语言各生成一份。
+
 ## 全部字段与默认值 {#fields}
 
 | 字段 | 默认值 | 作用 |
@@ -44,7 +92,7 @@ export default {
 | `siteUrl` | 必填 | 完整站点地址 |
 | `content` | 必填 | 语言到内容目录 |
 | `basePath` | `'/'` | 部署在子路径时的前缀，如 `'/wiki'` |
-| `defaultLanguage` | `'zh'` | 默认语言，链接里不带语言前缀 |
+| `defaultLanguage` | `'zh'` | 默认语言，链接里不带语言前缀。**必须是 `content` 的键** |
 | `assetsDir` | `'assets'` | 静态资源目录名，只改来源，产物里固定落 `assets/` |
 | `outputDir` | `'dist'` | 构建输出目录 |
 | `docsDir` | `'docs'` | 内容页的路径前缀 |

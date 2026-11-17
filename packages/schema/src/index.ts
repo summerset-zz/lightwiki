@@ -233,6 +233,22 @@ export const siteConfigSchema = z.object({
       'markdown must be a function',
     )
     .optional(),
+}).superRefine((value, ctx) => {
+  // `defaultLanguage` 必须真的是一门配了内容的语言。
+  //
+  // 不校验的后果不是报错而是**静默生成坏链接**：默认语言的页面不带前缀，
+  // 根目录那张跳转页也是按它算的（`/docs/`）。写成 `content` 里没有的语言时，
+  // 构建照样成功，但整站从登录页开始就 404 —— 只有部署上去才发现。
+  if (value.content[value.defaultLanguage] === undefined) {
+    const available = Object.keys(value.content);
+    ctx.addIssue({
+      code: 'custom',
+      path: ['defaultLanguage'],
+      message: `"${value.defaultLanguage}" is not a key of content (available: ${
+        available.length > 0 ? available.join(', ') : '(none)'
+      })`,
+    });
+  }
 });
 
 export type SiteConfig = z.infer<typeof siteConfigSchema>;
@@ -241,10 +257,10 @@ export type SiteConfigInput = z.input<typeof siteConfigSchema>;
 /** 站点级的 markdown-it 插件入口：拿到的就是 markdown-it 实例 */
 export type MarkdownSetup = (md: unknown) => void;
 
-/** 把 zod 的报错整理成「文件: 字段 → 原因」，避免只丢一坨 JSON。 */
+/** 把 zod 的报错整理成「文件: 字段 -> 原因」，避免只丢一坨 JSON。 */
 export function describeIssues(issues: z.ZodIssue[]): string[] {
   return issues.map((issue) => {
     const path = issue.path.join('.');
-    return path ? `${path} → ${issue.message}` : issue.message;
+    return path ? `${path} -> ${issue.message}` : issue.message;
   });
 }
