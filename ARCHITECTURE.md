@@ -167,7 +167,7 @@ dist/
 
 ## 10. 已实现 / 未实现
 
-**已实现**：三阶段渲染、双链（slug/标题/锚点）、宏（三种形态、组合、循环检测、行内与块级）、`it.page`/`it.site`、分类与分类页、404、重定向（js/server/both）、代码高亮、Less、markdown 插件钩子、dev server（SSE 热刷新 + 源码监护自动重启）、全部 check 项、可移植产物、单文件产物（`inline`）、`urlStyle: 'dir'` 与 `'file'` 两种形态（含相对链接）、站内搜索（索引 + 默认主题的搜索框）、查看源码、按页面指定布局（`layout`）、页面级样式/脚本（`styles` / `scripts`，可逐条声明 ESM）、`docsDir` 可配、未定义宏的可配置处理、红链标记。
+**已实现**：三阶段渲染、双链（slug/标题/锚点）、宏（三种形态、组合、循环检测、行内与块级）、`it.page`/`it.site`、分类与分类页、404、重定向（js/server/both）、代码高亮、Less、markdown 插件钩子、dev server（SSE 热刷新 + 源码监护自动重启）、全部 check 项、可移植产物、单文件产物（`inline`）、`urlStyle: 'directory'` 与 `'file'` 两种形态（含相对链接）、站内搜索（索引 + 默认主题的搜索框）、查看源码、按页面指定布局（`layout`）、页面级样式/脚本（`styles` / `scripts`，可逐条声明 ESM）、`docsDir` 可配、未定义宏的可配置处理、红链标记。
 
 **不打算做**：
 
