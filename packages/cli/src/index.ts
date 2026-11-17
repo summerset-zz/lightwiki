@@ -16,7 +16,7 @@ Options:
   -p, --port   dev server port (default: 5173)
   --host       dev server host (default: 127.0.0.1)
   -o, --out    output directory (default: outputDir from config)
-  --inline     inline CSS/JS/images so the output is only .html
+    --inline     inline CSS/JS/images/search index so the output is only .html
   --strict     treat red links and orphan pages as failures
   --name       site name for init (default: directory name)
   --force      init: overwrite existing files (default: skip)

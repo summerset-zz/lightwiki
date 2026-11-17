@@ -45,11 +45,18 @@ export interface BuildResult {
 }
 
 export async function buildSite(
-  config: LoadedConfig,
+  rawConfig: LoadedConfig,
   options: BuildOptions = {},
 ): Promise<BuildResult> {
+  // `--inline` 与配置里的 `inline: true` 等价，但对内只能是同一个值：
+  // 搜索索引内联（`shouldInlineSearch`）读的是 `config.inline`，如果只把命令行参数
+  // 当作局部变量，资源内联了、`search-index.json` 却仍会单独落盘，
+  // 「产物只有 .html」就不成立。所以这里先算出生效值，下游一律看它。
+  const inlineMode = options.inline ?? rawConfig.inline;
+  const config: LoadedConfig =
+    inlineMode === rawConfig.inline ? rawConfig : { ...rawConfig, inline: inlineMode };
+
   const outputDir = resolve(config.root, options.outDir ?? config.outputDir);
-  const inlineMode = options.inline ?? config.inline;
   const { pages, problems, warnings } = await loadContent(config);
 
   // 未解析的内链/未定义的宏进 build 的警告列表，否则产物里会静默露出占位或原文

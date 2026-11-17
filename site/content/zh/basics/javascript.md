@@ -122,4 +122,8 @@ x zh/index -> scripts: nope.js
 
 module 脚本内联后仍然保留 `type="module"`，`import` / `export` 照常能跑。
 
+搜索索引也会内联进页面，`data-index` 变成空值，搜索脚本直接读页面里那一份。这一条是为了让单个 html 拷走也能搜。
+
+> 体积会明显变大：每页都带一份脚本、一份样式、一份全站搜索索引。100 页的站，光索引就是每页几十 KB。单文件产物适合把一页单独发出去，不适合做站时默认开着。
+
 同一次构建里样式表也会一起内联。样式怎么编译见 [样式与 Less](/docs/basics/styles)，图片等资源的路径规则见 [静态资源](/docs/basics/assets)。

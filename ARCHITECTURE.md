@@ -148,7 +148,9 @@ dist/
 
 `outputDir` 每次构建前被 `rm -rf`。
 
-**单文件产物（`inline: true`）**：产物里只有 `.html`（加上 `_redirects`，如果业务需要），没有 `assets/`、没有 `meta.json`。`collectAssets()` 把资源留在内存里供 `inline.ts` 使用，一个字节都不落盘 —— 「只有 .html」是硬约束，不是副作用。
+**单文件产物（`inline: true`）**：产物里只有 `.html`（加上 `_redirects`，如果业务需要），没有 `assets/`、没有 `meta.json`、没有 `search-index.json`。`collectAssets()` 把资源留在内存里供 `inline.ts` 使用，一个字节都不落盘 —— 「只有 .html」是硬约束，不是副作用。
+
+搜索索引也算在内：命令行 `--inline` 会被折进生效配置（`buildSite` 开头），所以 `shouldInlineSearch()` 看到的就是 `true`，索引走内联分支而不是落盘。否则资源内联了、json 却在外面，「单文件」只在资源那一半成立。
 
 已知边界（`relative.ts` 有意不处理的）：`404.html` 保持绝对路径（它要在任意深度被打开）、`srcset` / 表单 `action`、自定义布局里的 `<meta http-equiv="refresh">`。重定向页的跳转地址由构建器算出 `href` 字段传进模板，所以是相对化的。
 

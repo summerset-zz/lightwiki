@@ -109,4 +109,6 @@ x zh/index -> styles: nope.css
 
 引用路径不用改，构建会把对应的 `<link>` 换成内联的 `<style>`。
 
+> 体积会明显变大：每页都带一份完整样式，页数越多总体积越高。站内搜索的索引也会跟着内联，按「页数 × (样式 + 索引)」放大。单文件产物适合把一页单独发出去，不适合做站时默认开着。
+
 脚本的挂法见 [JavaScript](/docs/basics/javascript)，图片等资源的路径规则见 [静态资源](/docs/basics/assets)。

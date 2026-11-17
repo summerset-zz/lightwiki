@@ -115,7 +115,7 @@ export default {
 | `basePath` | `/` | 部署基路径。放到 `example.com/wiki/` 就写 `/wiki/` |
 | `urlStyle` | `directory` | `directory` → `/docs/a/`；`file` → `/docs/a.html`，且站内链接写成相对路径（给 `file://` 与 CHM 用） |
 | `docsDir` | `docs` | 内容页的路径前缀。`'wiki'` → `/wiki/a/`；`''` → `/a/`（直接挂在语言根下） |
-| `inline` | `false` | 单文件产物：CSS/JS/图片全部塞进页面，产物里只剩 `.html` |
+| `inline` | `false` | 单文件产物：CSS/JS/图片/搜索索引全部塞进页面，产物里只剩 `.html`（体积代价见下文） |
 | `search` | `{ enabled: true, excerpt: 300 }` | 站内搜索。`excerpt` 是每页索引里的正文摘要长度（字符），`enabled: false` 连索引都不产出 |
 | `macros` | `{ undefined: 'show' }` | 未定义的宏怎么处理：`'show'` 保留 `{{原文}}`、`'hide'` 删掉、或给个 `(name, raw) => string` 函数。三种都会在构建时提示 |
 | `theme` | `@lightwiki/theme-default` | 主题包名、git 地址或相对路径 |
@@ -194,7 +194,7 @@ dist/
 ```
 
 只剩 `.html`，没有 `assets/` 也没有 `meta.json`，一个页面文件双击就能看。
-代价是每页各带一份样式，全站体积随页数线性增长。
+代价是每页各带一份样式与一份**全站搜索索引**，体积按「页数 × (样式 + 索引)」放大。要发给别人单页时用它，做站时不要用。
 
 `dist/` 是**一组可移植的静态文件**：没有服务器依赖、没有 SPA、没有外部 CDN。扔到任何静态托管、U 盘、光盘镜像里都能用。
 
