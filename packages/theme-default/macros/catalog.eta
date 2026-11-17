@@ -1,0 +1,11 @@
+<%
+// 分类清单：显示名 + 页面数，链到该分类页。
+// 数据来自 it.site.categoryList（已按配置声明顺序排好，未声明的排在后面）。
+// 产出 markdown 列表而不是 HTML —— 样式交给站点自己的 CSS。
+const categories = it.site.categoryList;
+const lines =
+  categories.length === 0
+    ? ['暂无分类。']
+    : categories.map((c) => `- [${c.label}](/categories/${c.slug}/)（${c.count} 篇）`);
+%>
+<%= lines.join('\n') %>

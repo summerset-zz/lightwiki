@@ -213,7 +213,9 @@ export function createSiteInfo(
   pages: Summarizable[],
   generatedAt: Date = new Date(),
 ): SiteInfo {
-  const published = pages.filter((page) => !page.draft);
+  // 404 页不是「站点里的一页」：它只负责生成根目录的 404.html，不该出现在导航、
+  // 分类计数和 `{{pages}}` 这类目录宏里。过滤放在这里，正文渲染与布局看到的才是同一份。
+  const published = pages.filter((page) => !page.draft && page.slug !== NOT_FOUND_SLUG);
   const pageCounts: Record<string, number> = {};
   for (const lang of Object.keys(config.content)) pageCounts[lang] = 0;
   for (const page of published) {

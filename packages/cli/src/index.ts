@@ -214,6 +214,22 @@ async function run(args: string[]): Promise<number> {
       }
     }
 
+    if (result.assetIssues.length > 0) {
+      section(`样式/脚本文件不存在 ${result.assetIssues.length} 处`);
+      line('  frontmatter 的 styles / scripts 相对 assets/ 解析（.less 会编译成同名 .css）');
+      for (const issue of result.assetIssues) {
+        line(`  ✗ ${issue.file} → ${issue.field}: ${issue.reference}`);
+      }
+    }
+
+    if (result.missingHomes.length > 0) {
+      section(`缺首页 ${result.missingHomes.length} 处`);
+      line('  每种语言都要有 content/<语言>/index.md —— 它就是该语言的首页（/docs/）');
+      for (const lang of result.missingHomes) {
+        line(`  ✗ ${lang}：没有 index.md，这个语言的首页会 404`);
+      }
+    }
+
     if (result.categoryIssues.length > 0) {
       section(`分类提示 ${result.categoryIssues.length} 处`);
       for (const issue of result.categoryIssues.slice(0, 20)) {

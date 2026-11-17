@@ -11,7 +11,8 @@
   "type": "module",
   "files": [
     "layouts",
-    "assets"
+    "assets",
+    "macros"
   ],
   "publishConfig": {
     "access": "public"

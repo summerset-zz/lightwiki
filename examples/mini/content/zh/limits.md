@@ -4,7 +4,7 @@ keywords: 限制, limit, todo, 待办
 description: v0.1 还不支持的东西，以及为什么。
 section: reference
 order: 3
-updated: 2026-11-15
+updated: 2026-11-17
 draft: false
 categories: [official]
 ---
@@ -15,13 +15,17 @@ categories: [official]
 
 英文页链到只有中文存在的页面时，目标页确实 404。暂时没有「回退到默认语言」的行为。
 
-## 只有 /docs 补语言前缀 {#prefix}
+## 只有内容页与分类页补语言前缀 {#prefix}
 
-其余站内路径原样输出。
+其余站内路径（`assets/` 等）原样输出。
 
-## 布局名固定 {#layouts}
+## 换布局不换数据 {#layouts}
 
-还不能「按 section 选不同布局」。
+`layout:` 只能换骨架，布局里能拿到的数据还是 `doc` 那一套。想要「一组编辑手挑的卡片」，得在 `.eta` 里写死或用宏。
+
+## 没有自定义排序 {#sort}
+
+目录宏只能按 `section` / `category` 过滤，顺序固定为 section → order → slug。要「按这个顺序列这几页」，目前只能手写列表。
 
 ## 行内宏不能产出块级结构 {#inline}
 

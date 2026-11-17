@@ -2,27 +2,39 @@ import { posix } from 'node:path';
 import type { LoadedConfig } from './config.js';
 import { normalizeBasePath, urlToOutputPath } from './routes.js';
 
+/** 语言代码段（`/zh/...`） */
+function isLangSegment(segment: string, config: LoadedConfig): boolean {
+  return config.content[segment] !== undefined;
+}
+
 /**
  * 是不是页面 URL（而非资源路径）。
  *
- * 只靠扩展名判断会误伤：slug 可以写成 `v1.2`。所以照 `localizeHref()` 的老规矩来——
- * 只有 `/docs` 与 `/categories` 两棵路径（含语言前缀）以及站点根是页面。
+ * 只靠扩展名判断会误伤：slug 可以写成 `v1.2`。所以优先**查已知页面集合**——
+ * 构建时所有页面的 URL 都是已知的，这是唯一可靠的判据（`docsDir` 可以配成空串，
+ * 那时页面就挂在语言根下，光看前缀根本分不出来）。
+ * 没给集合时（比如重定向页）退化成看 `docsDir` 与 `categories` 两棵路径。
  */
-function isPageUrl(path: string, config: LoadedConfig): boolean {
+function isPageUrl(path: string, config: LoadedConfig, pageKeys?: Set<string>): boolean {
   const segs = path.split('/').filter(Boolean);
   if (segs.length === 0) return true;
-  if (segs[0] === 'docs' || segs[0] === 'categories') return true;
-  return (
-    config.content[segs[0] ?? ''] !== undefined &&
-    (segs[1] === 'docs' || segs[1] === 'categories')
-  );
+
+  if (pageKeys) return pageKeys.has(`/${segs.join('/')}`);
+
+  const categoryAt = isLangSegment(segs[0] ?? '', config) ? 1 : 0;
+  return segs[categoryAt] === 'categories';
 }
 
 /**
  * 把一个站内绝对 URL 改写成相对 `pagePath` 的路径；不该改写的情况原样返回。
  * 单独导出是为了重定向页也能复用 —— 它的 meta refresh 与 JS 也要拿到可用地址。
  */
-export function relativeUrl(url: string, pagePath: string, config: LoadedConfig): string {
+export function relativeUrl(
+  url: string,
+  pagePath: string,
+  config: LoadedConfig,
+  pageKeys?: Set<string>,
+): string {
   if (!url.startsWith('/') || url.startsWith('//')) return url;
 
   const hashAt = url.indexOf('#');
@@ -43,7 +55,7 @@ export function relativeUrl(url: string, pagePath: string, config: LoadedConfig)
 
   // 页面 URL 要按 urlStyle 映射成产物路径（directory → index.html，file → .html）；
   // 资源（css / 图片 / 字体）路径是什么就指什么，别给它补 .html。
-  const target = isPageUrl(afterBase, config)
+  const target = isPageUrl(afterBase, config, pageKeys)
     ? urlToOutputPath(config, afterBase)
     : afterBase.replace(/^\/+/, '');
 
@@ -69,6 +81,7 @@ export function rewriteRelativeLinks(
   html: string,
   pagePath: string,
   config: LoadedConfig,
+  pageKeys: Set<string>,
 ): string {
   // 逐个标签处理：canonical / alternate 是给爬虫的绝对地址，不能相对化
   const rewriteTag = (tag: string): string => {
@@ -78,7 +91,7 @@ export function rewriteRelativeLinks(
       /\b(href|src|poster)\s*=\s*("([^"]*)"|'([^']*)')/gi,
       (match, name: string, _quoted: string, dq?: string, sq?: string) => {
         const url = dq ?? sq ?? '';
-        const next = relativeUrl(url, pagePath, config);
+        const next = relativeUrl(url, pagePath, config, pageKeys);
         return next === url ? match : `${name}="${next}"`;
       },
     );

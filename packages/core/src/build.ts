@@ -2,17 +2,17 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { collectAssets, copyAssets } from './assets.js';
 import type { LoadedConfig } from './config.js';
-import { loadContent, type ContentProblem } from './content.js';
+import { loadContent, type ContentProblem, type Page } from './content.js';
 import { createSiteInfo } from './context.js';
 import { createInlineBundle, inlineHtml, type InlineBundle } from './inline.js';
-import { buildLinkReport, type LinkReport } from './links.js';
+import { buildLinkReport, normUrl, type LinkReport } from './links.js';
+import { assetList, injectPageAssets, pageAssetUrl, resolvePageAsset } from './page-assets.js';
 import { createRenderer } from './render.js';
 import { relativeUrl, rewriteRelativeLinks } from './relative.js';
-import { categoryOutputPath, indexOutputPath, langPrefix, normalizeBasePath, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath } from './routes.js';
+import { categoryOutputPath, INDEX_SLUG, indexOutputPath, langPrefix, normalizeBasePath, pageUrl, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath } from './routes.js';
 import { buildSearchIndex, injectSearchIndex } from './search.js';
 import {
   createCategoryView,
-  createIndexView,
   createNotFoundRender,
   createPageView,
   NOT_FOUND_SLUG,
@@ -78,6 +78,35 @@ export async function buildSite(
 
   const reportedMissing = new Set<string>();
   const inlineTotals = { css: 0, scripts: 0, media: 0 };
+
+  /**
+   * 页面级样式/脚本：解析成站内地址。
+   *
+   * 找不到不算构建失败 —— 页面本身是好的，少一个样式表不该让整站出不来；
+   * 但会记成警告，`wiki check` 里则是错误。
+   */
+  const pageAssetsOf = (page: Page): { styles: string[]; scripts: string[] } => {
+    const resolveList = (refs: string[], field: string): string[] => {
+      const urls: string[] = [];
+      for (const ref of refs) {
+        const hit = resolvePageAsset(config, ref);
+        if (!hit) {
+          warnings.push({
+            file: `${page.lang}/${page.slug}`,
+            messages: [`${field} 找不到文件：${ref}（相对 ${config.assetsDir}/ 解析）`],
+          });
+          continue;
+        }
+        urls.push(pageAssetUrl(config, hit.rel));
+      }
+      return urls;
+    };
+
+    return {
+      styles: resolveList(assetList(page.data.styles), 'styles'),
+      scripts: resolveList(assetList(page.data.scripts), 'scripts'),
+    };
+  };
   // file 模式下站内链接一律相对：`file://` 下的 `/docs/a.html` 会指到盘符根
   const relativeMode = config.urlStyle === 'file';
   // 索引内联（file / inline 模式）：每页一份，url 相对当前页
@@ -90,9 +119,15 @@ export async function buildSite(
   const emit = async (
     relative: string,
     html: string,
-    options: { absolute?: boolean } = {},
+    options: { absolute?: boolean; page?: Page } = {},
   ): Promise<void> => {
     let content = html;
+
+    // 页面级样式/脚本先插：后面 inline 才能把它们一起内联进去
+    if (options.page) {
+      const resolved = pageAssetsOf(options.page);
+      content = injectPageAssets(content, resolved.styles, resolved.scripts);
+    }
 
     if (bundle) {
       const inlined = inlineHtml(html, relative, bundle, base);
@@ -113,7 +148,7 @@ export async function buildSite(
     }
 
     if (relativeMode && !options.absolute) {
-      content = rewriteRelativeLinks(content, relative, config);
+      content = rewriteRelativeLinks(content, relative, config, pageKeys);
     }
 
     // 索引最后注入：不参与内联与相对化，它自己已经按页面算好了地址
@@ -136,20 +171,18 @@ export async function buildSite(
   // 全站信息只算一次：宏与布局看到的是同一个对象，而且 generatedAt 保持一致
   const siteInfo = createSiteInfo(config, published);
 
+  // 相对化时用它判断「这不是资源而是页面」：比猜前缀可靠，docsDir 配成空串也不怕
+  const pageKeys = new Set(published.map((page) => normUrl(page.url, config)));
+
   for (const page of published) {
     const view = createPageView(config, pages, page, siteInfo) as unknown as Record<string, unknown>;
     // 页面可以自己挑布局（frontmatter 的 layout），不写就用主题的 doc
     const html = await renderer.renderLayout(page.data.layout ?? 'doc', view);
-    await emit(page.outputPath, html);
+    await emit(page.outputPath, html, { page });
   }
 
-  // 每种语言一个目录页：既是导航入口，也是孤页判定的基准
-  for (const lang of Object.keys(config.content)) {
-    const indexPath = indexOutputPath(config, lang);
-    const view = createIndexView(config, pages, lang, siteInfo) as unknown as Record<string, unknown>;
-    const html = await renderer.renderLayout('index', view);
-    await emit(indexPath, html);
-  }
+  // 首页（`/docs/` 或 docsDir 指定的位置）就是内容里的 `index.md`，走上面的普通页面循环。
+  // 以前这里会额外生成一张目录页，现在那一页由作者提供 —— 想列全站就用 {{catalog}} / {{pages}}。
 
   // 分类页：每种语言、每个实际被用到的分类各一页
   for (const lang of Object.keys(config.content)) {
@@ -213,16 +246,17 @@ export async function buildSite(
     }
   }
 
-  // 根目录跳转到默认语言，方便 file:// 双击直接看。
-  // file 模式下写相对路径（`docs.html`），否则双击时 `/docs/` 会指到盘符根。
-  const homeHref =
-    config.urlStyle === 'file'
-      ? `${langPrefix(config, config.defaultLanguage).replace(/^\//, '')}docs.html`
-      : `${base}${langPrefix(config, config.defaultLanguage)}/docs/`;
-  const rootIndex = `<!doctype html><meta charset="utf-8"><title>${config.title}</title>` +
-    `<meta http-equiv="refresh" content="0;url=${homeHref}">` +
-    `<p><a href="${homeHref}">进入 ${config.title}</a></p>`;
-  await emit('index.html', rootIndex);
+  // 根目录跳转到默认语言首页，方便 file:// 双击直接看。
+  // 若首页本身就在根上（`docsDir: ''`），产物已经是 index.html，不再多写一张跳转页。
+  const homeHref = pageUrl(config, config.defaultLanguage, INDEX_SLUG);
+  if (indexOutputPath(config, config.defaultLanguage) !== 'index.html') {
+    const href =
+      config.urlStyle === 'file' ? relativeUrl(homeHref, 'index.html', config, pageKeys) : homeHref;
+    const rootIndex = `<!doctype html><meta charset="utf-8"><title>${config.title}</title>` +
+      `<meta http-equiv="refresh" content="0;url=${href}">` +
+      `<p><a href="${href}">进入 ${config.title}</a></p>`;
+    await emit('index.html', rootIndex);
+  }
 
   // 资源：内容仓库的 assets/ 与主题的 assets/。`.less` 在这里编译成同名 `.css`。
   // 内联模式已经把它们读进内存了，不再落盘。

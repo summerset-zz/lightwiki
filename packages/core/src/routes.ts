@@ -12,17 +12,50 @@ export function langPrefix(config: LoadedConfig, lang: string): string {
   return lang === config.defaultLanguage ? '' : `/${lang}`;
 }
 
+/**
+ * 内容页的路径前缀，已含前导斜杠：`/docs`、`/wiki`，或者空串（页面直接挂在语言根下）。
+ * 所有路由都从这里取，不再各自写 `/docs`。
+ */
+export function pageBase(config: LoadedConfig): string {
+  const dir = config.docsDir.replace(/^\/+|\/+$/g, '');
+  return dir ? `/${dir}` : '';
+}
+
+/**
+ * 首页的 slug：`index.md` 就是该语言的首页。
+ *
+ * 以前首页是构建器自动生成的目录页，现在这一页由作者提供 —— 想炫酷、想纯 HTML、
+ * 想只是一句话，都是同一份 frontmatter 说了算。
+ */
+export const INDEX_SLUG = 'index';
+
 /** 页面在站点里的 URL（不含站点域名） */
 export function pageUrl(config: LoadedConfig, lang: string, slug: string): string {
   const base = normalizeBasePath(config.basePath);
-  const suffix = config.urlStyle === 'file' ? '.html' : '/';
-  return `${base}${langPrefix(config, lang)}/docs/${slug}${suffix}`;
+  const dir = `${langPrefix(config, lang)}${pageBase(config)}`;
+
+  if (slug === INDEX_SLUG) {
+    // 根上的首页：directory 模式是 `/`，file 模式只能是 `/index.html`
+    if (config.urlStyle === 'file') return `${base}${dir ? `${dir}.html` : '/index.html'}`;
+    return `${base}${dir}/`;
+  }
+
+  return `${base}${dir}/${slug}${config.urlStyle === 'file' ? '.html' : '/'}`;
 }
 
 /** 输出文件相对 outputDir 的路径 */
 export function outputPathFor(config: LoadedConfig, lang: string, slug: string): string {
-  const dir = `${langPrefix(config, lang)}/docs`.replace(/^\//, '');
-  return config.urlStyle === 'file' ? `${dir}/${slug}.html` : `${dir}/${slug}/index.html`;
+  // `docsDir: ''` 时这里会是空串，拼路径不能直接 `${dir}/...`，否则得到前导斜杠，
+  // 后续按相对路径算链接就会算飞（file 模式下会变成 `git repo/xxx/assets/...` 这种）
+  const dir = `${langPrefix(config, lang)}${pageBase(config)}`.replace(/^\//, '');
+  const at = dir ? `${dir}/` : '';
+
+  if (slug === INDEX_SLUG) {
+    if (config.urlStyle === 'file') return dir ? `${dir}.html` : 'index.html';
+    return `${at}index.html`;
+  }
+
+  return config.urlStyle === 'file' ? `${at}${slug}.html` : `${at}${slug}/index.html`;
 }
 
 /** 分类页 URL */
@@ -39,14 +72,13 @@ export function categoryOutputPath(config: LoadedConfig, lang: string, slug: str
 }
 
 /**
- * 目录页（`/docs/`）的输出路径。
+ * 首页（`<pageBase>/`）的输出路径。等于 slug 为 `index` 的那页的产物位置。
  *
- * file 模式下必须与 `urlToOutputPath()` / `localizeHref()` 算出来的一致（`docs.html`），
- * 否则链接会指向一个不存在的文件 —— 以前就出过这个错。
+ * 单独留一个函数是因为重定向与 file 模式的链接都拿它当中枢：
+ * 以前这里是「构建器自动生成的目录页」，现在就是作者写的 `index.md`。
  */
 export function indexOutputPath(config: LoadedConfig, lang: string): string {
-  const dir = `${langPrefix(config, lang)}/docs`.replace(/^\//, '');
-  return config.urlStyle === 'file' ? `${dir}.html` : `${dir}/index.html`;
+  return outputPathFor(config, lang, INDEX_SLUG);
 }
 
 /** 把站内 URL 映射成产物里的相对文件路径（相对 outputDir） */
@@ -79,7 +111,12 @@ function splitHash(href: string): { path: string; hash: string } {
  * 若再加一次 basePath 就会变成 `/wiki/wiki/docs/x`。部署在子路径时才会显形，
  * 以前一直是 `/` 所以没暴露过。
  */
-export function localizeHref(href: string, lang: string, config: LoadedConfig): string {
+export function localizeHref(
+  href: string,
+  lang: string,
+  config: LoadedConfig,
+  isPageSlug?: (slug: string) => boolean,
+): string {
   if (!href.startsWith('/') || href.startsWith('//')) return href;
 
   const base = normalizeBasePath(config.basePath);
@@ -92,12 +129,18 @@ export function localizeHref(href: string, lang: string, config: LoadedConfig): 
   }
   if (!next.startsWith('/')) next = `/${next}`;
 
-  // 只有这两棵路径是按语言分叉的；其他站内路径（工具页、字体页）与语言无关
-  const localized =
-    next === '/docs' ||
-    next.startsWith('/docs/') ||
-    next === '/categories' ||
-    next.startsWith('/categories/');
+  // 只有这两棵路径是按语言分叉的；其他站内路径（资源、工具页）与语言无关。
+  // 前缀可配（`docsDir`），所以不能再写死 `/docs`；前缀为空时页面就挂在语言根下，
+  // 那时只能问「这一页存不存在」—— 由调用方传入的 isPageSlug 回答。
+  const pagesBase = pageBase(config);
+  const firstSeg = next.split('/').filter(Boolean)[0] ?? '';
+
+  const isCategory = next === '/categories' || next.startsWith('/categories/');
+  const isPage = pagesBase
+    ? next === pagesBase || next.startsWith(`${pagesBase}/`)
+    : firstSeg !== '' && (isPageSlug?.(firstSeg) ?? false);
+
+  const localized = isPage || isCategory;
 
   if (localized) {
     next = `${langPrefix(config, lang)}${next}`;

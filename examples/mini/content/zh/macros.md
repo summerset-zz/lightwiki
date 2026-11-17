@@ -1,10 +1,10 @@
 ---
 title: 宏
-keywords: 宏, macro, 模板, 参数, template
+keywords: 宏, macro, 模板, 参数, template, catalog, 目录
 description: 宏是正文里 {{…}} 调用的片段，产出 markdown 文本，展开后继续被解析。
 section: syntax
 order: 5
-updated: 2026-11-15
+updated: 2026-11-17
 draft: false
 categories: [syntax]
 ---
@@ -33,6 +33,29 @@ categories: [syntax]
 整行只放一个宏时，可以产出块级结构：
 
 {{note("整行独占时，宏可以返回段落、列表、表格这类结构。")}}
+
+## 主题自带的目录宏 {#catalog}
+
+首页或任何一页需要「目录」时，不用手写：
+
+| 写法 | 产出 |
+|---|---|
+| `{{catalog}}` | 所有分类，带页面数与链接 |
+| `{{pages(section: syntax)}}` | 某个分组下的页面列表 |
+| `{{pages(category: demo)}}` | 某个分类下的页面列表 |
+| `{{pages()}}` | 当前语言的全部页面 |
+
+参数用**命名参数**（`键: 值`），不是 `key="value"`；写错了会被当成位置参数，什么也过滤不出来。
+
+它们产出的都是 markdown 列表，样式交给站点自己的 CSS。本页所在站点的首页用的就是这两个宏：
+
+```text
+{{catalog}}
+```
+
+```text
+{{pages(section: reference)}}
+```
 
 ## 宏产出的是文本 {#text}
 

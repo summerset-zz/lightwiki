@@ -4,21 +4,26 @@ import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { extname, join, resolve, sep } from 'node:path';
 import {
+  assetList,
   buildSearchIndex,
   compileLess,
   createCategoryView,
-  createIndexView,
   createNotFoundRender,
   createPageView,
   createRenderer,
   createSiteInfo,
+  injectPageAssets,
   injectSearchIndex,
   langPrefix,
   loadContent,
   normalizeBasePath,
   normUrl,
+  pageAssetUrl,
+  pageUrl,
+  resolvePageAsset,
   SEARCH_INDEX_FILE,
   shouldInlineSearch,
+  INDEX_SLUG,
   type LoadedConfig,
   type Page,
   type SiteInfo,
@@ -55,7 +60,6 @@ export interface DevState {
 
 export type DevRoute =
   | { kind: 'page'; page: Page }
-  | { kind: 'index'; lang: string }
   | { kind: 'category'; lang: string; slug: string }
   | { kind: 'asset'; file: string }
   | { kind: 'search-index' }
@@ -108,8 +112,24 @@ async function loadState(config: LoadedConfig): Promise<DevState> {
 }
 
 function indexUrlOf(config: LoadedConfig, lang: string): string {
-  const base = normalizeBasePath(config.basePath);
-  return `${base}${langPrefix(config, lang)}/docs/`;
+  return pageUrl(config, lang, INDEX_SLUG);
+}
+
+/** 页面级样式/脚本（frontmatter 的 styles / scripts）：解析成站内地址，缺的就跳过 */
+function pageAssetLinks(
+  config: LoadedConfig,
+  page: Page,
+): { styles: string[]; scripts: string[] } {
+  const urls = (refs: string[]): string[] =>
+    refs
+      .map((ref) => resolvePageAsset(config, ref))
+      .filter((hit): hit is NonNullable<typeof hit> => hit !== null)
+      .map((hit) => pageAssetUrl(config, hit.rel));
+
+  return {
+    styles: urls(assetList(page.data.styles)),
+    scripts: urls(assetList(page.data.scripts)),
+  };
 }
 
 /**
@@ -139,8 +159,10 @@ export function resolveDevRoute(
     }
 
     for (const lang of langs) {
+      // 首页就是 slug 为 index 的那一页，已经在 byUrl 里了，不需要单独判定
       if (candidate === normUrl(indexUrlOf(config, lang), config)) {
-        return { kind: 'index', lang };
+        const home = state.byUrl.get(candidate);
+        if (home) return { kind: 'page', page: home };
       }
     }
 
@@ -256,15 +278,8 @@ export async function startDevServer(
         route.page.data.layout ?? 'doc',
         createPageView(config, state.pages, route.page, state.siteInfo) as unknown as Record<string, unknown>,
       );
-      return inject(html);
-    }
-
-    if (route.kind === 'index') {
-      const html = await renderer.renderLayout(
-        'index',
-        createIndexView(config, state.pages, route.lang, state.siteInfo) as unknown as Record<string, unknown>,
-      );
-      return inject(html);
+      const assets = pageAssetLinks(config, route.page);
+      return inject(injectPageAssets(html, assets.styles, assets.scripts));
     }
 
     if (route.kind === 'category') {

@@ -2,12 +2,21 @@ import { existsSync } from 'node:fs';
 import type { LoadedConfig } from './config.js';
 import { loadContent, type ContentProblem } from './content.js';
 import { buildLinkReport, type LinkReport } from './links.js';
+import { assetList, resolvePageAsset } from './page-assets.js';
 import { layoutCandidates } from './render.js';
+import { INDEX_SLUG } from './routes.js';
 import type { TitleConflict } from './resolve.js';
 
 export interface LayoutIssue {
   file: string;
   layout: string;
+}
+
+/** frontmatter 的 styles / scripts 指向了不存在的文件 */
+export interface AssetIssue {
+  file: string;
+  field: 'styles' | 'scripts';
+  reference: string;
 }
 
 export interface SectionIssue {
@@ -66,6 +75,10 @@ export interface CheckResult {
   categoryIssues: CategoryIssue[];
   /** frontmatter 指定的布局找不到文件：构建时必炋，所以算错误 */
   layoutIssues: LayoutIssue[];
+  /** frontmatter 的 styles / scripts 找不到文件（构建时只警告，但仍然是写错了） */
+  assetIssues: AssetIssue[];
+  /** 缺首页的语言：`/docs/`（或 docsDir 指定的位置）会直接 404 */
+  missingHomes: string[];
 }
 
 export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
@@ -151,13 +164,31 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     }
   }
 
+  // styles / scripts：产物里会少一个引用，页面还能看，但那就是写错了
+  const assetIssues: AssetIssue[] = [];
+  for (const page of pages) {
+    for (const field of ['styles', 'scripts'] as const) {
+      for (const reference of assetList(page.data[field])) {
+        if (resolvePageAsset(config, reference)) continue;
+        assetIssues.push({ file: `${page.lang}/${page.slug}`, field, reference });
+      }
+    }
+  }
+
+  // 每种语言都得有 index.md：它是 `/docs/`（或 docsDir 指定的位置）唯一的来源
+  const missingHomes = Object.keys(config.content).filter(
+    (lang) => !pages.some((page) => page.lang === lang && page.slug === INDEX_SLUG),
+  );
+
   return {
     ok:
       problems.length === 0 &&
       sectionIssues.length === 0 &&
       conflicts.length === 0 &&
       macroErrors === 0 &&
-      layoutIssues.length === 0,
+      layoutIssues.length === 0 &&
+      assetIssues.length === 0 &&
+      missingHomes.length === 0,
     pageCount: pages.length,
     pageCounts: countByLanguage(config, pages),
     problems,
@@ -169,5 +200,7 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     unresolved,
     categoryIssues,
     layoutIssues,
+    assetIssues,
+    missingHomes,
   };
 }

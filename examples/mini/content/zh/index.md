@@ -38,6 +38,31 @@ categories: [demo]
 
 它们在这个页面上都真实生效，效果就是上面那排链接。
 
+## 这一页本身就是首页 {#as-home}
+
+`content/zh/index.md` 就是 `/docs/` —— 没有「自动生成的目录页」这回事，目录写什么、怎么排，全由这一页决定。想换成纯 HTML，就配一个 `layout: landing` 然后正文留空。
+
+下面两节用的是主题自带的目录宏；想按分组列全站，写成 `{{pages(section: reference)}}` 就是这个效果：
+
+{{pages(section: reference)}}
+
+### 按分类列 {#by-category}
+
+{{catalog}}
+
+## 这一页本身就是首页 {#as-home}
+
+`content/zh/index.md` 就是 `/docs/`，没有「自动生成的目录页」这回事 —— 目录写什么、怎么排，全由这一页决定。
+
+下面两节用的都是主题自带的目录宏。想要「按分组列全站」就把它们换成 `{{pages(section: 分组名)}}`：
+
+{{pages(section: reference)}}
+
+## 按分类列 {#by-category}
+
+{{catalog}}
+
+
 ## 宏 {#macro}
 
 {{note("这段文字来自 note 宏，不是正文里手写的。")}}

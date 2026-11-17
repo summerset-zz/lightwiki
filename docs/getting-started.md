@@ -114,6 +114,7 @@ export default {
 | `outputDir` | `dist` | 构建输出目录（相对内容根） |
 | `basePath` | `/` | 部署基路径。放到 `example.com/wiki/` 就写 `/wiki/` |
 | `urlStyle` | `directory` | `directory` → `/docs/a/`；`file` → `/docs/a.html`，且站内链接写成相对路径（给 `file://` 与 CHM 用） |
+| `docsDir` | `docs` | 内容页的路径前缀。`'wiki'` → `/wiki/a/`；`''` → `/a/`（直接挂在语言根下） |
 | `inline` | `false` | 单文件产物：CSS/JS/图片全部塞进页面，产物里只剩 `.html` |
 | `search` | `{ enabled: true, excerpt: 300 }` | 站内搜索。`excerpt` 是每页索引里的正文摘要长度（字符），`enabled: false` 连索引都不产出 |
 | `theme` | `@lightwiki/theme-default` | 主题包名、git 地址或相对路径 |
@@ -136,15 +137,15 @@ export default {
 
 页面文件名的规则：`content/zh/api/v1.md` → slug `api/v1` → `/docs/api/v1/`。**文件名就是身份**，改名等于删一篇加一篇。
 
-### 首页是自动生成的，别叫它 index.md {#home}
+### 首页就是 index.md {#home}
 
-`/docs/` 是**目录页**，由工具自动生成（列出所有页面），**不是**某个 `.md` 文件。
+`content/<语言>/index.md` **就是该语言的首页**（`/docs/`），没有「自动生成的目录页」。
 
-所以不要把入口页写成 `index.md` —— 那会得到 `/docs/index/`，和目录页撞名，很难解释。给入口页起个正常名字（`start.md`、`home.md`），它的地址就是 `/docs/start/`。
+目录要列什么由你决定：正文里放 `{{catalog}}`（按分类）或 `{{pages(section: 分组名)}}`（按分组），不想列就写别的。想要纯 HTML 的封面，给它配 `layout: landing`，正文留空。
+
+**每种语言都必须有 `index.md`**，缺了那个语言的首页会 404，`wiki check` 会报错。
 
 唯一的例外是 **`404.md`**：slug 为 `404` 的页面会被输出成根目录的 `404.html`，不会生成 `/docs/404/`。
-
-## 6. 本地构建
 
 ## 6. 构建
 
@@ -171,9 +172,10 @@ npx @lightwiki/cli deploy <内容目录>    # 同上，但走「为发布而构�
 
 ```
 dist/
-├── index.html                      跳转到默认语言
+├── index.html                      跳转到默认语言（docsDir 为空时这里就是首页）
 ├── 404.html                        静态托管的 404 页
-├── docs/<slug>/index.html          内容页
+├── docs/index.html                 首页（content/<语言>/index.md）
+├── docs/<slug>/index.html          其余内容页
 ├── categories/<slug>/index.html    分类页
 ├── assets/                         图片与编译后的 CSS
 └── meta.json                       构建时间与工具信息

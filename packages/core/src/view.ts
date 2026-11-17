@@ -1,7 +1,7 @@
-import type { LoadedConfig } from './config.js';
+﻿import type { LoadedConfig } from './config.js';
 import type { Page } from './content.js';
 import { keywordsOf, NOT_FOUND_SLUG, pageInfoOf, type SiteInfo } from './context.js';
-import { categoryUrl, langPrefix, normalizeBasePath } from './routes.js';
+import { categoryUrl, INDEX_SLUG, normalizeBasePath, pageUrl } from './routes.js';
 
 export interface NavPage {
   title: string;
@@ -150,55 +150,7 @@ export function createPageView(
     },
     nav: buildNav(config, pages, page.lang, page.url),
     sidebar: buildSidebar(config, pages, page),
-    index: { url: `${base}${langPrefix(config, page.lang)}/docs/` },
-  };
-}
-
-export interface IndexView {
-  site: SiteInfo;
-  page: Record<string, unknown>;
-  nav: NavGroup[];
-  groups: NavGroup[];
-  categories: Array<{ slug: string; label: string; url: string; count: number }>;
-  index: { url: string };
-}
-
-export function createIndexView(
-  config: LoadedConfig,
-  pages: Page[],
-  lang: string,
-  site: SiteInfo,
-): IndexView {
-  const base = normalizeBasePath(config.basePath);
-  const indexUrl = `${base}${langPrefix(config, lang)}/docs/`;
-  const nav = buildNav(config, pages, lang, indexUrl);
-  return {
-    site,
-    page: {
-      lang,
-      title: config.title,
-      description: '',
-      keywords: [],
-      updated: '',
-      url: indexUrl,
-      html: '',
-      headings: [],
-      hints: [],
-      sources: [],
-      source: { site: '', title: '', url: '', revid: '', license: '', licenseUrl: '', changes: '' },
-      license: '',
-      licenseUrl: '',
-      authors: '',
-    },
-    nav,
-    groups: nav,
-    categories: site.categoryList.map((c) => ({
-      slug: c.slug,
-      label: c.label,
-      url: categoryUrl(config, lang, c.slug),
-      count: c.count,
-    })),
-    index: { url: indexUrl },
+    index: { url: pageUrl(config, page.lang, INDEX_SLUG) },
   };
 }
 
@@ -227,7 +179,7 @@ export function createNotFoundView(
     site,
     lang,
     nav: buildNav(config, pages, lang, ''),
-    index: { url: `${base}${langPrefix(config, lang)}/docs/` },
+    index: { url: pageUrl(config, lang, INDEX_SLUG) },
   };
 }
 
@@ -299,6 +251,6 @@ export function createCategoryView(
       pages: members.map((p) => ({ title: p.data.title, url: p.url, current: false })),
     },
     nav: buildNav(config, pages, lang, url),
-    index: { url: `${base}${langPrefix(config, lang)}/docs/` },
+    index: { url: pageUrl(config, lang, INDEX_SLUG) },
   };
 }

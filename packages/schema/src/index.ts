@@ -54,6 +54,16 @@ export const frontmatterSchema = z
       .optional(),
 
     /**
+     * 这一页额外引入的样式表 / 脚本，按顺序注入 `<head>` 与 `</body>` 前。
+     *
+     * 路径相对 `assets/`（也可以写成 `/assets/...`）。**一律写 `.css`**：
+     * 与 assets 目录的约定一致 —— `hero.less` 会被编译成 `hero.css`，产物里只有后者。
+     * 文件不存在时 `wiki check` 会报错（构建会跳过并警告，不会让整页挂掉）。
+     */
+    styles: z.union([z.string(), z.array(z.string())]).optional(),
+    scripts: z.union([z.string(), z.array(z.string())]).optional(),
+
+    /**
      * 分类的键是 ASCII slug，显示名放站点配置的 `categories` 里。
      * 理由是 URL 要稳定、要能翻译。
      */
@@ -92,13 +102,27 @@ export const siteConfigSchema = z.object({
   content: z.record(z.string(), z.string()),
   assetsDir: z.string().default('assets'),
   /** 内容里允许出现的 section 取值与顺序；留空则不校验 */
-  sections: z.array(z.string()).default([]),
-  /** section slug → 显示名；未声明的直接用 slug */
+  sections: z.array(z.string()).default([]),  /** section slug → 显示名；未声明的直接用 slug */
   sectionLabels: z.record(z.string(), z.string()).default({}),
   /** 分类 slug → 显示名。未声明的分类用 slug 当显示名 */
   categories: z.record(z.string(), z.string()).default({}),
   theme: z.string().default('@lightwiki/theme-default'),
   outputDir: z.string().default('dist'),
+
+  /**
+   * 内容页的路径前缀。
+   *
+   * - `'docs'`（默认）→ `/docs/关于/`
+   * - `'wiki'` → `/wiki/关于/`
+   * - `''` → `/关于/`，页面直接挂在语言根下
+   *
+   * 只接受一段名字（允许空串）：带了斜杠等于把内容塞进子目录，那是另一件事。
+   * 空串时会和 `assets/`、`categories/` 这些保留段抢位置，由 `check` 点出来。
+   */
+  docsDir: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]*$/, 'docsDir 只能是一段名字（字母、数字、下划线、连字符），留空表示页面在根目录')
+    .default('docs'),
   /**
    * 链接形态。directory 适合托管站（a/b/），file 适合 file:// 与 CHM（a/b.html）。
    */

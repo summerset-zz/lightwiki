@@ -1,7 +1,7 @@
 import type { LoadedConfig } from './config.js';
 import type { Page } from './content.js';
 import { NOT_FOUND_SLUG } from './context.js';
-import { categoryUrl, normalizeBasePath } from './routes.js';
+import { categoryUrl, INDEX_SLUG, normalizeBasePath } from './routes.js';
 
 export interface RedLink {
   from: string;
@@ -67,18 +67,14 @@ export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport
     }
   }
 
-  // 索引页（/docs、/zh/docs）由构建器生成，天然会链向所有页面，不计入孤页判定
-  const indexKeys = new Set(
-    Object.keys(config.content).map((lang) => hrefToKey(`/${lang === config.defaultLanguage ? '' : lang + '/'}docs`.replace('//', '/'), config)),
-  );
-
-  // 入口页：每种语言排序第一的那页。它靠导航到达，没人用正文链接指向它是正常的。
-  for (const key of entryPageKeys(config, published)) indexKeys.add(key);
+  // 入口页：每种语言的首页（slug 为 index），它天然会链向全站，不计入孤页判定。
+  // 没写首页时退回「排序第一的那页」—— 它靠导航到达，没人用正文链接指向它也正常。
+  const entryKeys = new Set(entryPageKeys(config, published));
 
   const orphans = published
     .filter((p) => {
       const key = normUrl(p.url, config);
-      if (indexKeys.has(key)) return false;
+      if (entryKeys.has(key)) return false;
       return (inbound.get(key) ?? 0) === 0;
     })
     .map((p) => `${p.lang}/${p.slug}`)
@@ -90,13 +86,18 @@ export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport
   return { redLinks, orphans, inboundCount };
 }
 
-/** 每种语言按「section 顺序 → order → slug」排序后的第一页 */
+/** 每种语言的入口页：优先首页（slug 为 index），否则按 section → order → slug 排序取第一页 */
 function entryPageKeys(config: LoadedConfig, pages: Page[]): string[] {
   const keys: string[] = [];
   for (const lang of Object.keys(config.content)) {
-    const list = pages
-      .filter((p) => p.lang === lang)
-      .sort((a, b) => {
+    const list = pages.filter((p) => p.lang === lang);
+    const home = list.find((p) => p.slug === INDEX_SLUG);
+    if (home) {
+      keys.push(normUrl(home.url, config));
+      continue;
+    }
+
+    const sorted = [...list].sort((a, b) => {
         const sa = config.sections.indexOf(a.data.section ?? '');
         const sb = config.sections.indexOf(b.data.section ?? '');
         const na = sa === -1 ? Number.MAX_SAFE_INTEGER : sa;
@@ -107,7 +108,7 @@ function entryPageKeys(config: LoadedConfig, pages: Page[]): string[] {
         if (oa !== ob) return oa - ob;
         return a.slug.localeCompare(b.slug, 'zh');
       });
-    const first = list[0];
+    const first = sorted[0];
     if (first) keys.push(normUrl(first.url, config));
   }
   return keys;

@@ -193,7 +193,14 @@ export function createMarkdown(options: MarkdownOptions = {}): MarkdownIt {
           const href = token.attrGet('href');
           if (href) {
             const isExternal = /^https?:\/\//i.test(href);
-            token.attrSet('href', isExternal ? href : localizeHref(href, env.lang, env.config));
+            token.attrSet(
+              'href',
+              isExternal
+                ? href
+                : localizeHref(href, env.lang, env.config, (slug) =>
+                    env.resolver ? env.resolver.hasSlug(slug, env.lang) : false,
+                  ),
+            );
             if (isExternal) {
               token.attrSet('rel', 'nofollow noopener');
               if (safeHost(href) !== siteHost) token.attrSet('target', '_blank');

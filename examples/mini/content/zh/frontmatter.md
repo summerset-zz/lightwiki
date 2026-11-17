@@ -1,10 +1,10 @@
 ---
 title: frontmatter
-keywords: frontmatter, 字段, 元数据, metadata, yaml
+keywords: frontmatter, 字段, 元数据, metadata, yaml, styles, scripts
 description: 页面开头的 YAML 块能写哪些字段，以及写坏了会怎样。
 section: syntax
 order: 2
-updated: 2026-11-15
+updated: 2026-11-17
 draft: false
 categories: [syntax]
 ---
@@ -35,6 +35,8 @@ sidebarCategory: syntax
 | `updated` | `YYYY-MM-DD` | 只接受这个格式 |
 | `draft` | 布尔 | 见 [[structure#draft]] |
 | `layout` | 字符串 | 这一页用的布局名，不写就是 `doc`，见 [[layouts#per-page]] |
+| `styles` | 字符串或数组 | 额外引入的样式表，注入 `</head>` 前 |
+| `scripts` | 字符串或数组 | 额外引入的脚本，注入 `</body>` 前（带 `defer`） |
 | `categories` | 字符串或数组 | 见 [[categories]] |
 | `sidebarCategory` | 字符串 | 用哪个分类的页面列表充当侧栏 |
 | `hintTitle` `hint` | 字符串 | 整篇只有一个术语提示时用 |

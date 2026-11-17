@@ -8,7 +8,23 @@ export {
 } from './content.js';
 export { buildSite, type BuildOptions, type BuildResult } from './build.js';
 export { deploySite, type DeployOptions, type DeployResult, type DeployTarget } from './deploy.js';
-export { checkSite, type CategoryIssue, type CheckResult, type LayoutIssue, type MissingTranslation, type SectionIssue, type UnresolvedIssue } from './check.js';
+export {
+  checkSite,
+  type AssetIssue,
+  type CategoryIssue,
+  type CheckResult,
+  type LayoutIssue,
+  type MissingTranslation,
+  type SectionIssue,
+  type UnresolvedIssue,
+} from './check.js';
+export {
+  assetList,
+  injectPageAssets,
+  pageAssetUrl,
+  resolvePageAsset,
+  type ResolvedAsset,
+} from './page-assets.js';
 export { buildLinkReport, normUrl, type LinkReport, type RedLink } from './links.js';
 export { compileLess, collectAssets, copyAssets, type AssetFile } from './assets.js';
 export { createHighlighter, type Highlighter } from './highlight.js';
@@ -42,11 +58,13 @@ export {
   assetHref,
   categoryOutputPath,
   categoryUrl,
+  INDEX_SLUG,
   indexOutputPath,
   langPrefix,
   localizeHref,
   normalizeBasePath,
   outputPathFor,
+  pageBase,
   pageUrl,
   SEARCH_INDEX_FILE,
   searchIndexUrl,
@@ -66,13 +84,11 @@ export {
   buildNav,
   buildSidebar,
   createCategoryView,
-  createIndexView,
   createNotFoundRender,
   createNotFoundView,
   createPageView,
   NOT_FOUND_SLUG,
   type CategoryView,
-  type IndexView,
   type NavGroup,
   type NavPage,
   type NotFoundRender,
