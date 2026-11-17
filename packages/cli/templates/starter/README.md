@@ -126,6 +126,7 @@ GitHub Copilot、Cursor、Codex 这类工具会自动读它，你什么都不用
 | 自定义样式 | `assets/*.css` 或 `assets/*.less` |
 | 覆盖某个页面的布局 | `layouts/doc.eta` 等，只写要改的那个 |
 | 让某一页用别的布局 | 该页 frontmatter 写 `layout: landing`，再建 `layouts/landing.eta` |
+| 给某一页单独挂样式/脚本 | 该页 frontmatter 写 `styles: [x.css]` / `scripts: [x.js]`，文件放 `assets/` |
 | 自定义宏 | `macros/note.eta` 等 |
 
 布局就是完整的 HTML 骨架，`<style>` 与 `<script>` 都可以直接写在里面；换了布局之后能用的数据仍然是 `page` / `site` / `nav` 那一套。

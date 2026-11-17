@@ -6,7 +6,7 @@ import { loadContent, type ContentProblem, type Page } from './content.js';
 import { createSiteInfo } from './context.js';
 import { createInlineBundle, inlineHtml, type InlineBundle } from './inline.js';
 import { buildLinkReport, normUrl, type LinkReport } from './links.js';
-import { assetList, injectPageAssets, pageAssetUrl, resolvePageAsset } from './page-assets.js';
+import { assetList, injectPageAssets, pageAssetUrl, resolvePageAsset, scriptList } from './page-assets.js';
 import { createRenderer } from './render.js';
 import { relativeUrl, rewriteRelativeLinks } from './relative.js';
 import { categoryOutputPath, INDEX_SLUG, indexOutputPath, langPrefix, normalizeBasePath, pageUrl, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath } from './routes.js';
@@ -89,26 +89,29 @@ export async function buildSite(
    * 找不到不算构建失败 —— 页面本身是好的，少一个样式表不该让整站出不来；
    * 但会记成警告，`wiki check` 里则是错误。
    */
-  const pageAssetsOf = (page: Page): { styles: string[]; scripts: string[] } => {
-    const resolveList = (refs: string[], field: string): string[] => {
-      const urls: string[] = [];
-      for (const ref of refs) {
-        const hit = resolvePageAsset(config, ref);
-        if (!hit) {
-          warnings.push({
-            file: `${page.lang}/${page.slug}`,
-            messages: [`${field}: file not found: ${ref} (resolved against ${config.assetsDir}/)`],
-          });
-          continue;
-        }
-        urls.push(pageAssetUrl(config, hit.rel));
+  const pageAssetsOf = (page: Page): { styles: string[]; scripts: Array<{ src: string; module: boolean }> } => {
+    const resolveOne = (ref: string, field: string): string | null => {
+      const hit = resolvePageAsset(config, ref);
+      if (!hit) {
+        warnings.push({
+          file: `${page.lang}/${page.slug}`,
+          messages: [`${field}: file not found: ${ref} (resolved against ${config.assetsDir}/)`],
+        });
+        return null;
       }
-      return urls;
+      return pageAssetUrl(config, hit.rel);
     };
 
     return {
-      styles: resolveList(assetList(page.data.styles), 'styles'),
-      scripts: resolveList(assetList(page.data.scripts), 'scripts'),
+      styles: assetList(page.data.styles)
+        .map((ref) => resolveOne(ref, 'styles'))
+        .filter((url): url is string => url !== null),
+      scripts: scriptList(page.data.scripts)
+        .map((entry) => {
+          const url = resolveOne(entry.src, 'scripts');
+          return url === null ? null : { src: url, module: entry.module };
+        })
+        .filter((entry): entry is { src: string; module: boolean } => entry !== null),
     };
   };
   // file 模式下站内链接一律相对：`file://` 下的 `/docs/a.html` 会指到盘符根
@@ -134,7 +137,9 @@ export async function buildSite(
     }
 
     if (bundle) {
-      const inlined = inlineHtml(html, relative, bundle, base);
+      // 注意传 content 而不是 html：页面级 styles / scripts 是刚插进去的，
+      // 拿原始 html 去内联会把它们整个丢掉（曾经就是这样，单文件产物里少样式）
+      const inlined = inlineHtml(content, relative, bundle, base);
       content = inlined.html;
       inlineTotals.css += inlined.report.css;
       inlineTotals.scripts += inlined.report.scripts;

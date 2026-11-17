@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import type { LoadedConfig } from './config.js';
 import { loadContent, type ContentProblem } from './content.js';
 import { buildLinkReport, type LinkReport } from './links.js';
-import { assetList, resolvePageAsset } from './page-assets.js';
+import { assetList, resolvePageAsset, scriptList } from './page-assets.js';
 import { layoutCandidates } from './render.js';
 import { INDEX_SLUG } from './routes.js';
 import type { TitleConflict } from './resolve.js';
@@ -177,11 +177,14 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
   // styles / scripts：产物里会少一个引用，页面还能看，但那就是写错了
   const assetIssues: AssetIssue[] = [];
   for (const page of pages) {
-    for (const field of ['styles', 'scripts'] as const) {
-      for (const reference of assetList(page.data[field])) {
-        if (resolvePageAsset(config, reference)) continue;
-        assetIssues.push({ file: `${page.lang}/${page.slug}`, field, reference });
-      }
+    const file = `${page.lang}/${page.slug}`;
+    for (const reference of assetList(page.data.styles)) {
+      if (resolvePageAsset(config, reference)) continue;
+      assetIssues.push({ file, field: 'styles', reference });
+    }
+    for (const entry of scriptList(page.data.scripts)) {
+      if (resolvePageAsset(config, entry.src)) continue;
+      assetIssues.push({ file, field: 'scripts', reference: entry.src });
     }
   }
 

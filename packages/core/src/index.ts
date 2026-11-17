@@ -23,7 +23,9 @@ export {
   injectPageAssets,
   pageAssetUrl,
   resolvePageAsset,
+  scriptList,
   type ResolvedAsset,
+  type ScriptRef,
 } from './page-assets.js';
 export { buildLinkReport, normUrl, type LinkReport, type RedLink } from './links.js';
 export { compileLess, collectAssets, copyAssets, type AssetFile } from './assets.js';

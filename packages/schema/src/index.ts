@@ -61,7 +61,24 @@ export const frontmatterSchema = z
      * 文件不存在时 `wiki check` 会报错（构建会跳过并警告，不会让整页挂掉）。
      */
     styles: z.union([z.string(), z.array(z.string())]).optional(),
-    scripts: z.union([z.string(), z.array(z.string())]).optional(),
+    /**
+     * 脚本。每条可以是一个路径，也可以写成 `{ src, module }`。
+     *
+     * `module: true` 会注入 `<script type="module">`（不加 defer —— module 本来就是延迟执行的）。
+     * 两种写法可以混用，所以只在个别脚本需要 ESM 时不必把整页都换成模块。
+     */
+    scripts: z
+      .union([
+        z.string(),
+        z.object({ src: z.string().min(1, 'src must not be empty'), module: z.boolean().default(false) }),
+        z.array(
+          z.union([
+            z.string(),
+            z.object({ src: z.string().min(1, 'src must not be empty'), module: z.boolean().default(false) }),
+          ]),
+        ),
+      ])
+      .optional(),
 
     /**
      * 分类的键是 ASCII slug，显示名放站点配置的 `categories` 里。

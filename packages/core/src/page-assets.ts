@@ -15,13 +15,47 @@ import { normalizeBasePath } from './routes.js';
  * 所以用户覆盖过的布局也自动获得这两个字段的能力，不用在 `.eta` 里写额外代码。
  */
 
-/** frontmatter 里的字符串或数组统一成干净的字符串数组 */
+/** frontmatter 里的字符串或数组统一成干净的字符串数组（styles 用） */
 export function assetList(value: unknown): string[] {
   const raw = typeof value === 'string' ? [value] : Array.isArray(value) ? value : [];
   return raw
     .filter((item): item is string => typeof item === 'string')
     .map((item) => item.trim())
     .filter((item) => item.length > 0);
+}
+
+/** 一条脚本：路径 + 是否 ES module */
+export interface ScriptRef {
+  src: string;
+  module: boolean;
+}
+
+/**
+ * `scripts` 的两种写法：`'a.js'` 或 `{ src: 'a.js', module: true }`，可以混放在数组里。
+ * 字符串仍然是最常用的那种，对象只是给需要 ESM 的单条脚本用。
+ */
+export function scriptList(value: unknown): ScriptRef[] {
+  const raw =
+    typeof value === 'string' || (value !== null && typeof value === 'object' && !Array.isArray(value))
+      ? [value]
+      : Array.isArray(value)
+        ? value
+        : [];
+
+  const out: ScriptRef[] = [];
+  for (const item of raw) {
+    if (typeof item === 'string') {
+      const src = item.trim();
+      if (src) out.push({ src, module: false });
+      continue;
+    }
+    if (item && typeof item === 'object') {
+      const entry = item as { src?: unknown; module?: unknown };
+      const src = typeof entry.src === 'string' ? entry.src.trim() : '';
+      if (src) out.push({ src, module: entry.module === true });
+    }
+  }
+  return out;
 }
 
 export interface ResolvedAsset {
@@ -64,10 +98,17 @@ export function pageAssetUrl(config: LoadedConfig, rel: string): string {
 /**
  * 把样式表塞进 `</head>` 前、脚本塞进 `</body>` 前。
  *
+ * 普通脚本带 `defer`；module 脚本不带（它本来就是延迟执行的），但要保留
+ * `type="module"` —— 内联之后丢了它，`import` / `export` 会直接报语法错。
+ *
  * 放在 inline 之前执行，所以 `inline: true` 时这两个字段也被一起内联，
  * 产物仍然只有 `.html`。
  */
-export function injectPageAssets(html: string, styles: string[], scripts: string[]): string {
+export function injectPageAssets(
+  html: string,
+  styles: string[],
+  scripts: Array<{ src: string; module: boolean }>,
+): string {
   if (styles.length === 0 && scripts.length === 0) return html;
 
   let next = html;
@@ -83,7 +124,12 @@ export function injectPageAssets(html: string, styles: string[], scripts: string
 
   if (scripts.length > 0) {
     const tags = scripts
-      .map((src) => `<script src="${src.replace(/"/g, '&quot;')}" defer></script>`)
+      .map(({ src, module }) => {
+        const url = src.replace(/"/g, '&quot;');
+        return module
+          ? `<script type="module" src="${url}"></script>`
+          : `<script src="${url}" defer></script>`;
+      })
       .join('\n');
     next = next.includes('</body>')
       ? next.replace('</body>', `${tags}\n</body>`)

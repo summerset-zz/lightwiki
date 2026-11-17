@@ -36,12 +36,28 @@ sidebarCategory: syntax
 | `draft` | 布尔 | 见 [[structure#draft]] |
 | `layout` | 字符串 | 这一页用的布局名，不写就是 `doc`，见 [[layouts#per-page]] |
 | `styles` | 字符串或数组 | 额外引入的样式表，注入 `</head>` 前 |
-| `scripts` | 字符串或数组 | 额外引入的脚本，注入 `</body>` 前（带 `defer`） |
+| `scripts` | 字符串 / 数组 / `{ src, module }` | 额外引入的脚本，注入 `</body>` 前（普通脚本带 `defer`，`module: true` 则加 `type="module"`） |
 | `categories` | 字符串或数组 | 见 [[categories]] |
 | `sidebarCategory` | 字符串 | 用哪个分类的页面列表充当侧栏 |
 | `hintTitle` `hint` | 字符串 | 整篇只有一个术语提示时用 |
 | `sourceSite` 等 | 字符串 | 整篇改编的来源，见 [[directives#source]] |
 | `license` `licenseUrl` `authors` | 字符串 | 站点自有的内容许可 |
+
+## 页面的样式与脚本 {#assets}
+
+`styles` / `scripts` 相对 `assets/` 解析（也接受 `/assets/...`），`.less` 会认成同名 `.css`。
+
+每条脚本可以单独声明是不是 ES module，两种写法能混用：
+
+```yaml
+scripts:
+  - theme/analytics.js          # 普通脚本：<script src defer>
+  - src: theme/app.js           # ESM：<script type="module">
+    module: true
+  - theme/widget.js
+```
+
+`module: true` 的脚本**不加** `defer` —— module 本来就是延迟执行的。单文件产物（`--inline`）里这个字段也会被保留，`import` / `export` 不会因为内联而报语法错。
 
 ## 未知字段不会报错 {#unknown}
 

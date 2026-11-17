@@ -21,6 +21,7 @@ import {
   pageAssetUrl,
   pageUrl,
   resolvePageAsset,
+  scriptList,
   SEARCH_INDEX_FILE,
   shouldInlineSearch,
   INDEX_SLUG,
@@ -119,16 +120,22 @@ function indexUrlOf(config: LoadedConfig, lang: string): string {
 function pageAssetLinks(
   config: LoadedConfig,
   page: Page,
-): { styles: string[]; scripts: string[] } {
-  const urls = (refs: string[]): string[] =>
-    refs
-      .map((ref) => resolvePageAsset(config, ref))
-      .filter((hit): hit is NonNullable<typeof hit> => hit !== null)
-      .map((hit) => pageAssetUrl(config, hit.rel));
+): { styles: string[]; scripts: Array<{ src: string; module: boolean }> } {
+  const url = (ref: string): string | null => {
+    const hit = resolvePageAsset(config, ref);
+    return hit === null ? null : pageAssetUrl(config, hit.rel);
+  };
 
   return {
-    styles: urls(assetList(page.data.styles)),
-    scripts: urls(assetList(page.data.scripts)),
+    styles: assetList(page.data.styles)
+      .map(url)
+      .filter((item): item is string => item !== null),
+    scripts: scriptList(page.data.scripts)
+      .map((entry) => {
+        const resolved = url(entry.src);
+        return resolved === null ? null : { src: resolved, module: entry.module };
+      })
+      .filter((entry): entry is { src: string; module: boolean } => entry !== null),
   };
 }
 
