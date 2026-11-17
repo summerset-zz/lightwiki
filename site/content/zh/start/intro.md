@@ -10,13 +10,13 @@ draft: false
 
 ## 它是什么 {#what}
 
-你用 markdown 写页面，开头加一小段 frontmatter —— 标题、分组、排序之类的几行声明。跑一条命令，得到一个 `dist/`。
+你用 markdown 写页面，开头加一小段 frontmatter：标题、分组、排序之类的几行声明。跑一条命令，得到一个 `dist/`。
 
 `dist/` 里是纯静态文件：没有服务器、没有数据库、没有 SPA、没有外部 CDN。扔到任何静态托管、U 盘、甚至光盘镜像里，双击就能看。
 
 ## 和 MediaWiki 比一下 {#compare}
 
-提到「维基」，多数人想到的是 MediaWiki：要一台服务器，装 PHP 和 MySQL，每看一次页面就现查一次数据库。
+提到维基，多数人想到的是 MediaWiki：要一台服务器，装 PHP 和 MySQL，每看一次页面就现查一次数据库。
 
 轻维基走另一头。页面在构建的时候就已经变成文件了，之后谁来看都不需要程序参与。代价是它不适合几百人同时在线编辑；好处是，你只需要写 markdown，剩下的活交给编译。
 
@@ -43,16 +43,16 @@ dist/
 
 三件事值得记：
 
-- **首页就是 `docs/index.html`**，它来自 `content/zh/index.md` —— 不是自动生成的目录页。
+- **首页就是 `docs/index.html`**，它来自 `content/zh/index.md`，不是自动生成的目录页。
 - **一页一个目录**：`content/zh/start.md` → `/docs/start/` → `docs/start/index.html`。
 - **`assets/` 放样式和图片**：你自己的在 `assets/` 下，主题的单独归到 `assets/theme/`。
 
 ## 想立刻看一眼 {#try}
 
-三个入口，从「不用动手」排到「动手」：
+三个入口，按动手程度从少到多：
 
-1. 线上语法示例站：<https://summerset-zz.github.io/lightwiki/> —— 每一页都在演示它自己讲的那个语法。
-2. 模板仓库：<https://github.com/summerset-zz/lightwiki-starter> —— 点 **Use this template** 就有了自己的站。
+1. 线上语法示例站：<https://summerset-zz.github.io/lightwiki/>。每一页都在演示它自己讲的那个语法。
+2. 模板仓库：<https://github.com/summerset-zz/lightwiki-starter>，点 **Use this template** 就有了自己的站。
 3. 一条命令：
 
 ```bash
