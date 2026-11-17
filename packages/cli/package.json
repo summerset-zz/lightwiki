@@ -1,6 +1,6 @@
 {
   "name": "@lightwiki/cli",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "轻维基的命令行：wiki dev / check / build / deploy",
   "license": "MIT",
   "repository": {

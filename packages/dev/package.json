@@ -1,6 +1,6 @@
 {
   "name": "@lightwiki/dev",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "轻维基的本地预览服务器（node:http + SSE）",
   "license": "MIT",
   "repository": {

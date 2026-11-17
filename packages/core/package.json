@@ -1,6 +1,6 @@
 {
   "name": "@lightwiki/core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "轻维基的核心：扫描、渲染、链接图、构建",
   "license": "MIT",
   "repository": {

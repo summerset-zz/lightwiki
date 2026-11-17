@@ -156,7 +156,7 @@ export default {
 |---|---|---|
 | 本地看一眼 | 什么都不装 | `npx @lightwiki/cli dev .` |
 | 在自己的仓库里构建 | 建议 `npm i -D @lightwiki/cli`（版本可复现、离线可用） | `npx wiki build .` |
-| CI 里构建 | 一段 workflow（起始模板已带） | `npx @lightwiki/cli@^0.1.0 build .` |
+| CI 里构建 | 一段 workflow（起始模板已带） | `npx --yes @lightwiki/cli build .` |
 
 四个子命令：
 
