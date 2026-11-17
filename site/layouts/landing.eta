@@ -154,7 +154,7 @@ title: 你好，世界
         <p class="pair-label">macros/term.eta</p>
         <pre><code>&lt;%
   const word = it.args[0] ?? '';
-  const gloss = it.named.定义 ?? '';
+  const gloss = it.named.gloss ?? '';
 %&gt;
 **&lt;%~ word %&gt;**（&lt;%~ gloss %&gt;）</code></pre>
       </div>
@@ -163,7 +163,7 @@ title: 你好，世界
         <pre><code>排版里 **字距**（tracking）
 这个词，指的是…
 
-{{term(字距, 定义: 一组字符之间的
+{{term(字距, gloss: 一组字符之间的
 统一间距)}}</code></pre>
       </div>
     </div>
