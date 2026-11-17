@@ -43,6 +43,16 @@ scripts:
 
 路径相对 `assets/`，写 `/assets/app.js` 也认，构建会剥掉这个前缀再找文件。
 
+**站外地址直接写完整的 URL**，它会原样进产物：不查本地文件、不加站点前缀，`--inline` 也不会去内联它。
+
+```yaml
+scripts:
+  - src: https://cdn.jsdelivr.net/npm/某个库/dist/x.min.js
+    module: true
+```
+
+引外部库的完整例子（含 CDN 与本地各自的代价）见 [引用外部库](/docs/advanced/external-libs)。
+
 ## module 与普通脚本 {#module}
 
 两者的产物标签不一样：
@@ -113,6 +123,8 @@ x zh/index -> scripts: nope.js
 ```
 
 路径写错时页面照常生成，只是脚本没加载。页面上往往看不出任何区别，改完去浏览器控制台看一眼。
+
+站外地址不在这项检查里：CDN 上的东西我们看不见，域名写错也不会报，只会在浏览器控制台里失败。
 
 字段本身的位置与规则见 [frontmatter](/docs/basics/frontmatter)。
 
