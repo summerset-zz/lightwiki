@@ -54,15 +54,23 @@ export async function collectAssets(srcDir: string): Promise<AssetFile[]> {
   return files;
 }
 
+/** 拷贝结果：产物里的资源文件数与总字节数（`.less` 已编译成 `.css`） */
+export interface CopiedAssets {
+  files: number;
+  bytes: number;
+}
+
 /** 复制资源目录到产物（非 inline 模式）：`.less` 编译成同名 `.css`，其余原样。 */
-export async function copyAssets(srcDir: string, destDir: string): Promise<number> {
+export async function copyAssets(srcDir: string, destDir: string): Promise<CopiedAssets> {
   const files = await collectAssets(srcDir);
 
+  let bytes = 0;
   for (const file of files) {
     const target = join(destDir, ...file.path.split('/'));
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, file.data);
+    bytes += file.data.length;
   }
 
-  return files.length;
+  return { files: files.length, bytes };
 }

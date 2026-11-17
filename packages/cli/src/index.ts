@@ -39,13 +39,25 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-/** Artifact stats. Shared wording so the numbers mean the same thing everywhere. */
+/**
+ * Artifact stats. Shared wording so the numbers mean the same thing everywhere.
+ *
+ * 体积分两行：第一行是总体积（含资源），第二行拆开写。
+ * 资源可能是一个几 MB 的第三方库，混在一起会让「页面有多大」失去答案。
+ */
 function printArtifact(result: BuildResult, elapsed: number): void {
-  line(
-    `  pages ${result.pageCount} | files ${result.written.length} | ${formatBytes(
-      result.bytes,
-    )} | ${elapsed} ms`,
-  );
+  const fileCount = result.written.length + result.assetFiles;
+  const total = result.bytes + result.assetBytes;
+
+  line(`  pages ${result.pageCount} | files ${fileCount} | ${formatBytes(total)} | ${elapsed} ms`);
+
+  if (result.assetFiles > 0) {
+    line(
+      `  bytes: html+json ${formatBytes(result.bytes)} | assets ${formatBytes(
+        result.assetBytes,
+      )} (${result.assetFiles} file(s))`,
+    );
+  }
 
   if (result.inline) {
     const stats = result.inlineStats;

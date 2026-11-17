@@ -69,6 +69,16 @@ argument-hint: "要做什么？例如：加搜索索引 / 修分类页链接 / �
 - **不要跑打包**。这个项目没有 build 步骤：各包 `exports` 指向 `src/*.ts`，`tsx` 直接执行。
 - **不要创建后台任务**（`Start-Job`、`Start-Process`、`nohup`、`&`）。除 dev server 外不要留任何常驻进程。
 - **不要用终端命令改源码文件**（PowerShell 会把中文按 GBK 解码再写回，整片乱码）。一律用编辑工具。
+- **临时文件一律以 `.tmp-` 开头**，`.gitignore` 里有一条 `.tmp-*`（同时匹配文件与目录）。用完删掉，但**先起对名字**，否则 `git add -A` 会把它带进提交：
+
+  | 用途 | 命名 | 备注 |
+  |---|---|---|
+  | 一次性验证脚本 | `.tmp-probe.ts` | `npx tsx .tmp-probe.ts`，跑完删 |
+  | 临时站点（验证构建、资源、语言等） | `.tmp-asset/`、`.tmp-lang/` | `yarn wiki build .tmp-asset`，跑完删 |
+  | curl / 抓取的中转文件 | `.tmp-pkg.json` | 别留在根目录 |
+  | 临时产物目录 | `.tmp-out/` | 用 `-o .tmp-out` 指定 |
+
+  反例：`tmp-probe.ts`、`probe.tmp.ts` 都**不会**被忽略（`.tmp-*` 只认开头那个点），`git add -A` 当场就把它提交了。
 - **不要改 `node_modules`**。库有问题就用包装/绕过的办法解决，并在代码里注释原因。
 - 不确定的第三方行为（托管方对 404 的处理、某个库的 API）先查证，别猜。
 - 改路由或产物形态时，`routes.ts` / `build.ts` / `dev` 的 `resolveDevRoute` **三处必须同步**，否则预览与产物不一致。

@@ -36,8 +36,12 @@ export interface BuildResult {
   inline: boolean;
   /** 内联命中数；非内联模式为 null */
   inlineStats: { css: number; scripts: number; media: number } | null;
-  /** 产物总体积（字节） */
+  /** 写出来的文字文件（HTML / json）的字节数，不含资源 */
   bytes: number;
+  /** 拷进 `assets/` 的资源文件数；内联模式为 0（它们已经进 HTML 了） */
+  assetFiles: number;
+  /** 拷进 `assets/` 的资源字节数；内联模式为 0 */
+  assetBytes: number;
   /** 未定义的宏有几处（产物里保留原文 / 隐藏 / 自定义，看配置） */
   undefinedMacros: number;
   /** 当前对未定义宏的处理方式，CLI 据此拼提示文案 */
@@ -281,9 +285,16 @@ export async function buildSite(
 
   // 资源：内容仓库的 assets/ 与主题的 assets/。`.less` 在这里编译成同名 `.css`。
   // 内联模式已经把它们读进内存了，不再落盘。
+  //
+  // 这两批单独计（`assetFiles` / `assetBytes`）：它们可能是 MB 级的第三方库，
+  // 混进 `bytes` 会让「页面有多大」这个问题失去答案。
+  let assetFiles = 0;
+  let assetBytes = 0;
   if (!bundle) {
-    await copyAssets(resolve(config.root, config.assetsDir), join(outputDir, 'assets'));
-    await copyAssets(join(config.themeDir, 'assets'), join(outputDir, 'assets', 'theme'));
+    const own = await copyAssets(resolve(config.root, config.assetsDir), join(outputDir, 'assets'));
+    const theme = await copyAssets(join(config.themeDir, 'assets'), join(outputDir, 'assets', 'theme'));
+    assetFiles = own.files + theme.files;
+    assetBytes = own.bytes + theme.bytes;
   }
 
   // 搜索索引：能 fetch 就写 json，不能（file / inline）就跟着页面走，已在 emit 里注入。
@@ -333,6 +344,8 @@ export async function buildSite(
     inline: bundle !== null,
     inlineStats: bundle ? inlineTotals : null,
     bytes,
+    assetFiles,
+    assetBytes,
     undefinedMacros: undefinedMacroList.length,
     undefinedMacroMode,
   };
