@@ -7,7 +7,7 @@ import { z } from 'zod';
  */
 const isoDate = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, '应为 YYYY-MM-DD，例如 2026-11-15');
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD, e.g. 2026-11-15');
 
 /**
  * 修订号写成字符串最稳（前导零不会丢），但 YAML 里不写引号就会变成数字。
@@ -16,7 +16,7 @@ const isoDate = z
 const revid = z
   .union([z.string(), z.number()])
   .transform((value) => String(value))
-  .refine((value) => /^\d+$/.test(value), '只接受纯数字修订号');
+  .refine((value) => /^\d+$/.test(value), 'digits only');
 
 /** keywords 允许写成逗号分隔的字符串（既有内容的习惯），也允许写成数组。 */
 const keywords = z.union([z.string(), z.array(z.string())]);
@@ -34,7 +34,7 @@ const keywords = z.union([z.string(), z.array(z.string())]);
 export const frontmatterSchema = z
   .object({
     // —— 内容 ——
-    title: z.string().min(1, 'title 不能为空'),
+    title: z.string().min(1, 'title must not be empty'),
     description: z.string().optional(),
     keywords: keywords.optional(),
     section: z.string().optional(),
@@ -50,7 +50,7 @@ export const frontmatterSchema = z
      */
     layout: z
       .string()
-      .regex(/^[A-Za-z0-9._-]+$/, 'layout 只能是文件名，不能带路径，例如 landing')
+      .regex(/^[A-Za-z0-9._-]+$/, 'layout must be a single file name, e.g. landing')
       .optional(),
 
     /**
@@ -78,15 +78,15 @@ export const frontmatterSchema = z
     // —— 整篇改编的来源 ——
     sourceSite: z.string().optional(),
     sourceTitle: z.string().optional(),
-    sourceUrl: z.string().url('sourceUrl 需要一个完整 URL').optional(),
+    sourceUrl: z.string().url('sourceUrl must be a full URL').optional(),
     sourceRevid: revid.optional(),
     sourceLicense: z.string().optional(),
-    sourceLicenseUrl: z.string().url('sourceLicenseUrl 需要一个完整 URL').optional(),
+    sourceLicenseUrl: z.string().url('sourceLicenseUrl must be a full URL').optional(),
     sourceChanges: z.string().optional(),
 
     // —— 站点自有内容的许可 ——
     license: z.string().optional(),
-    licenseUrl: z.string().url('licenseUrl 需要一个完整 URL').optional(),
+    licenseUrl: z.string().url('licenseUrl must be a full URL').optional(),
     authors: z.union([z.string(), z.array(z.string())]).optional(),
   })
   .passthrough();
@@ -103,20 +103,21 @@ export type Frontmatter = z.infer<typeof frontmatterSchema>;
 const undefinedMacroHandler = z.union([
   z.enum(['show', 'hide']),
   z.custom<(name: string, raw: string) => string>((value) => typeof value === 'function', {
-    message: 'macros.undefined 只能是 show / hide，或一个函数 (name, raw) => string',
+    message: 'macros.undefined must be show / hide, or a function (name, raw) => string',
   }),
 ]);
 
 export const siteConfigSchema = z.object({
   title: z.string().min(1),
-  siteUrl: z.string().url('siteUrl 需要一个完整 URL'),
+  siteUrl: z.string().url('siteUrl must be a full URL'),
   basePath: z.string().default('/'),
   defaultLanguage: z.string().default('zh'),
   /** 语言代码 → 该语言的内容目录（相对内容根目录） */
   content: z.record(z.string(), z.string()),
   assetsDir: z.string().default('assets'),
   /** 内容里允许出现的 section 取值与顺序；留空则不校验 */
-  sections: z.array(z.string()).default([]),  /** section slug → 显示名；未声明的直接用 slug */
+  sections: z.array(z.string()).default([]),
+  /** section slug -> display name; undeclared ones fall back to the slug */
   sectionLabels: z.record(z.string(), z.string()).default({}),
   /** 分类 slug → 显示名。未声明的分类用 slug 当显示名 */
   categories: z.record(z.string(), z.string()).default({}),
@@ -143,7 +144,7 @@ export const siteConfigSchema = z.object({
    */
   docsDir: z
     .string()
-    .regex(/^[A-Za-z0-9_-]*$/, 'docsDir 只能是一段名字（字母、数字、下划线、连字符），留空表示页面在根目录')
+    .regex(/^[A-Za-z0-9_-]*$/, 'docsDir must be a single name (letters, digits, _ or -); leave empty for pages at the site root')
     .default('docs'),
   /**
    * 链接形态。directory 适合托管站（a/b/），file 适合 file:// 与 CHM（a/b.html）。
@@ -167,8 +168,8 @@ export const siteConfigSchema = z.object({
   redirects: z
     .array(
       z.object({
-        from: z.string().min(1, 'from 不能为空'),
-        to: z.string().min(1, 'to 不能为空'),
+        from: z.string().min(1, 'from must not be empty'),
+        to: z.string().min(1, 'to must not be empty'),
         status: z.number().int().default(301),
       }),
     )
@@ -212,7 +213,7 @@ export const siteConfigSchema = z.object({
   markdown: z
     .custom<MarkdownSetup>(
       (value) => value === undefined || typeof value === 'function',
-      'markdown 必须是一个函数',
+      'markdown must be a function',
     )
     .optional(),
 });

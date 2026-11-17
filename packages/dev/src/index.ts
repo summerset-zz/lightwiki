@@ -244,7 +244,7 @@ export async function startDevServer(
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
-          process.stderr.write(`重建失败：${message}\n`);
+          process.stderr.write(`rebuild failed: ${message}\n`);
         }
         for (const client of clients) client.write('data: reload\n\n');
       })();
@@ -325,12 +325,12 @@ export async function startDevServer(
         if (pathname === `${base}${RESTART_PATH}` || pathname === RESTART_PATH) {
           if (options.supervised !== true) {
             res.writeHead(501, { 'Content-Type': 'text/plain; charset=utf-8' });
-            res.end('这个 dev server 不是被 wiki dev 监护启动的，没法自己重启；请手动重启它\n');
+            res.end('this dev server was not started by the wiki dev supervisor, so it cannot restart itself; restart it manually\n');
             return;
           }
           res.writeHead(202, { 'Content-Type': 'text/plain; charset=utf-8' });
           res.end('restarting\n');
-          process.stderr.write('  收到重启请求，重启中…\n');
+          process.stderr.write('  restart requested, restarting...\n');
           // 先把响应推出去再退，否则浏览器那边是「连接被重置」而不是一句 restarting
           setImmediate(() => process.exit(RESTART_EXIT_CODE));
           return;
@@ -403,7 +403,7 @@ export async function startDevServer(
       } catch (error) {
         const message = error instanceof Error ? error.stack ?? error.message : String(error);
         res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end(`渲染失败\n\n${message}`);
+        res.end(`render failed\n\n${message}`);
       }
     })();
   });
@@ -433,7 +433,7 @@ export async function startDevServer(
     }
     if (attempt === range - 1) {
       throw new Error(
-        `端口 ${startPort}–${startPort + range - 1} 都被占用，请用 --port 指定一个空闲端口`,
+        `ports ${startPort}-${startPort + range - 1} are all taken; pick a free one with --port`,
       );
     }
   }

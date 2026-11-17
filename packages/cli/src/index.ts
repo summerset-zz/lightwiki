@@ -3,27 +3,27 @@ import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { buildSite, checkSite, deploySite, loadConfig, type BuildResult } from '@lightwiki/core';
 
-const USAGE = `轻维基 CLI
+const USAGE = `lightwiki CLI
 
-用法：
-  wiki init [目录]                     生成新站点（配置 + 示例内容 + Pages workflow）
-  wiki dev [目录] [-p 端口]           启动本地预览（改动自动刷新）
-  wiki check [目录]                    校验 frontmatter、section、红链、孤页、缺译
-  wiki build [目录] [-o 目录] [--inline]   构建静态站点
-  wiki deploy [目录] [-o 目录] [--inline]  构建可部署产物（目前只输出到本地目录）
+Usage:
+  wiki init [dir]                       scaffold a new site (config + sample content + Pages workflow)
+  wiki dev [dir] [-p port]              start the preview server (live reload)
+  wiki check [dir]                      validate frontmatter, sections, red links, orphans, translations
+  wiki build [dir] [-o out] [--inline]  build a static site
+  wiki deploy [dir] [-o out] [--inline] build deployable output (local directory for now)
 
-参数：
-  [目录]        含 wiki.config.ts 的内容仓库根目录，默认当前目录
-  -p, --port    dev 端口，默认 5173
-  --host        dev 监听地址，默认 127.0.0.1
-  -o, --out     构建输出目录，默认取配置里的 outputDir
-  --inline      内联 CSS/JS/图片，产物里只剩 .html（不产 assets/ 与 meta.json）
-  --strict      红链与孤页也视为失败
-  --name        init 时的站点名，默认取目录名
-  --force       init 时覆盖已存在的文件（默认跳过）
-  --no-watch    dev 时关掉「改了 packages/*/src 自动重启」的监护层
+Options:
+  [dir]        content repo root containing wiki.config.ts (default: current directory)
+  -p, --port   dev server port (default: 5173)
+  --host       dev server host (default: 127.0.0.1)
+  -o, --out    output directory (default: outputDir from config)
+  --inline     inline CSS/JS/images so the output is only .html
+  --strict     treat red links and orphan pages as failures
+  --name       site name for init (default: directory name)
+  --force      init: overwrite existing files (default: skip)
+  --no-watch   dev: disable the supervisor that restarts on packages/*/src changes
 
-退出码：0 正常；1 有错误；2 用法错误`;
+Exit codes: 0 ok, 1 problems found, 2 usage error`;
 
 function line(text = ''): void {
   process.stdout.write(`${text}\n`);
@@ -40,43 +40,43 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-/** 产物统计：体积与形态用同一套口径，build 与 deploy 都打印它 */
+/** Artifact stats. Same wording for build and deploy, so the numbers mean the same thing. */
 function printArtifact(result: BuildResult, elapsed: number): void {
   line(
-    `  页面 ${result.pageCount} 篇 · 文件 ${result.written.length} 个 · ${formatBytes(
+    `  pages ${result.pageCount} | files ${result.written.length} | ${formatBytes(
       result.bytes,
-    )} · 用时 ${elapsed} ms`,
+    )} | ${elapsed} ms`,
   );
 
   if (result.inline) {
     const stats = result.inlineStats;
     line(
-      `  形态：单文件 HTML（已内联 样式表 ${stats?.css ?? 0} 个 / 脚本 ${stats?.scripts ?? 0} 个 / 资源 ${stats?.media ?? 0} 处）`,
+      `  output: single-file HTML (inlined ${stats?.css ?? 0} stylesheet(s), ${stats?.scripts ?? 0} script(s), ${stats?.media ?? 0} asset(s))`,
     );
   } else {
-    line('  形态：HTML + assets/（加 --inline 可改成单文件）');
+    line('  output: HTML + assets/ (add --inline for a single file)');
   }
 }
 
 function printOutcome(result: BuildResult): number {
   if (result.warnings.length > 0) {
-    line(`  警告 ${result.warnings.length} 处（wiki check 可看详情）`);
+    line(`  warnings: ${result.warnings.length} (run wiki check for details)`);
   }
 
   if (result.undefinedMacros > 0) {
     const how =
       result.undefinedMacroMode === 'hide'
-        ? "已隐藏（macros.undefined = 'hide'）"
+        ? "hidden (macros.undefined = 'hide')"
         : result.undefinedMacroMode === 'custom'
-          ? '已交给自定义函数处理'
-          : "产物里保留原文（macros.undefined = 'show'）";
-    line(`  提示：${result.undefinedMacros} 处未定义的宏，${how}`);
+          ? 'handled by your own function'
+          : "kept as-is in the output (macros.undefined = 'show')";
+    line(`  note: ${result.undefinedMacros} undefined macro(s), ${how}`);
   }
 
   if (result.problems.length > 0) {
-    section(`有 ${result.problems.length} 篇因 frontmatter 错误被跳过`);
+    section(`${result.problems.length} page(s) skipped because of frontmatter errors`);
     for (const problem of result.problems) {
-      line(`  ✗ ${problem.file}`);
+      line(`  x ${problem.file}`);
       for (const message of problem.messages) line(`      - ${message}`);
     }
     return 1;
@@ -84,7 +84,7 @@ function printOutcome(result: BuildResult): number {
 
   if (result.report.redLinks.length > 0) {
     line(
-      `  提示：${result.report.redLinks.length} 处红链、${result.report.orphans.length} 篇孤页，用 wiki check 查看`,
+      `  note: ${result.report.redLinks.length} red link(s), ${result.report.orphans.length} orphan page(s) -- run wiki check`,
     );
   }
   return 0;
@@ -121,15 +121,15 @@ async function run(args: string[]): Promise<number> {
     const { initSite } = await import('./init.js');
     const result = initSite(root, { name: values.name, force: values.force });
 
-    line(`已生成站点 → ${result.dir}`);
+    line(`site created -> ${result.dir}`);
     for (const file of result.written) line(`  + ${file}`);
-    for (const file of result.skipped) line(`  = ${file}（已存在，跳过）`);
+    for (const file of result.skipped) line(`  = ${file} (already exists, skipped)`);
 
     if (result.written.length > 0) {
-      section('下一步');
+      section('Next steps');
       line(`  cd ${positionals[0] ?? '.'}`);
-      line('  npx @lightwiki/cli dev .        # 本地预览，改内容会自动刷新');
-      line('  发布到 GitHub Pages：见 README 的「发布」一节');
+      line(`  npx @lightwiki/cli dev .        # live preview`);
+      line('  To publish on GitHub Pages, see the "Publishing" section in README.');
     }
     return 0;
   }
@@ -153,7 +153,7 @@ async function run(args: string[]): Promise<number> {
     const { startDevServer } = await import('@lightwiki/dev');
     const port = values.port ? Number(values.port) : undefined;
     if (port !== undefined && (!Number.isInteger(port) || port <= 0 || port > 65535)) {
-      line(`端口不合法：${values.port}`);
+      line(`invalid port: ${values.port}`);
       return 2;
     }
 
@@ -161,14 +161,14 @@ async function run(args: string[]): Promise<number> {
       port,
       host: values.host,
       supervised,
-      onRebuild: (info) => line(`  重建 · ${info.pages} 篇 · ${info.ms} ms`),
+      onRebuild: (info) => line(`  rebuilt | ${info.pages} page(s) | ${info.ms} ms`),
     });
 
-    line(`预览地址：${server.url}`);
-    line(`  内容：${Object.entries(config.content).map(([lang, dir]) => `${lang}=${dir}`).join(' · ')}`);
-    line('  改动内容或模板会自动刷新；按 Ctrl+C 退出。');
+    line(`preview: ${server.url}`);
+    line(`  content: ${Object.entries(config.content).map(([lang, dir]) => `${lang}=${dir}`).join(' | ')}`);
+    line('  Edits to content and layouts reload automatically. Press Ctrl+C to stop.');
     if (supervised) {
-      line('  改了 packages/*/src 会自动重启；也可以 POST /__lightwiki/restart 手动触发。');
+      line('  Changes under packages/*/src restart the server; you can also POST /__lightwiki/restart.');
     }
 
     await new Promise<void>((done) => {
@@ -184,76 +184,76 @@ async function run(args: string[]): Promise<number> {
   if (command === 'check') {
     const result = await checkSite(config);
 
-    line(`内容检查 · ${root}`);
+    line(`checking ${root}`);
     line(
-      `  页面 ${result.pageCount} 篇（${Object.keys(config.content)
+      `  pages: ${result.pageCount} (${Object.keys(config.content)
         .map((lang) => `${lang} ${result.pageCounts[lang] ?? 0}`)
-        .join(' / ')}）`,
+        .join(' / ')})`,
     );
 
     if (result.problems.length > 0) {
-      section(`frontmatter 错误 ${result.problems.length} 处`);
+      section(`${result.problems.length} frontmatter error(s)`);
       for (const problem of result.problems) {
-        line(`  ✗ ${problem.file}`);
+        line(`  x ${problem.file}`);
         for (const message of problem.messages) line(`      - ${message}`);
       }
     }
 
     if (result.warnings.length > 0) {
-      section(`警告 ${result.warnings.length} 处`);
+      section(`${result.warnings.length} warning(s)`);
       for (const warning of result.warnings.slice(0, 20)) {
         line(`  ! ${warning.file}`);
         for (const message of warning.messages) line(`      - ${message}`);
       }
-      if (result.warnings.length > 20) line(`  …另有 ${result.warnings.length - 20} 处`);
+      if (result.warnings.length > 20) line(`  ... ${result.warnings.length - 20} more`);
     }
 
     if (result.sectionIssues.length > 0) {
-      section(`section 取值不在允许列表 ${result.sectionIssues.length} 处`);
-      line(`  允许值：${config.sections.join(' · ')}`);
+      section(`${result.sectionIssues.length} section value(s) not in the allowed list`);
+      line(`  allowed: ${config.sections.join(' | ')}`);
       for (const issue of result.sectionIssues) {
-        line(`  ✗ ${issue.file} → ${issue.section}`);
+        line(`  x ${issue.file} -> ${issue.section}`);
       }
     }
 
     if (result.layoutIssues.length > 0) {
-      section(`布局文件不存在 ${result.layoutIssues.length} 处`);
-      line('  frontmatter 里写了 layout，但 layouts/<名字>.eta 在内容仓库和主题里都找不到');
+      section(`${result.layoutIssues.length} layout file(s) missing`);
+      line('  frontmatter says layout, but layouts/<name>.eta is in neither the content repo nor the theme');
       for (const issue of result.layoutIssues) {
-        line(`  ✗ ${issue.file} → ${issue.layout}.eta`);
+        line(`  x ${issue.file} -> ${issue.layout}.eta`);
       }
     }
 
     if (result.assetIssues.length > 0) {
-      section(`样式/脚本文件不存在 ${result.assetIssues.length} 处`);
-      line('  frontmatter 的 styles / scripts 相对 assets/ 解析（.less 会编译成同名 .css）');
+      section(`${result.assetIssues.length} missing style/script file(s)`);
+      line('  frontmatter styles / scripts resolve against assets/ (.less compiles to a same-named .css)');
       for (const issue of result.assetIssues) {
-        line(`  ✗ ${issue.file} → ${issue.field}: ${issue.reference}`);
+        line(`  x ${issue.file} -> ${issue.field}: ${issue.reference}`);
       }
     }
 
     if (result.missingHomes.length > 0) {
-      section(`缺首页 ${result.missingHomes.length} 处`);
-      line('  每种语言都要有 content/<语言>/index.md —— 它就是该语言的首页（/docs/）');
+      section(`${result.missingHomes.length} language(s) without a home page`);
+      line('  every language needs content/<lang>/index.md -- that page IS /docs/');
       for (const lang of result.missingHomes) {
-        line(`  ✗ ${lang}：没有 index.md，这个语言的首页会 404`);
+        line(`  x ${lang}: no index.md, so this language has no home page (404)`);
       }
     }
 
     if (result.categoryIssues.length > 0) {
-      section(`分类提示 ${result.categoryIssues.length} 处`);
+      section(`${result.categoryIssues.length} category note(s)`);
       for (const issue of result.categoryIssues.slice(0, 20)) {
-        line(`  · ${issue.file}：${issue.message}`);
+        line(`  - ${issue.file}: ${issue.message}`);
       }
       if (result.categoryIssues.length > 20) {
-        line(`  …另有 ${result.categoryIssues.length - 20} 处`);
+        line(`  ... ${result.categoryIssues.length - 20} more`);
       }
     }
 
     if (result.titleConflicts.length > 0) {
-      section(`标题重复 ${result.titleConflicts.length} 组（[[标题]] 这种内链会变得不明确）`);
+      section(`${result.titleConflicts.length} duplicate title(s) ([[]] links become ambiguous)`);
       for (const conflict of result.titleConflicts) {
-        line(`  ✗ [${conflict.lang}] 「${conflict.title}」→ ${conflict.pages.join('、')}`);
+        line(`  x [${conflict.lang}] "${conflict.title}" -> ${conflict.pages.join(', ')}`);
       }
     }
 
@@ -261,46 +261,46 @@ async function run(args: string[]): Promise<number> {
     const linkIssues = result.unresolved.filter((item) => item.kind === 'wikilink');
 
     if (macroIssues.length > 0) {
-      section(`未定义的宏 ${macroIssues.length} 处（产物里会露出 {{...}} 原文）`);
+      section(`${macroIssues.length} undefined macro(s) (the raw {{...}} shows up in the output)`);
       for (const issue of macroIssues.slice(0, 30)) {
-        line(`  ✗ ${issue.file} → {{${issue.target}}}：${issue.message}`);
+        line(`  x ${issue.file} -> {{${issue.target}}}: ${issue.message}`);
       }
-      if (macroIssues.length > 30) line(`  …另有 ${macroIssues.length - 30} 处`);
+      if (macroIssues.length > 30) line(`  ... ${macroIssues.length - 30} more`);
     }
 
     if (linkIssues.length > 0) {
-      section(`未解析的内链 ${linkIssues.length} 处（slug 与标题都没命中）`);
+      section(`${linkIssues.length} unresolved wikilink(s) (neither slug nor title matched)`);
       for (const issue of linkIssues.slice(0, 30)) {
-        line(`  · ${issue.file} → [[${issue.target}]]`);
+        line(`  - ${issue.file} -> [[${issue.target}]]`);
       }
-      if (linkIssues.length > 30) line(`  …另有 ${linkIssues.length - 30} 处`);
+      if (linkIssues.length > 30) line(`  ... ${linkIssues.length - 30} more`);
     }
 
     if (result.report.redLinks.length > 0) {
-      section(`红链 ${result.report.redLinks.length} 处（指向不存在的页面）`);
+      section(`${result.report.redLinks.length} red link(s) (target page does not exist)`);
       for (const red of result.report.redLinks.slice(0, 30)) {
-        line(`  ${red.from} → ${red.href}`);
+        line(`  ${red.from} -> ${red.href}`);
       }
       if (result.report.redLinks.length > 30) {
-        line(`  …另有 ${result.report.redLinks.length - 30} 处`);
+        line(`  ... ${result.report.redLinks.length - 30} more`);
       }
     }
 
     if (result.report.orphans.length > 0) {
-      section(`孤页 ${result.report.orphans.length} 篇（没有任何页面链向它）`);
+      section(`${result.report.orphans.length} orphan page(s) (nothing links to them)`);
       for (const orphan of result.report.orphans.slice(0, 30)) line(`  ${orphan}`);
       if (result.report.orphans.length > 30) {
-        line(`  …另有 ${result.report.orphans.length - 30} 篇`);
+        line(`  ... ${result.report.orphans.length - 30} more`);
       }
     }
 
     if (result.missingTranslations.length > 0) {
-      section(`缺译 ${result.missingTranslations.length} 处（只提示，不算失败）`);
+      section(`${result.missingTranslations.length} missing translation(s) (informational, not a failure)`);
       for (const item of result.missingTranslations.slice(0, 20)) {
-        line(`  ${item.slug} → 缺 ${item.missing.join(', ')}`);
+        line(`  ${item.slug} -> missing ${item.missing.join(', ')}`);
       }
       if (result.missingTranslations.length > 20) {
-        line(`  …另有 ${result.missingTranslations.length - 20} 处`);
+        line(`  ... ${result.missingTranslations.length - 20} more`);
       }
     }
 
@@ -309,8 +309,8 @@ async function run(args: string[]): Promise<number> {
       (values.strict === true &&
         (result.report.redLinks.length > 0 || result.report.orphans.length > 0));
 
-    section(failed ? '结果：有问题' : '结果：通过');
-    line(`  用时 ${Date.now() - started} ms`);
+    section(failed ? 'result: problems found' : 'result: ok');
+    line(`  took ${Date.now() - started} ms`);
     return failed ? 1 : 0;
   }
 
@@ -320,7 +320,7 @@ async function run(args: string[]): Promise<number> {
       // 没给 --inline 时不动配置里的值：站点可能本来就要单文件产物
       inline: values.inline ? true : undefined,
     });
-    line(`构建完成 → ${result.outputDir}`);
+    line(`build finished -> ${result.outputDir}`);
     printArtifact(result, Date.now() - started);
     return printOutcome(result);
   }
@@ -330,13 +330,13 @@ async function run(args: string[]): Promise<number> {
       outDir: values.out,
       inline: values.inline ? true : undefined,
     });
-    line(`部署产物就绪 → ${result.outputDir}`);
-    line('  目标：本地目录 · remote 未接入，没有推送任何东西');
+    line(`deploy output ready -> ${result.outputDir}`);
+    line('  target: local directory; no remote configured, nothing was pushed');
     printArtifact(result, Date.now() - started);
     return printOutcome(result);
   }
 
-  line(`未知命令：${command}`);
+  line(`unknown command: ${command}`);
   line(USAGE);
   return 2;
 }

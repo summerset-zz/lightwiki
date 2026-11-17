@@ -91,13 +91,13 @@ export async function loadMacros(config: LoadedConfig): Promise<MacroRegistry> {
         const key = macroName.toLowerCase();
         const source = sources.get(key);
         if (source === undefined) {
-          throw new Error(`未定义的宏：${macroName}`);
+          throw new Error(`undefined macro: ${macroName}`);
         }
         if (stack.includes(key)) {
-          throw new Error(`宏循环引用：${[...stack, key].join(' 到 ')}`);
+          throw new Error(`macro cycle: ${[...stack, key].join(' -> ')}`);
         }
         if (stack.length >= MAX_MACRO_DEPTH) {
-          throw new Error(`宏嵌套超过 ${MAX_MACRO_DEPTH} 层：${[...stack, key].join(' 到 ')}`);
+          throw new Error(`macro nesting deeper than ${MAX_MACRO_DEPTH}: ${[...stack, key].join(' -> ')}`);
         }
 
         stack.push(key);
@@ -110,7 +110,7 @@ export async function loadMacros(config: LoadedConfig): Promise<MacroRegistry> {
           };
           const result: unknown = eta.renderString(source, context);
           if (typeof result !== 'string') {
-            throw new Error(`宏 ${macroName} 必须是同步的（模板里不能有 await）`);
+            throw new Error(`macro ${macroName} must be synchronous (no await in the template)`);
           }
           return result;
         } finally {

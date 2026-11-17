@@ -103,7 +103,7 @@ export function supervise(options: SuperviseOptions): Promise<number> {
         // 子进程自己退了（配置加载失败、端口全占、真崩了）。
         // 不跟着退出：留在原地等下一次改动再拉起来，否则用户的终端就没了。
         process.stdout.write(
-          `\n开发服务器已退出（退出码 ${code ?? '未知'}），改完文件会自动重新拉起；按 Ctrl+C 结束。\n`,
+          `\ndev server exited (code ${code ?? 'unknown'}); it will start again when you touch a file, Ctrl+C to stop.\n`,
         );
       });
     };
@@ -112,21 +112,21 @@ export function supervise(options: SuperviseOptions): Promise<number> {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         if (!child) {
-          process.stdout.write(`  ${reason}，重新启动…\n`);
+          process.stdout.write(`  ${reason}, restarting...\n`);
           spawnChild();
           return;
         }
         // 直接杀：进程一退，监听的 socket 由系统回收，下一任能立刻占回同一个端口。
         // 不先 close() 是为了不把「关得干不干净」的外部依赖算进重启路径里。
         restartPending = true;
-        process.stdout.write(`  ${reason}，重启中…\n`);
+        process.stdout.write(`  ${reason}, restarting...\n`);
         child.kill();
       }, debounceMs);
     };
 
     for (const root of options.roots) {
       try {
-        watchers.push(watch(root, { recursive: true }, () => restart('检测到源码改动')));
+        watchers.push(watch(root, { recursive: true }, () => restart('source change detected')));
       } catch {
         // 目录被删了之类：少盯一个不影响用
       }
@@ -151,7 +151,7 @@ export function supervise(options: SuperviseOptions): Promise<number> {
     process.once('SIGTERM', stop);
 
     process.stdout.write(
-      `监护模式：改了 ${options.roots.length} 个源码目录会自动重启（--no-watch 关闭）\n`,
+      `supervisor: changes under ${options.roots.length} source dir(s) restart the server (--no-watch to disable)\n`,
     );
     spawnChild();
   });

@@ -133,7 +133,7 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
       if (!(category in config.categories)) {
         categoryIssues.push({
           file: `${page.lang}/${page.slug}`,
-          message: `分类 ${category} 没在配置的 categories 里声明，会直接拿 slug 当显示名`,
+          message: `category ${category} is not declared in config.categories; the slug will be used as the label`,
         });
       }
     }
@@ -146,19 +146,21 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
       if (!hasMember) {
         categoryIssues.push({
           file: `${page.lang}/${page.slug}`,
-          message: `sidebarCategory「${sidebar}」下没有任何页面，侧栏会退回全站导航`,
+          message: `sidebarCategory "${sidebar}" has no pages; the sidebar falls back to site navigation`,
         });
       }
     }
   }
 
-  // 未定义的宏会让产物里直接露出 `{{...}}` 原文。这是不是错，取决于站点怎么选：
+  // 未定义的宏会让产物里直接露 `{{...}}` 原文。这是不是错，取决于站点怎么选：
   // 默认（show）算错——露花括号通常是漏搬了宏；显式选 hide 或给了处理函数，
   // 说明作者清楚自己在做什么，那就只当提示。
   // 展开失败（循环引用、模板抛错）无论怎么配都是错。
-  const macroFailures = unresolved.filter(
-    (item) => item.kind === 'macro' && !item.message.startsWith('未定义的宏'),
-  ).length;
+  const macroFailures = pages.reduce(
+    (sum, page) =>
+      sum + page.unresolved.filter((item) => item.kind === 'macro' && !item.undefinedMacro).length,
+    0,
+  );
   const undefinedIsError = (config.macros?.undefined ?? 'show') === 'show';
   const macroErrors = macroFailures + (undefinedIsError ? undefinedMacros : 0);
 

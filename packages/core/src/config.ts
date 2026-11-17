@@ -50,7 +50,7 @@ export async function loadConfig(root: string): Promise<LoadedConfig> {
 
   if (!configFile) {
     throw new Error(
-      `在 ${absRoot} 找不到站点配置。请创建其一：${CONFIG_FILES.join(' / ')}`,
+      `no site config found in ${absRoot}. Create one of: ${CONFIG_FILES.join(' / ')}`,
     );
   }
 
@@ -59,13 +59,13 @@ export async function loadConfig(root: string): Promise<LoadedConfig> {
   };
   const raw = mod.default;
   if (!raw) {
-    throw new Error(`${configFile} 需要 export default 一个配置对象`);
+    throw new Error(`${configFile} must export default a config object`);
   }
 
   const parsed = siteConfigSchema.safeParse(raw);
   if (!parsed.success) {
     const lines = describeIssues(parsed.error.issues).map((l) => `  - ${l}`);
-    throw new Error(`站点配置有误（${configFile}）：\n${lines.join('\n')}`);
+    throw new Error(`invalid site config (${configFile}):\n${lines.join('\n')}`);
   }
 
   return {

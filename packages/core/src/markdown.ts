@@ -294,10 +294,10 @@ function wikilinkRule(state: any, silent: boolean): boolean {
     (env.unresolved ??= []).push({
       kind: 'wikilink',
       target: rawTarget,
-      message: env.resolver ? '找不到对应页面（slug 与标题都没有命中）' : '内链解析器未启用',
+      message: env.resolver ? 'no matching page (neither slug nor title hit)' : 'wikilink resolver not enabled',
     });
     const span = state.push('html_inline', '', 0);
-    span.content = `<span class="wikilink-missing" title="未找到：${escapeHtml(rawTarget)}">${escapeHtml(label)}</span>`;
+    span.content = `<span class="wikilink-missing" title="not found: ${escapeHtml(rawTarget)}">${escapeHtml(label)}</span>`;
   }
 
   state.pos += total;
@@ -421,7 +421,7 @@ function expandMacro(
 ): string | null {
   const registry = env.macros;
   if (!registry || !registry.has(name)) {
-    recordUnresolved(env, name, registry ? `未定义的宏：${name}` : '宏未启用', true);
+    recordUnresolved(env, name, registry ? `undefined macro: ${name}` : 'macros are not enabled', true);
     onFailure();
     return null;
   }
@@ -430,12 +430,12 @@ function expandMacro(
   const key = name.toLowerCase();
 
   if (stack.includes(key)) {
-    recordUnresolved(env, name, `宏循环引用：${[...stack, key].join(' 到 ')}`);
+    recordUnresolved(env, name, `macro cycle: ${[...stack, key].join(' -> ')}`);
     onFailure();
     return null;
   }
   if (stack.length >= MAX_MACRO_DEPTH) {
-    recordUnresolved(env, name, `宏嵌套超过 ${MAX_MACRO_DEPTH} 层：${[...stack, key].join(' 到 ')}`);
+    recordUnresolved(env, name, `macro nesting deeper than ${MAX_MACRO_DEPTH}: ${[...stack, key].join(' -> ')}`);
     onFailure();
     return null;
   }

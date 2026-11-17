@@ -57,7 +57,7 @@ export async function buildSite(
     for (const item of page.unresolved) {
       warnings.push({
         file: `${page.lang}/${page.slug}`,
-        messages: [`${item.kind === 'macro' ? '宏' : '内链'} ${item.target}：${item.message}`],
+        messages: [`${item.kind === 'macro' ? 'macro' : 'wikilink'} ${item.target}: ${item.message}`],
       });
     }
   }
@@ -97,7 +97,7 @@ export async function buildSite(
         if (!hit) {
           warnings.push({
             file: `${page.lang}/${page.slug}`,
-            messages: [`${field} 找不到文件：${ref}（相对 ${config.assetsDir}/ 解析）`],
+            messages: [`${field}: file not found: ${ref} (resolved against ${config.assetsDir}/)`],
           });
           continue;
         }
@@ -146,7 +146,7 @@ export async function buildSite(
         reportedMissing.add(miss);
         warnings.push({
           file: relative,
-          messages: [`内联时找不到资源，产物里仍是外链引用：${miss}`],
+          messages: [`asset not found while inlining, kept as an external reference: ${miss}`],
         });
       }
     }
@@ -222,7 +222,7 @@ export async function buildSite(
         if (taken.has(relative)) {
           warnings.push({
             file: rule.from,
-            messages: [`重定向会覆盖已有页面，已跳过：${relative}`],
+            messages: [`redirect would overwrite an existing page, skipped: ${relative}`],
           });
           continue;
         }
@@ -258,7 +258,7 @@ export async function buildSite(
       config.urlStyle === 'file' ? relativeUrl(homeHref, 'index.html', config, pageKeys) : homeHref;
     const rootIndex = `<!doctype html><meta charset="utf-8"><title>${config.title}</title>` +
       `<meta http-equiv="refresh" content="0;url=${href}">` +
-      `<p><a href="${href}">进入 ${config.title}</a></p>`;
+      `<p><a href="${href}">Enter ${config.title}</a></p>`;
     await emit('index.html', rootIndex);
   }
 

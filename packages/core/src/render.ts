@@ -30,12 +30,12 @@ export function createRenderer(config: LoadedConfig): Renderer {
 
   function resolveLayout(name: string): string {
     if (!LAYOUT_NAME.test(name)) {
-      throw new Error(`布局名不合法：${name}（只能是一段文件名，例如 landing）`);
+      throw new Error(`invalid layout name: ${name} (must be a single file name, e.g. landing)`);
     }
     const candidates = layoutCandidates(config, name);
     const found = candidates.find(existsSync);
     if (!found) {
-      throw new Error(`找不到布局 ${name}.eta。找过：\n  ${candidates.join('\n  ')}`);
+      throw new Error(`layout ${name}.eta not found. Looked in:\n  ${candidates.join('\n  ')}`);
     }
     return found;
   }

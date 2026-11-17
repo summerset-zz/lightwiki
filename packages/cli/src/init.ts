@@ -39,7 +39,7 @@ export interface InitResult {
 /** 站名会进 TS 字符串与 markdown 标题，去掉引号与换行最省事 */
 function cleanName(raw: string): string {
   const cleaned = raw.replace(/["'`\\\r\n]/g, '').trim();
-  return cleaned.length > 0 ? cleaned : '我的知识库';
+  return cleaned.length > 0 ? cleaned : 'My Wiki';
 }
 
 interface TemplateFile {
@@ -72,7 +72,7 @@ function collect(sourceDir = '', targetDir = ''): TemplateFile[] {
 
 export function initSite(dir: string, options: InitOptions = {}): InitResult {
   if (!existsSync(TEMPLATE_DIR)) {
-    throw new Error(`起始模板缺失：${TEMPLATE_DIR}（安装包不完整？）`);
+    throw new Error(`starter template missing: ${TEMPLATE_DIR} (incomplete install?)`);
   }
 
   const name = cleanName(options.name ?? dir.replace(/[\\/]+$/, '').split(/[\\/]/).pop() ?? '');

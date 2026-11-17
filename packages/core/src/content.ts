@@ -185,7 +185,7 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
     try {
       files = await fg('**/*.md', { cwd: absDir, absolute: true });
     } catch {
-      problems.push({ file: absDir, messages: [`内容目录不存在：${dir}`] });
+      problems.push({ file: absDir, messages: [`content directory not found: ${dir}`] });
       continue;
     }
 
@@ -197,7 +197,7 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
         warnings.push({
           file: `${dir}/${relativePath}`,
           messages: [
-            `frontmatter 不是合法 YAML，已按宽松模式逐行读取${parsed.reason ? `：${parsed.reason}` : ''}`,
+            `frontmatter is not valid YAML, read line by line in lenient mode${parsed.reason ? `: ${parsed.reason}` : ''}`,
           ],
         });
       }
