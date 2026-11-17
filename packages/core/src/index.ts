@@ -7,7 +7,6 @@ export {
   type PageSeed,
 } from './content.js';
 export { buildSite, type BuildOptions, type BuildResult } from './build.js';
-export { deploySite, type DeployOptions, type DeployResult, type DeployTarget } from './deploy.js';
 export {
   checkSite,
   type AssetIssue,

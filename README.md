@@ -47,7 +47,7 @@ packages/
   schema/           frontmatter 与站点配置的 zod schema
   core/             扫描 → 解析 → 渲染 → 链接图 → 输出（不认识任何托管平台）
   dev/              本地预览服务器（node:http + SSE，不写盘）
-  cli/              wiki init / dev / check / build / deploy
+  cli/              wiki init / dev / check / build
   theme-default/    默认主题（layouts / macros / assets）
 examples/mini/      语法手册，同时是冒烟测试
 packages/cli/templates/starter/  wiki init 用的起始内容仓库
@@ -61,8 +61,7 @@ docs/               上手文档与设计决策
 ```bash
 yarn type:check                     # 类型检查，不产出文件
 yarn wiki check examples/mini       # 校验 frontmatter / 红链 / 孤页 / 缺译
-yarn wiki build examples/mini       # 构建，产物在 examples/mini/dist
-yarn wiki deploy examples/mini      # 为发布构建（目前只输出到本地目录；--inline 出单文件）
+yarn wiki build examples/mini       # 构建，产物在 examples/mini/dist（--inline 出单文件）
 yarn wiki dev examples/mini         # 本地预览，改内容或模板自动刷新
 ```
 

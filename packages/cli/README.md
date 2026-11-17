@@ -6,7 +6,7 @@
 npx @lightwiki/cli dev      # 本地预览，改内容自动刷新
 npx @lightwiki/cli check    # 校验 frontmatter、红链、孤页、缺译
 npx @lightwiki/cli build    # 构建静态站点
-npx @lightwiki/cli deploy   # 为发布构建（目前输出到本地目录）
+npx @lightwiki/cli build .  # 产出到 ./dist
 ```
 
 参数：`[目录]` 是含 `wiki.config.ts` 的内容仓库根目录，默认当前目录；`-o` 指定输出目录；`--inline` 产出单文件 HTML（样式、脚本、图片全塞进页面）。

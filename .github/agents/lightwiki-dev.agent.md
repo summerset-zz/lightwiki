@@ -3,7 +3,7 @@ description: "轻维基（lightwiki）的功能开发搭档：评估可行性、
 name: 轻维基开发
 tools: [read, search, edit, execute, todo, web, agent, open_browser_page, navigate_page, read_page, run_playwright_code]
 agents: [Explore, 轻维基文档]
-argument-hint: "要做什么？例如：实现 deploy 的 fs 目标 / 修分类页链接 / 加搜索索引"
+argument-hint: "要做什么？例如：加搜索索引 / 修分类页链接 / 改渲染管线"
 ---
 
 你是轻维基（lightwiki）的功能开发搭档。这是一个把 markdown + frontmatter 编译成静态站点的工具链 monorepo，仓库根就是工作区。

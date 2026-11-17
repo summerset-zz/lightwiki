@@ -1,7 +1,7 @@
 ---
 title: 命令
-keywords: 命令, cli, init, build, check, dev, deploy, inline, 校验, 自动重启
-description: wiki init / dev / check / build / deploy 五个子命令分别做什么。
+keywords: 命令, cli, init, build, check, dev, inline, 校验, 自动重启
+description: wiki init / dev / check / build 四个子命令分别做什么。
 section: reference
 order: 1
 updated: 2026-11-17
@@ -14,7 +14,6 @@ npx @lightwiki/cli init   <目录>                 # 生成新站点
 npx @lightwiki/cli dev    <目录> [-p 端口]       # 本地预览
 npx @lightwiki/cli check  <目录> [--strict]      # 只校验，不产出
 npx @lightwiki/cli build  <目录> [-o 输出目录]    # 产出静态站点
-npx @lightwiki/cli deploy <目录> [-o 输出目录]    # 为发布产出（目前只到本地目录）
 ```
 
 工具还没装的话 `npx` 会自动下载。装了开发依赖（`npm i -D @lightwiki/cli`）之后，`npx wiki` 就是同一组命令。
@@ -109,17 +108,11 @@ GitHub Pages、Netlify、Cloudflare Pages、S3、OSS 都会在未命中时返回
 
 只有**默认语言**的那份参与产物，因为 `404.html` 只能有一个。没有这个文件时，主题的 `not-found` 布局兜底。
 
-## deploy {#deploy}
+## 发布不归 CLI 管 {#publish}
 
-产物和 `build` 一字不差，差别在语义：`build` 是「我想看看产物」，`deploy` 是「这个要发出去」。
+工具只把静态文件生成到 `dist/`，**不碰任何远端**。配好 workflow 之后，`git push` 就是部署——CI 里跑一次 `build`，再交给托管的动作去上传。
 
-现在只做本地这一段：构建到 `dist/` 就停下，**不推送任何东西**。远端形态（push 到仓库、生成 GitHub Pages）要等 remote 接入——它们九成的复杂度在认证与远端状态，跟编译链无关。
-
-```bash
-npx @lightwiki/cli deploy <目录> --inline    # 给「一个文件就能看」的场景
-```
-
-远端做完之后，两者会变成：`build` 留在本地，`deploy` 负责发出去。
+所以没有 `deploy` 子命令：它只会是和 `build` 字节一模一样的别名，多一个概念却不解决问题。GitHub Pages 的完整做法见 [[commands#ci]]。
 
 ## 重定向 {#redirects}
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { buildSite, checkSite, deploySite, loadConfig, type BuildResult } from '@lightwiki/core';
+import { buildSite, checkSite, loadConfig, type BuildResult } from '@lightwiki/core';
 
 const USAGE = `lightwiki CLI
 
@@ -10,7 +10,6 @@ Usage:
   wiki dev [dir] [-p port]              start the preview server (live reload)
   wiki check [dir]                      validate frontmatter, sections, red links, orphans, translations
   wiki build [dir] [-o out] [--inline]  build a static site
-  wiki deploy [dir] [-o out] [--inline] build deployable output (local directory for now)
 
 Options:
   [dir]        content repo root containing wiki.config.ts (default: current directory)
@@ -40,7 +39,7 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-/** Artifact stats. Same wording for build and deploy, so the numbers mean the same thing. */
+/** Artifact stats. Shared wording so the numbers mean the same thing everywhere. */
 function printArtifact(result: BuildResult, elapsed: number): void {
   line(
     `  pages ${result.pageCount} | files ${result.written.length} | ${formatBytes(
@@ -321,17 +320,6 @@ async function run(args: string[]): Promise<number> {
       inline: values.inline ? true : undefined,
     });
     line(`build finished -> ${result.outputDir}`);
-    printArtifact(result, Date.now() - started);
-    return printOutcome(result);
-  }
-
-  if (command === 'deploy') {
-    const result = await deploySite(config, {
-      outDir: values.out,
-      inline: values.inline ? true : undefined,
-    });
-    line(`deploy output ready -> ${result.outputDir}`);
-    line('  target: local directory; no remote configured, nothing was pushed');
     printArtifact(result, Date.now() - started);
     return printOutcome(result);
   }

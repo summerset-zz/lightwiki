@@ -164,8 +164,9 @@ export default {
 npx @lightwiki/cli init <目录>          # 生成新站点（配置 + 示例内容 + Pages workflow）
 npx @lightwiki/cli check <内容目录>     # 只校验，不写盘
 npx @lightwiki/cli build <内容目录>     # 产出到 <内容目录>/dist
-npx @lightwiki/cli deploy <内容目录>    # 同上，但走「为发布而构建」的入口（目前只输出到本地目录）
 ```
+
+没有 `deploy`：工具只负责把文件生成到 `dist/`，发布交给托管方（配好 workflow 后 `git push` 就是部署）。
 
 （装了 `@lightwiki/cli` 作为开发依赖的话，把 `npx @lightwiki/cli` 换成 `npx wiki` 就行。）
 

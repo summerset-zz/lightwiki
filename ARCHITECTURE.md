@@ -163,13 +163,18 @@ dist/
 
 ## 10. 已实现 / 未实现
 
-**已实现**：三阶段渲染、双链（slug/标题/锚点）、宏（三种形态、组合、循环检测、行内与块级）、`it.page`/`it.site`、分类与分类页、404、重定向（js/server/both）、代码高亮、Less、markdown 插件钩子、dev server（SSE 热刷新）、全部 check 项、可移植产物、单文件产物（`inline`）、`urlStyle: 'dir'` 与 `'file'` 两种形态（含相对链接）、站内搜索（索引 + 默认主题的搜索框）、查看源码、`deploy` 的本地目录目标。
+**已实现**：三阶段渲染、双链（slug/标题/锚点）、宏（三种形态、组合、循环检测、行内与块级）、`it.page`/`it.site`、分类与分类页、404、重定向（js/server/both）、代码高亮、Less、markdown 插件钩子、dev server（SSE 热刷新 + 源码监护自动重启）、全部 check 项、可移植产物、单文件产物（`inline`）、`urlStyle: 'dir'` 与 `'file'` 两种形态（含相对链接）、站内搜索（索引 + 默认主题的搜索框）、查看源码、按页面指定布局（`layout`）、页面级样式/脚本（`styles` / `scripts`，可逐条声明 ESM）、`docsDir` 可配、未定义宏的可配置处理、红链标记。
+
+**不打算做**：
+
+| 项 | 为什么 |
+|---|---|
+| 推送到远端的 `deploy` 目标 | 配好 workflow 后 `git push` 就是部署，工具再包一层只会多一个概念；且 `core` 不认识任何托管平台（§1） |
 
 **未实现**：
 
 | 项 | 备注 |
 |---|---|
-| `deploy` 的 remote 目标 | 目前只有 `dir`（构建到本地目录）。push 到仓库 / 生成 Pages 等接入 remote 后做 |
 | 官方 GitHub Action（`uses:` 一行） | 现在内容仓库用 `npx @lightwiki/cli build .`，效果一样 |
 | 搜索的分词与高亮 | 现在是子串匹配，命中词不标亮 |
 | sitemap / RSS | 产物里没有 |
@@ -226,13 +231,20 @@ dist/
 | 阶段 | 内容 | 状态 |
 |---|---|---|
 | v0.1 | 内容管线、双链、宏、分类、404、重定向、高亮、Less、dev、check | 完成 |
-| v0.1 | `deploy` 本地目录目标 + 单文件产物（`inline`） | 完成 |
+| v0.1 | 单文件产物（`inline`） | 完成 |
 | v0.1 | `urlStyle: 'file'` 端到端（相对链接、目录页路径、重定向地址） | 完成 |
 | v0.1 | 站内搜索（索引 + 主题搜索框）与查看源码 | 完成 |
-| v0.1 | `deploy` 的 remote 目标（push、Pages） | 等 remote 接入 |
-| v0.1 | npm 发布（五包 @ 0.1.1，Trusted Publishing + provenance） | 完成 |
+| v0.1 | npm 发布（五包，Trusted Publishing + provenance） | 完成 |
 | v0.1 | `publish.yml`：打 tag 即发版，零 token | 完成 |
-| v0.2 | Electron 客户端（连接仓库、编辑预览、commit + push） | 未开始 |
-| v0.3+ | sitemap/RSS、语言切换、主题生态、按 section 分派布局 | 未开始 |
+| v0.2 | `wiki init`：模板随包发布，一条命令生成站点 | 完成 |
+| v0.2 | dev 监护层：改 `packages/*/src` 自动重启 | 完成 |
+| v0.3 | 首页改由 `index.md` 提供（不再自动生成目录页） | 完成 |
+| v0.3 | 按页面指定布局（`layout`）、页面级样式/脚本（可声明 ESM） | 完成 |
+| v0.3 | 目录宏 `{{catalog}}` / `{{pages}}`、`docsDir` 可配、未定义宏可配、红链标记 | 完成 |
+| v0.3 | 控制台输出全英文 ASCII | 完成 |
+| — | 推送到远端的 `deploy` 目标 | 不做（`git push` 就是部署，见 §10） |
+| v0.4 | 主站文档中心（面向三类用户重写）+ `examples/mini` 退回冒烟测试 | 未开始 |
+| v0.4 | Electron 客户端（连接仓库、编辑预览、commit + push） | 未开始 |
+| v0.5+ | sitemap/RSS、语言切换、主题生态、按 section 分派皮肤 | 未开始 |
 
 Electron 后置的理由：它 90% 的工作量在认证与 git 状态，与编译链无关，早做会拖慢核心迭代。
