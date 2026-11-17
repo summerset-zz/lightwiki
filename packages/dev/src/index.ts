@@ -253,7 +253,7 @@ export async function startDevServer(
 
     if (route.kind === 'page') {
       const html = await renderer.renderLayout(
-        'doc',
+        route.page.data.layout ?? 'doc',
         createPageView(config, state.pages, route.page, state.siteInfo) as unknown as Record<string, unknown>,
       );
       return inject(html);

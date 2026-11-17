@@ -10,6 +10,17 @@ export interface Renderer {
   resolveLayout(name: string): string;
 }
 
+/** 布局名只能是一段文件名：带了路径就能把模板解析到仓库外面去 */
+const LAYOUT_NAME = /^[A-Za-z0-9._-]+$/;
+
+/** 某个布局会去哪些地方找（顺序即优先级）；`check` 也用它判断布局存不存在 */
+export function layoutCandidates(config: LoadedConfig, name: string): string[] {
+  return [
+    join(config.root, 'layouts', `${name}.eta`),
+    join(config.themeDir, 'layouts', `${name}.eta`),
+  ];
+}
+
 /**
  * 布局查找顺序（§3.1）：内容仓库 layouts/ → 主题包 layouts/ → 报错。
  * 这一层是主题可升级的全部机制 —— 用户只对自己覆盖的文件负责。
@@ -17,19 +28,14 @@ export interface Renderer {
 export function createRenderer(config: LoadedConfig): Renderer {
   const eta = new Eta({ autoEscape: true, cache: false });
 
-  function candidates(name: string): string[] {
-    return [
-      join(config.root, 'layouts', `${name}.eta`),
-      join(config.themeDir, 'layouts', `${name}.eta`),
-    ];
-  }
-
   function resolveLayout(name: string): string {
-    const found = candidates(name).find(existsSync);
+    if (!LAYOUT_NAME.test(name)) {
+      throw new Error(`布局名不合法：${name}（只能是一段文件名，例如 landing）`);
+    }
+    const candidates = layoutCandidates(config, name);
+    const found = candidates.find(existsSync);
     if (!found) {
-      throw new Error(
-        `找不到布局 ${name}.eta。找过：\n  ${candidates(name).join('\n  ')}`,
-      );
+      throw new Error(`找不到布局 ${name}.eta。找过：\n  ${candidates.join('\n  ')}`);
     }
     return found;
   }

@@ -138,7 +138,8 @@ export async function buildSite(
 
   for (const page of published) {
     const view = createPageView(config, pages, page, siteInfo) as unknown as Record<string, unknown>;
-    const html = await renderer.renderLayout('doc', view);
+    // 页面可以自己挑布局（frontmatter 的 layout），不写就用主题的 doc
+    const html = await renderer.renderLayout(page.data.layout ?? 'doc', view);
     await emit(page.outputPath, html);
   }
 

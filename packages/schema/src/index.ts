@@ -43,6 +43,17 @@ export const frontmatterSchema = z
     draft: z.boolean().default(false),
 
     /**
+     * 这一页用哪个布局（`layouts/<name>.eta`，不写就是 `doc`）。
+     *
+     * 布局名只能是一段文件名（字母数字与 `._-`），不能带路径 —— 否则内容
+     * 就能把模板解析到仓库外面去。文件不存在时构建直接报错，`wiki check` 会先点名。
+     */
+    layout: z
+      .string()
+      .regex(/^[A-Za-z0-9._-]+$/, 'layout 只能是文件名，不能带路径，例如 landing')
+      .optional(),
+
+    /**
      * 分类的键是 ASCII slug，显示名放站点配置的 `categories` 里。
      * 理由是 URL 要稳定、要能翻译。
      */

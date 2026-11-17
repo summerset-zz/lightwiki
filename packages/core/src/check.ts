@@ -1,7 +1,14 @@
+import { existsSync } from 'node:fs';
 import type { LoadedConfig } from './config.js';
 import { loadContent, type ContentProblem } from './content.js';
 import { buildLinkReport, type LinkReport } from './links.js';
+import { layoutCandidates } from './render.js';
 import type { TitleConflict } from './resolve.js';
+
+export interface LayoutIssue {
+  file: string;
+  layout: string;
+}
 
 export interface SectionIssue {
   file: string;
@@ -57,6 +64,8 @@ export interface CheckResult {
   unresolved: UnresolvedIssue[];
   /** 分类的疑点（未声明显示名、sidebarCategory 没成员） */
   categoryIssues: CategoryIssue[];
+  /** frontmatter 指定的布局找不到文件：构建时必炋，所以算错误 */
+  layoutIssues: LayoutIssue[];
 }
 
 export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
@@ -132,12 +141,23 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
   // 未解析的内链与红链同级，是「目标还没写」的正常状态。
   const macroErrors = unresolved.filter((item) => item.kind === 'macro').length;
 
+  // 页面自己指定的布局：文件名不对或文件不在，构建都会直接抛错，不如先点出来
+  const layoutIssues: LayoutIssue[] = [];
+  for (const page of pages) {
+    const layout = page.data.layout;
+    if (!layout) continue;
+    if (!layoutCandidates(config, layout).some(existsSync)) {
+      layoutIssues.push({ file: `${page.lang}/${page.slug}`, layout });
+    }
+  }
+
   return {
     ok:
       problems.length === 0 &&
       sectionIssues.length === 0 &&
       conflicts.length === 0 &&
-      macroErrors === 0,
+      macroErrors === 0 &&
+      layoutIssues.length === 0,
     pageCount: pages.length,
     pageCounts: countByLanguage(config, pages),
     problems,
@@ -148,5 +168,6 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     titleConflicts: conflicts,
     unresolved,
     categoryIssues,
+    layoutIssues,
   };
 }

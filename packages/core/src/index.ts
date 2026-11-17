@@ -8,7 +8,7 @@ export {
 } from './content.js';
 export { buildSite, type BuildOptions, type BuildResult } from './build.js';
 export { deploySite, type DeployOptions, type DeployResult, type DeployTarget } from './deploy.js';
-export { checkSite, type CategoryIssue, type CheckResult, type MissingTranslation, type SectionIssue, type UnresolvedIssue } from './check.js';
+export { checkSite, type CategoryIssue, type CheckResult, type LayoutIssue, type MissingTranslation, type SectionIssue, type UnresolvedIssue } from './check.js';
 export { buildLinkReport, normUrl, type LinkReport, type RedLink } from './links.js';
 export { compileLess, collectAssets, copyAssets, type AssetFile } from './assets.js';
 export { createHighlighter, type Highlighter } from './highlight.js';
@@ -52,7 +52,7 @@ export {
   searchIndexUrl,
   shouldInlineSearch,
 } from './routes.js';
-export { createRenderer, type Renderer } from './render.js';
+export { createRenderer, layoutCandidates, type Renderer } from './render.js';
 export { rewriteRelativeLinks, relativeUrl } from './relative.js';
 export {
   buildSearchIndex,

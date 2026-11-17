@@ -1,10 +1,10 @@
 ---
 title: 布局
-keywords: 布局, layout, 模板, 覆盖, override
+keywords: 布局, layout, 模板, 覆盖, override, 页面布局, landing
 description: 布局是整页骨架，按「内容仓库 → 主题包」的顺序查找，可以只覆盖要改的部分。
 section: reference
 order: 0
-updated: 2026-11-15
+updated: 2026-11-17
 draft: false
 categories: [official]
 ---
@@ -30,6 +30,46 @@ categories: [official]
 | `redirect` | 重定向跳转页，每条重定向生成一份（见 [[commands#redirects]]） |
 
 覆盖就是建同名文件，只写要改的部分。**没覆盖的部分会随主题升级自动跟进**——这也是不要整份拷贝主题的原因。
+
+## 指定某一页用哪个布局 {#per-page}
+
+默认内容页全部用 `doc`。在 frontmatter 里写 `layout` 就能换掉这一页的骨架：
+
+```yaml
+---
+title: 我的站点
+layout: landing
+---
+```
+
+它去 `layouts/landing.eta` 找模板（照上面的查找顺序），找不到就直接报错——不会默默退回 `doc`。`wiki check` 会先把「哪个文件、要哪个布局」点出来，不用等到构建。
+
+几个要知道的地方：
+
+- **名字只能是一段文件名**（字母、数字、`._-`），写 `../x` 这类会直接判为不合法。
+- **换布局不换数据**：能用的还是 `doc` 那套 `site` / `page` / `nav` / `sidebar` / `index`。想做成完全不同的版式，就自己在 `.eta` 里写完整 HTML——包括 `<style>` 与 `<script>`，不必先建 `assets/`。
+- **不限于首页**：任何一页都可以，也能多页共用同一个布局。
+
+一个小例子，一个只有标题与正文、没有侧栏的落地页：
+
+```html
+<!doctype html>
+<html lang="<%= it.page.lang %>">
+  <head>
+    <meta charset="utf-8" />
+    <title><%= it.page.title %></title>
+    <style>body{margin:0;display:grid;place-items:center;min-height:100vh}</style>
+  </head>
+  <body>
+    <main>
+      <h1><%= it.page.title %></h1>
+      <%~ it.page.html %>
+    </main>
+  </body>
+</html>
+```
+
+> `/docs/` 那个目录页是**自动生成**的，不属于内容页，所以它不读 frontmatter 里的 `layout`；要改它就直接覆盖 `layouts/index.eta`。
 
 ## 语法 {#syntax}
 

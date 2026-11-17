@@ -206,6 +206,14 @@ async function run(args: string[]): Promise<number> {
       }
     }
 
+    if (result.layoutIssues.length > 0) {
+      section(`布局文件不存在 ${result.layoutIssues.length} 处`);
+      line('  frontmatter 里写了 layout，但 layouts/<名字>.eta 在内容仓库和主题里都找不到');
+      for (const issue of result.layoutIssues) {
+        line(`  ✗ ${issue.file} → ${issue.layout}.eta`);
+      }
+    }
+
     if (result.categoryIssues.length > 0) {
       section(`分类提示 ${result.categoryIssues.length} 处`);
       for (const issue of result.categoryIssues.slice(0, 20)) {

@@ -34,6 +34,7 @@ sidebarCategory: syntax
 | `order` | 数字 | 组内排序，小的在前 |
 | `updated` | `YYYY-MM-DD` | 只接受这个格式 |
 | `draft` | 布尔 | 见 [[structure#draft]] |
+| `layout` | 字符串 | 这一页用的布局名，不写就是 `doc`，见 [[layouts#per-page]] |
 | `categories` | 字符串或数组 | 见 [[categories]] |
 | `sidebarCategory` | 字符串 | 用哪个分类的页面列表充当侧栏 |
 | `hintTitle` `hint` | 字符串 | 整篇只有一个术语提示时用 |
