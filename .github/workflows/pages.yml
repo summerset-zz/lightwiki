@@ -35,15 +35,17 @@ jobs:
       - run: corepack enable
       - run: yarn install --immutable
 
-      - name: 构建语法手册
+      # 暂时仍发布 tests/mini（语法回归测试）：主站 site/ 还在建设，只有占位首页。
+      # 主站文档写完（「开始 / 基础 / 高级」三组齐了）之后，把这两处 tests/mini 换成 site。
+      - name: 构建语法回归测试
         env:
           LIGHTWIKI_BASE_PATH: /${{ github.event.repository.name }}/
           LIGHTWIKI_SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-        run: yarn wiki build examples/mini
+        run: yarn wiki build tests/mini
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: examples/mini/dist
+          path: tests/mini/dist
       - id: deployment
         uses: actions/deploy-pages@v4

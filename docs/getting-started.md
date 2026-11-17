@@ -26,7 +26,7 @@ npx wiki --help
 ```bash
 git clone https://github.com/summerset-zz/lightwiki.git
 cd lightwiki && yarn install
-yarn wiki dev examples/mini
+yarn wiki dev tests/mini
 ```
 
 打开输出里的地址（默认 `http://127.0.0.1:5173`），看够了按 `Ctrl+C` 关掉。
@@ -244,7 +244,7 @@ dist/
 如果用的是能读工作区的 AI（Copilot、Cursor、Codex 等），让它按这个顺序读：
 
 1. **`AGENTS.md`** —— 项目约定与阅读顺序，从这儿开始
-2. **`examples/mini/content/zh/*.md`** —— 语法手册的**源文件**（直接读 markdown，不需要构建；产物里的 HTML 反而不好读）
+2. **`tests/mini/content/zh/*.md`** —— 语法手册的**源文件**（直接读 markdown，不需要构建；产物里的 HTML 反而不好读）
 3. **`docs/getting-started.md`** —— 就是这一页，配置与目录约定
 
 要改工具本身（不是内容）才需要读 `ARCHITECTURE.md`。
@@ -255,7 +255,7 @@ dist/
 |---|---|---|
 | `README.md` | 是什么、快速开始 | 所有人 |
 | `docs/getting-started.md` | 本文：上手与配置 | 新用户 |
-| `examples/mini/` | 语法手册（16 页，用轻维基自己写） | 内容作者 |
+| `tests/mini/` | 语法手册（16 页，用轻维基自己写） | 内容作者 |
 | `packages/cli/templates/starter/` | `wiki init` 复制的起始模板 | 新用户 |
 | `AGENTS.md` | AI 的阅读顺序与项目约定 | AI / 贡献者 |
 | `ARCHITECTURE.md` | 开发文档：实现规格与改动指引 | 开发者 |

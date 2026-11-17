@@ -31,7 +31,7 @@ jobs:
       - name: 类型检查与校验
         run: |
           yarn type:check
-          yarn wiki check examples/mini --strict
+          yarn wiki check tests/mini --strict
 
       - name: 校验 tag 与所有包的版本一致
         run: |

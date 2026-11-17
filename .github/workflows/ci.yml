@@ -1,5 +1,5 @@
 # 每次 push / PR 都验证：类型、内容校验、构建。
-# 语法手册（examples/mini）就是回归测试 —— 它构建失败说明语法坏了。
+# 语法手册（tests/mini）就是回归测试 —— 它构建失败说明语法坏了。
 name: CI
 
 on:
@@ -25,8 +25,12 @@ jobs:
       - name: 类型检查
         run: yarn type:check
 
-      - name: 校验语法手册
-        run: yarn wiki check examples/mini --strict
+      - name: 校验语法回归测试
+        run: yarn wiki check tests/mini --strict
 
-      - name: 构建语法手册
-        run: yarn wiki build examples/mini
+      - name: 构建语法回归测试
+        run: yarn wiki build tests/mini
+
+      # 主站文档自己也得能过校验（不加 --strict：文档里允许有还没写的页）
+      - name: 校验主站文档
+        run: yarn wiki check site

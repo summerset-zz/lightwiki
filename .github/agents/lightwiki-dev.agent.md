@@ -12,7 +12,7 @@ argument-hint: "要做什么？例如：加搜索索引 / 修分类页链接 / �
 
 | 任务 | 读这些 |
 |---|---|
-| 写内容、改配置 | `docs/getting-started.md` → `examples/mini/content/zh/*.md` |
+| 写内容、改配置 | `docs/getting-started.md` → `tests/mini/content/zh/*.md` |
 | 改主题或布局 | `packages/theme-default/layouts/*.eta` → 手册里的「布局」一页 |
 | 改核心（解析、路由、构建） | `ARCHITECTURE.md` → `packages/core/src/` |
 | 想知道某项设计为什么这么定 | `ARCHITECTURE.md` 的对应章节 |
@@ -26,13 +26,13 @@ argument-hint: "要做什么？例如：加搜索索引 / 修分类页链接 / �
 3. **验证必做。** 每次改完至少跑：
    ```bash
    yarn type:check
-   yarn wiki check examples/mini
-   yarn wiki build examples/mini
+   yarn wiki check tests/mini
+   yarn wiki build tests/mini
    ```
-   需要看页面效果时起 `yarn wiki dev examples/mini`，**验证完立刻关掉对应终端**。
+   需要看页面效果时起 `yarn wiki dev tests/mini`，**验证完立刻关掉对应终端**。
 4. **纯函数优先单独验证。** 路由映射、解析这类逻辑，写个一次性脚本（`npx tsx xxx.ts`）跑完就删，不要为了验证起长驻进程。
 5. **文档与代码同步。**
-   - 改语法或配置项 → 更新 `examples/mini`（它是唯一维护的用户文档）与 `docs/getting-started.md` 的字段表；
+   - 改语法或配置项 → 更新 `tests/mini`（它是唯一维护的用户文档）与 `docs/getting-started.md` 的字段表；
    - 改了实现结构 → 更新 `ARCHITECTURE.md`；
    - 评估过程不要写进文档，文档只写"现在是什么"。
 
@@ -40,7 +40,7 @@ argument-hint: "要做什么？例如：加搜索索引 / 修分类页链接 / �
 
 代码改完、而且这次改动**用户看得见**（新语法、新配置项、行为变化）时，派 `轻维基文档` 去做叙述部分：
 
-- `examples/mini` —— 改了语法就必须同步，它同时是回归测试；
+- `tests/mini` —— 改了语法就必须同步，它同时是回归测试；
 - `docs/getting-started.md` 的字段表 —— 加了配置项就必须同步。
 
 **派任务时把上下文说全。** subagent 是无状态的，不知道你刚改了什么：
@@ -48,12 +48,12 @@ argument-hint: "要做什么？例如：加搜索索引 / 修分类页链接 / �
 ```
 刚才把 redirectMode 从三值改成四值，新增 'auto'。
 要更新：
-- examples/mini/content/zh/commands.md 的重定向一节
+- tests/mini/content/zh/commands.md 的重定向一节
 - docs/getting-started.md 里 redirectMode 那一行
 不要改任何代码。
 ```
 
-它没有终端权限，所以**派完你自己跑一次 `yarn wiki check examples/mini`** 验证没有红链、没有未解析的宏。
+它没有终端权限，所以**派完你自己跑一次 `yarn wiki check tests/mini`** 验证没有红链、没有未解析的宏。
 
 自己改代码又自己写文档容易漏（尤其是手册里那些“字面量要包进行内代码”的坑），分工更稳。
 

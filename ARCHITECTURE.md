@@ -1,6 +1,6 @@
 # 架构（开发文档）
 
-> 面向改代码的人。**用户文档**见 [`docs/getting-started.md`](./docs/getting-started.md)，**语法**见 [`examples/mini`](./examples/mini)（那是唯一维护的语法手册）。
+> 面向改代码的人。**用户文档**在主站 [`site/`](./site)，**语法回归测试**在 [`tests/mini`](./tests/mini)，上手与配置见 [`docs/getting-started.md`](./docs/getting-started.md)。
 
 ## 1. 定位与硬约束
 
@@ -189,17 +189,17 @@ dist/
 | 要做什么 | 改这些 |
 |---|---|
 | 加一个 frontmatter 字段 | `schema` → `content.ts` 的 `buildPageInfo` / `summarize` → `docs/getting-started.md` 的字段表 |
-| 加一个校验项 | `check.ts` 的 `CheckResult` → `cli` 的打印 → `examples/mini/commands.md` |
+| 加一个校验项 | `check.ts` 的 `CheckResult` → `cli` 的打印 → `tests/mini/commands.md` |
 | 加一种页面类型（新 URL） | `routes.ts` → `view.ts` 的 `create*View` → `build.ts` → `dev` 的 `resolveDevRoute` → 主题新布局 |
 | 加一个模板变量 | `context.ts`（`PageInfo` / `SiteInfo` + `pageInfoOf`）→ `view.ts` 与 `macros.ts` 自动继承 |
-| 加一种行内语法 | `markdown.ts` 的 ruler 注册 + 实现 → `examples/mini` 加一节 |
+| 加一种行内语法 | `markdown.ts` 的 ruler 注册 + 实现 → `tests/mini` 加一节 |
 | 改资源管线 | `assets.ts` → `build.ts` 的调用处 → `dev` 的 asset 分支 |
 | 改内联规则（哪些标签、哪种 data URI） | `inline.ts` 的 `inlineHtml` / `MIME` 表 |
 | 改相对链接改写规则 | `relative.ts` 的 `relativeUrl` / `isPageUrl` |
 | 改搜索命中策略或结果样式 | `theme-default/assets/search.js` 的 `score`、`style.css` 的 `.search-*` |
 | 改索引里放什么 | `search.ts` 的 `buildSearchIndex` → `site.search.excerpt` 配置 |
 
-改完至少跑：`yarn type:check`、`yarn wiki check examples/mini`、`yarn wiki build examples/mini`。
+改完至少跑：`yarn type:check`、`yarn wiki check tests/mini`、`yarn wiki build tests/mini`。
 
 ## 12. 许可与署名
 
@@ -223,7 +223,7 @@ dist/
 - **首次配 TP 后的发布可能进暂存区**（配置处于 `pending validation`），需要在 npm 网页上批准一次。暂存版本不进 registry 的 `versions`，`npm view` 会 404，别据此判断「没发出去」；
 - 还没上 changesets：版本号手工改，等包多到需要独立发版时再引入；
 - frontmatter **放行未知字段**（zod `passthrough`）：内容仓库与工具版本会脱钩，多一个不认识的键不该让整站失败；新增字段走弃用期；
-- `examples/mini` 每次都必须构建成功——它是唯一的语法回归测试；
+- `tests/mini` 每次都必须构建成功——它是唯一的语法回归测试；
 - 内容文件与产物都不带 tool 版本信息，`meta.json` 是唯一记录。
 
 ## 14. 路线图
@@ -243,7 +243,7 @@ dist/
 | v0.3 | 目录宏 `{{catalog}}` / `{{pages}}`、`docsDir` 可配、未定义宏可配、红链标记 | 完成 |
 | v0.3 | 控制台输出全英文 ASCII | 完成 |
 | — | 推送到远端的 `deploy` 目标 | 不做（`git push` 就是部署，见 §10） |
-| v0.4 | 主站文档中心（面向三类用户重写）+ `examples/mini` 退回冒烟测试 | 未开始 |
+| v0.4 | 主站文档中心（面向三类用户重写）+ `tests/mini` 退回冒烟测试 | 未开始 |
 | v0.4 | Electron 客户端（连接仓库、编辑预览、commit + push） | 未开始 |
 | v0.5+ | sitemap/RSS、语言切换、主题生态、按 section 分派皮肤 | 未开始 |
 
