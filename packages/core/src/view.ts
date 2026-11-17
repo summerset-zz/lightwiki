@@ -1,4 +1,6 @@
-﻿import type { LoadedConfig } from './config.js';
+﻿import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import type { LoadedConfig } from './config.js';
 import type { Page } from './content.js';
 import { keywordsOf, NOT_FOUND_SLUG, pageInfoOf, type SiteInfo } from './context.js';
 import { categoryUrl, INDEX_SLUG, normalizeBasePath, pageUrl } from './routes.js';
@@ -110,12 +112,28 @@ export function buildSidebar(
   };
 }
 
+/**
+ * 内容仓库里提供了哪些可选片段。
+ *
+ * 主题的皮肤据此决定要不要 `include()` —— 文件不存在时 include 会报错，
+ * 所以必须由数据层先告诉皮肤「有没有」。目前只有一个：顶栏。
+ */
+export interface Partials {
+  /** `layouts/nav.eta` 是否存在；存在时主题会把它插在 `<body>` 开头 */
+  nav: boolean;
+}
+
+function detectPartials(config: LoadedConfig): Partials {
+  return { nav: existsSync(join(config.root, 'layouts', 'nav.eta')) };
+}
+
 export interface PageView {
   site: SiteInfo;
   page: Record<string, unknown>;
   nav: NavGroup[];
   sidebar: Sidebar;
   index: { url: string };
+  partials: Partials;
 }
 
 export function createPageView(
@@ -151,6 +169,7 @@ export function createPageView(
     nav: buildNav(config, pages, page.lang, page.url),
     sidebar: buildSidebar(config, pages, page),
     index: { url: pageUrl(config, page.lang, INDEX_SLUG) },
+    partials: detectPartials(config),
   };
 }
 
@@ -159,6 +178,7 @@ export interface NotFoundView {
   lang: string;
   nav: NavGroup[];
   index: { url: string };
+  partials: Partials;
 }
 
 /**
@@ -180,6 +200,7 @@ export function createNotFoundView(
     lang,
     nav: buildNav(config, pages, lang, ''),
     index: { url: pageUrl(config, lang, INDEX_SLUG) },
+    partials: detectPartials(config),
   };
 }
 
@@ -228,6 +249,7 @@ export interface CategoryView {
   };
   nav: NavGroup[];
   index: { url: string };
+  partials: Partials;
 }
 
 export function createCategoryView(
@@ -252,5 +274,6 @@ export function createCategoryView(
     },
     nav: buildNav(config, pages, lang, url),
     index: { url: pageUrl(config, lang, INDEX_SLUG) },
+    partials: detectPartials(config),
   };
 }

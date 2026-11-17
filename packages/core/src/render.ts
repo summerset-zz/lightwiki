@@ -26,7 +26,16 @@ export function layoutCandidates(config: LoadedConfig, name: string): string[] {
  * 这一层是主题可升级的全部机制 —— 用户只对自己覆盖的文件负责。
  */
 export function createRenderer(config: LoadedConfig): Renderer {
-  const eta = new Eta({ autoEscape: true, cache: false });
+  // `views` 指向内容仓库的 layouts/：让皮肤能 include 同目录下的片段
+  // （比如所有页面共用的顶栏 `nav.eta`），不用把同一段 HTML 抄进每个皮肤。
+  //
+  // 只设内容仓库这一处，主题包不参与解析：主题的皮肤不能假设用户仓库里
+  // 一定有某个文件，否则一个空站点连页面都渲染不出来。
+  const eta = new Eta({
+    autoEscape: true,
+    cache: false,
+    views: join(config.root, 'layouts'),
+  });
 
   function resolveLayout(name: string): string {
     if (!LAYOUT_NAME.test(name)) {

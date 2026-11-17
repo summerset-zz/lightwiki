@@ -40,7 +40,7 @@ categories: [syntax]
 
 | 写法 | 产出 |
 |---|---|
-| `{{catalog}}` | 所有分类，带页面数与链接 |
+| `{{catalog}}` | 所有分类，带页面数与链接（页面数只算当前语言） |
 | `{{pages(section: syntax)}}` | 某个分组下的页面列表 |
 | `{{pages(category: demo)}}` | 某个分类下的页面列表 |
 | `{{pages()}}` | 当前语言的全部页面 |

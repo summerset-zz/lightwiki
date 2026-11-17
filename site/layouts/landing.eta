@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="<%= it.page.lang %>">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= it.page.title %> · 上世代的静态站点工具链</title>
+<% if (it.page.description) { %>
+<meta name="description" content="<%= it.page.description %>">
+<% } %>
+<link rel="stylesheet" href="<%= it.site.base %>/assets/theme/style.css">
+<link rel="stylesheet" href="<%= it.site.base %>/assets/theme/theme-extra.css">
+<style>
+  .hero,
+  .band { padding: 4rem 1.5rem; }
+  .band + .band { border-top: 1px solid var(--line); }
+  .wrap { max-width: 60rem; margin: 0 auto; }
+  .wrap-wide { max-width: 72rem; margin: 0 auto; }
+
+  .hero { text-align: center; padding-top: 5rem; padding-bottom: 4.5rem; }
+  .hero h1 { margin: 0 0 0.75rem; font-size: clamp(2.2rem, 6vw, 3.4rem); letter-spacing: -0.02em; }
+  .hero .tagline { margin: 0 0 1.5rem; font-size: 1.15rem; color: var(--fg-dim); }
+  .hero p { margin: 0 0 0.6rem; }
+  .hero .note { font-size: 0.9rem; color: var(--fg-dim); }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin: 2rem 0 0; }
+  .btn {
+    display: inline-block;
+    padding: 0.6rem 1.15rem;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { color: #fff; opacity: 0.9; }
+
+  .band h2 { margin: 0 0 0.4rem; font-size: 1.45rem; }
+  .band .lead { margin: 0 0 2rem; color: var(--fg-dim); }
+
+  .pair { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+  .pair > div { min-width: 0; }
+  .pair-label {
+    margin: 0 0 0.4rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+  }
+  .pair pre {
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--code-bg);
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  .pair .result {
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  .features { display: grid; gap: 0.85rem; margin: 0; padding: 0; list-style: none; }
+  .features li { padding-left: 1.2rem; position: relative; }
+  .features li::before { content: "·"; position: absolute; left: 0.3rem; color: var(--accent); font-weight: 700; }
+
+  .foot { padding: 3rem 1.5rem 4rem; border-top: 1px solid var(--line); }
+  .foot p { margin: 0 0 0.5rem; color: var(--fg-dim); font-size: 0.9rem; }
+  .source-view { margin-top: 1.5rem; }
+  .source-view summary { cursor: pointer; color: var(--fg-dim); font-size: 0.9rem; }
+  .source-view pre {
+    margin: 0.75rem 0 0;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--code-bg);
+    overflow-x: auto;
+    font-size: 0.82rem;
+  }
+
+  @media (min-width: 44rem) {
+    .pair { grid-template-columns: 1fr 1fr; align-items: start; }
+    .features { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<% if (it.partials.nav) { %><%~ include('nav', it) %><% } %>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>轻维基</h1>
+    <p class="tagline">上世代的静态站点工具链</p>
+    <p>写 markdown，加一段 frontmatter，运行一条命令。</p>
+    <p>产物是一堆静态文件，没有 vite、没有 vue、没有等着你调的构建。</p>
+    <p class="note">这里说的「上世代」是褒义：那些东西到现在还能用。</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="<%= it.site.base %>/docs/start/quickstart-ai">纯新人，从这里开始</a>
+      <a class="btn" href="<%= it.site.base %>/docs/start/quickstart-dev">开发者，从这里开始</a>
+    </div>
+    <p class="note" style="margin-top: 1.25rem">
+      只想先看看它是什么？读 <a href="<%= it.site.base %>/docs/start/intro">简介</a>。
+    </p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap-wide">
+    <h2>会写字，就能发布</h2>
+    <p class="lead">不需要知道 HTML、CSS、部署流程。一个文件一页，写完就能看。</p>
+    <div class="pair">
+      <div>
+        <p class="pair-label">一个 md 文件</p>
+        <pre><code>---
+title: 你好，世界
+---
+
+这是我的第一页。
+
+- 可以写列表
+- 可以放图片
+- 也可以只是写字</code></pre>
+      </div>
+      <div>
+        <p class="pair-label">打开就是</p>
+        <div class="result">
+          <strong>你好，世界</strong>
+          <p style="margin: 0.6rem 0 0">这是我的第一页。</p>
+          <ul style="margin: 0.6rem 0 0; padding-left: 1.2rem">
+            <li>可以写列表</li>
+            <li>可以放图片</li>
+            <li>也可以只是写字</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p style="margin: 1.5rem 0 0; color: var(--fg-dim); font-size: 0.9rem">
+      地址变成 <code>mysite.com/docs/hello/</code>，文件名就是地址。这一页自己也是这么生成的，
+      往下拉有「查看本页源码」。
+    </p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap-wide">
+    <h2>重复的部分，做成模板</h2>
+    <p class="lead">同一段结构写第二遍时就该抽出来。模板拿到当前页与全站数据，产出 markdown。</p>
+    <div class="pair">
+      <div>
+        <p class="pair-label">macros/term.eta</p>
+        <pre><code>&lt;%
+  const word = it.args[0] ?? '';
+  const gloss = it.named.定义 ?? '';
+%&gt;
+**&lt;%~ word %&gt;**（&lt;%~ gloss %&gt;）</code></pre>
+      </div>
+      <div>
+        <p class="pair-label">正文里这样用</p>
+        <pre><code>排版里 **字距**（tracking）
+这个词，指的是…
+
+{{term(字距, 定义: 一组字符之间的
+统一间距)}}</code></pre>
+      </div>
+    </div>
+    <ul class="features" style="margin-top: 1.5rem">
+      <li>模板写在 <code>macros/*.eta</code>，一个文件一个</li>
+      <li>参数用 <code>键: 值</code>，位置参数按顺序传</li>
+      <li>产出的是 markdown，会再解析一遍</li>
+      <li>主题自带 <code>catalog</code> 与 <code>pages</code> 两个</li>
+    </ul>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap-wide">
+    <h2>版面是皮肤，整页都归你</h2>
+    <p class="lead">皮肤就是一个 HTML 文件。想改结构就换皮肤，只想微调就不必动它。</p>
+    <div class="pair">
+      <div>
+        <p class="pair-label">换这一页的皮肤</p>
+        <pre><code>---
+title: 关于
+layout: landing
+styles: [about.css]
+scripts:
+  - src: about.js
+    module: true
+---</code></pre>
+      </div>
+      <div>
+        <p class="pair-label">layouts/landing.eta</p>
+        <pre><code>&lt;!doctype html&gt;
+&lt;html lang="&lt;%= it.page.lang %&gt;"&gt;
+&lt;head&gt;
+  &lt;title&gt;&lt;%= it.page.title %&gt;&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;%~ it.page.html %&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      </div>
+    </div>
+    <ul class="features" style="margin-top: 1.5rem">
+      <li>皮肤放 <code>layouts/</code>，同名文件覆盖主题</li>
+      <li>只覆盖要改的那几个，其余继续跟主题走</li>
+      <li>页面可以单独挂 css / js</li>
+      <li>标题、描述、canonical 都写在皮肤里，随便改</li>
+    </ul>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>让 AI 帮你写</h2>
+    <p class="lead">仓库根有一份 <code>AGENTS.md</code>，说明内容约定与可用语法。Copilot、Cursor 这类工具会自动读它。</p>
+    <ul class="features">
+      <li><strong>初始化项目</strong>：让助手跑 <code>wiki init</code>，再按你的需求改配置</li>
+      <li><strong>协助写作</strong>：说清楚要写哪几页，助手会照 frontmatter 规范产出</li>
+      <li><strong>不用装环境</strong>：工具从 npm 现取，内容仓库里没有依赖</li>
+      <li><strong>写完能验</strong>：<code>wiki check</code> 会点名红链、缺字段、缺首页</li>
+    </ul>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">
+<% if (it.page.html) { %>
+    <div class="prose" style="margin: 0 0 1.5rem"><%~ it.page.html %></div>
+<% } %>
+    <p>最少只要两个字段：<code>title</code> 和 <code>section</code>。其余都有默认值。</p>
+    <p>产物是可移植的静态文件，扔到任何静态托管、U 盘、光盘镜像里都能用。</p>
+<% if (it.page.markdown) { %>
+    <details class="source-view">
+      <summary>查看本页源码</summary>
+      <pre><code><%= it.page.markdown %></code></pre>
+    </details>
+<% } %>
+  </div>
+</footer>
+
+</body>
+</html>

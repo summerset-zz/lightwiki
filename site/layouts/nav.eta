@@ -1,0 +1,167 @@
+<%
+/**
+ * 站点的顶栏。放进 `layouts/nav.eta` 就会被主题自动插到每个页面的 <body> 开头，
+ * 不需要覆盖 doc.eta。
+ *
+ * 菜单是**写死**的：这是本站的产品决策，不从内容里推导。改菜单就改这张表。
+ *
+ * 二级菜单用 <details>，零依赖、键盘可用。下面那几行脚本只负责
+ * 「点别处、按 Esc 时收起」。不支持时影响很小（菜单仍然能展开）。
+ */
+const version = '0.3.0';
+
+const menus = [
+  {
+    label: '快速上手',
+    items: [
+      { label: '纯新人', href: '/docs/start/quickstart-ai' },
+      { label: '开发者', href: '/docs/start/quickstart-dev' },
+    ],
+  },
+  {
+    label: '语法',
+    items: [
+      { label: 'Markdown 与扩展语法', href: '/docs/basics/markdown' },
+      { label: 'frontmatter', href: '/docs/basics/frontmatter' },
+      { label: '模板', href: '/docs/basics/templates' },
+      { label: '皮肤', href: '/docs/basics/skins' },
+    ],
+  },
+  {
+    label: '配置与部署',
+    items: [
+      { label: '站点配置', href: '/docs/advanced/config' },
+      { label: '命令行', href: '/docs/advanced/cli' },
+      { label: '发布到 GitHub Pages', href: '/docs/advanced/deploy-pages' },
+    ],
+  },
+];
+
+const repo = 'https://github.com/summerset-zz/lightwiki';
+%>
+<header class="topnav">
+  <a class="topnav-brand" href="<%= it.index.url %>">
+    <span class="topnav-mark" aria-hidden="true">轻</span>
+    <span><%= it.site.title %></span>
+  </a>
+
+  <nav class="topnav-menu" aria-label="主导航">
+<% for (const menu of menus) { %>
+    <details class="topnav-group">
+      <summary><%= menu.label %></summary>
+      <ul>
+<% for (const item of menu.items) { %>
+        <li><a href="<%= it.site.base %><%= item.href %>"><%= item.label %></a></li>
+<% } %>
+      </ul>
+    </details>
+<% } %>
+    <a class="topnav-link" href="<%= repo %>" rel="noreferrer">GitHub</a>
+    <span class="topnav-version" title="工具版本">v<%= version %></span>
+  </nav>
+</header>
+
+<style>
+.topnav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: 0.9rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.topnav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+.topnav-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.85rem;
+}
+.topnav-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 1.25rem;
+  margin-left: auto;
+  font-size: 0.925rem;
+}
+.topnav-menu a,
+.topnav-menu summary {
+  color: var(--fg);
+  cursor: pointer;
+  text-decoration: none;
+}
+.topnav-menu a:hover,
+.topnav-menu summary:hover { color: var(--accent); }
+.topnav-group { position: relative; }
+.topnav-group summary { list-style: none; }
+.topnav-group summary::-webkit-details-marker { display: none; }
+.topnav-group summary::after { content: " ▾"; color: var(--fg-dim); font-size: 0.75em; }
+.topnav-group[open] summary { color: var(--accent); }
+.topnav-group > ul {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  min-width: 12rem;
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+.topnav-group > ul a { display: block; padding: 0.4rem 0.6rem; border-radius: 6px; }
+.topnav-group > ul a:hover { background: var(--code-bg); }
+.topnav-link { text-decoration: none; }
+.topnav-version {
+  color: var(--fg-dim);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 40rem) {
+  .topnav-menu { margin-left: 0; }
+  .topnav-group > ul { position: static; box-shadow: none; margin-top: 0.4rem; }
+}
+</style>
+
+<script>
+  // 展开一个就收起别的；点外部或按 Esc 也收起。纯粹是体验，不依赖它出内容。
+  (function () {
+    var menus = document.querySelectorAll('.topnav-group');
+    if (!menus.length) return;
+
+    function closeAll(except) {
+      menus.forEach(function (menu) {
+        if (menu !== except) menu.open = false;
+      });
+    }
+
+    menus.forEach(function (menu) {
+      menu.addEventListener('toggle', function () {
+        if (menu.open) closeAll(menu);
+      });
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!event.target.closest('.topnav-group')) closeAll();
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') closeAll();
+    });
+  })();
+</script>
