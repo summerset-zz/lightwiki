@@ -40,6 +40,8 @@ pnpm dlx @lightwiki/cli init my-wiki
 
 **没有 `package.json`，也不用 `npm install`。** 内容仓库不装东西，工具在用的时候现取。
 
+> 这六项、目录约定与常见坑也写成了一份可以整段喂给 AI 的说明：[assets/agents.md](/assets/agents.md)。它和上面这个 `AGENTS.md` 不是同一份：那份讲怎么从零把站搭起来，生成的 `AGENTS.md` 讲怎么往里写内容。
+
 ## 三条命令 {#commands}
 
 | 命令 | 做什么 |
