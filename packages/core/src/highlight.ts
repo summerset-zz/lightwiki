@@ -33,8 +33,6 @@ const ALIASES: Record<string, string> = {
   html: 'xml',
   svg: 'xml',
   vue: 'xml',
-  // Eta 就是 HTML 里嵌 JS 片段，用 xml 的结果比不染色好得多
-  eta: 'xml',
   ejs: 'xml',
   js: 'javascript',
   jsx: 'javascript',
@@ -50,6 +48,33 @@ const ALIASES: Record<string, string> = {
   text: 'plaintext',
   txt: 'plaintext',
 };
+
+/**
+ * `eta` 的自定义定义。
+ *
+ * highlight.js 没有 Eta。最接近的是 `erb`（同样是 HTML 里夹 `<% %>`），但它只声明了
+ * `subLanguage: 'ruby'` —— 没注册 ruby 时那段完全不工作，实测还不如直接用 xml。
+ *
+ * 所以自己写一个：整块按 HTML 走，`<% ... %>` 里按 JS 走。实测收益：
+ * 纯逻辑块从「只剩 tag/name 两类」变成「keyword/property/tag/name 四类」，
+ * `<%# 注释 %>` 也有了颜色。
+ *
+ * 依赖 `xml` 与 `javascript` 已注册，所以必须在 BUILTIN 之后注册。
+ */
+const ETA_DEFINITION = (h: typeof hljs) => ({
+  name: 'Eta',
+  subLanguage: 'xml',
+  contains: [
+    h.COMMENT('<%#', '%>'),
+    {
+      begin: /<%[%~=-]?/,
+      end: /[-%]?%>/,
+      subLanguage: 'javascript',
+      excludeBegin: true,
+      excludeEnd: true,
+    },
+  ],
+});
 
 export interface Highlighter {
   enabled: boolean;
@@ -78,8 +103,18 @@ export async function createHighlighter(config: LoadedConfig): Promise<Highlight
     for (const name of BUILTIN) {
       if (loadLanguage(name)) registered.add(name);
     }
+    // 排在 BUILTIN 之后：它把 `<% %>` 内部交给 javascript、其余交给 xml
+    hljs.registerLanguage('eta', ETA_DEFINITION as never);
+    registered.add('eta');
+
     for (const name of config.highlight.languages) {
-      const real = ALIASES[name.toLowerCase()] ?? name.toLowerCase();
+      const key = name.toLowerCase();
+      // 先当真名试：配 `vue` 就该用官方的 vue 定义，而不是别名表里的 xml
+      if (loadLanguage(key)) {
+        registered.add(key);
+        continue;
+      }
+      const real = ALIASES[key] ?? key;
       if (loadLanguage(real)) registered.add(real);
     }
   }
@@ -90,7 +125,8 @@ export async function createHighlighter(config: LoadedConfig): Promise<Highlight
     highlight(code, lang) {
       if (!enabled || !lang) return null;
       const key = lang.toLowerCase();
-      const real = ALIASES[key] ?? key;
+      // 真名优先：注册过 vue 就用 vue，没注册过才退回 xml
+      const real = hljs.getLanguage(key) ? key : (ALIASES[key] ?? key);
       if (!hljs.getLanguage(real)) return null;
       try {
         return hljs.highlight(code, { language: real, ignoreIllegals: true }).value;
