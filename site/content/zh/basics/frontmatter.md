@@ -55,6 +55,8 @@ title: 我的第一页
 | `categories` | 字符串或数组 | 归到哪些分类，写 ASCII slug。构建时为每个用到的分类生成 `/categories/<slug>/`。 |
 | `sidebarCategory` | 字符串 | 用哪个分类的页面列表当这一页的侧栏。不写就是全站导航。 |
 
+`categories` 与 `sidebarCategory` 的完整用法见 [分类](/docs/basics/categories)。
+
 另有一组 `source*` / `license*` 字段，用于整篇改编外部内容时标注出处与许可，一般用不上。整篇只有一个术语提示时，用 `hintTitle` / `hint`。
 
 ## 写坏了会怎样 {#pitfalls}
