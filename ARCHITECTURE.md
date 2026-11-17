@@ -98,7 +98,9 @@ markdown-it (html, linkify)
 
 `render.ts` 按顺序找布局：`<内容根>/layouts/<name>.eta` → `<主题>/layouts/<name>.eta` → 报错。
 
-现有布局名：`doc`（内容页）、`index`（目录页）、`category`（分类页）、`not-found`（无 `404.md` 时的兜底）、`redirect`（重定向页）。
+现有布局名：`doc`（内容页，**首页也用它**）、`category`（分类页）、`not-found`（没有已发布 `404.md` 时的兜底）、`redirect`（重定向页）。
+
+0.3 起没有 `index` 布局：首页由内容里的 `index.md` 提供，与普通页同一条路径。
 
 引擎是 Eta。**`autoTrim` 必须关闭**——宏产出的是 markdown，标签后的换行是语义的一部分。
 

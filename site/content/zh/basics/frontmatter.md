@@ -49,7 +49,7 @@ title: 我的第一页
 | `order` | 数字 | 组内排序，小的在前。 |
 | `updated` | `YYYY-MM-DD` | 页面上显示的最后更新日期。只认这个格式。 |
 | `draft` | 布尔，默认 `false` | 改成 `true` 时构建不收录，导航和搜索里也没有；本地预览仍能按地址打开。 |
-| `layout` | 字符串 | 换这一页的皮肤，写皮肤名（`layouts/` 下的文件名，不带 `.eta`）。不写就是 `doc`，文件不存在时构建报错。 |
+| `layout` | 字符串 | 换这一页的皮肤，写皮肤名（`layouts/` 下的文件名，不带 `.eta`）。不写就是 `doc`，文件不存在时构建报错。见 [皮肤](/docs/basics/skins)。 |
 | `styles` | 字符串或数组 | 只给这一页挂 css，路径相对 `assets/`。写 `.css` 就行，`.less` 会自动编译成同名 `.css`。 |
 | `scripts` | 字符串、数组或 `{ src, module }` | 只给这一页挂 js，路径相对 `assets/`。要 ES module 就写成 `- src: x.js` 加 `module: true`。 |
 | `categories` | 字符串或数组 | 归到哪些分类，写 ASCII slug。构建时为每个用到的分类生成 `/categories/<slug>/`。 |
