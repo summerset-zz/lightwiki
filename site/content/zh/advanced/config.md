@@ -105,7 +105,7 @@ defaultLanguage: 'zh',
 | `redirects` | `[]` | 旧地址到新地址的映射，元素是 `{ from, to, status }`，`status` 默认 `301` |
 | `redirectMode` | `'js'` | `'js'` 生成跳转页，`'server'` 只输出 `_redirects`，`'both'` 两者都做 |
 | `highlight.enabled` | `true` | 代码块高亮开关 |
-| `highlight.languages` | `[]` | 额外加载的 highlight.js 语言名，如 `'ruby'`、`'go'` |
+| `highlight.languages` | `[]` | 额外加载的 highlight.js 语言名，如 `'ruby'`、`'go'`（用法见 [代码高亮](/docs/basics/code-highlight)） |
 | `search.enabled` | `true` | 站内搜索开关 |
 | `search.excerpt` | `300` | 索引里保留的正文摘要长度（字符），`0` 表示只要标题 |
 | `macros.undefined` | `'show'` | 未定义模板的处理方式 |

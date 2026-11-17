@@ -305,7 +305,10 @@ a.redlink:hover { text-decoration: underline; }
 .hljs-comment, .hljs-quote { color: var(--hl-comment); font-style: italic; }
 .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag { color: var(--hl-keyword); }
 .hljs-string, .hljs-regexp, .hljs-addition, .hljs-template-tag { color: var(--hl-string); }
-.hljs-number, .hljs-attr, .hljs-property, .hljs-symbol { color: var(--hl-number); }
+.hljs-number, .hljs-property, .hljs-symbol { color: var(--hl-number); }
+/* attr 单独一条：它的变量本来是空挂的（值跟 number 一样但改了没效果），
+   分开写才让人能单独调属性名的颜色 */
+.hljs-attr { color: var(--hl-attr); }
 .hljs-title, .hljs-title.function_, .hljs-title.class_, .hljs-section { color: var(--hl-function); }
 .hljs-variable, .hljs-template-variable { color: var(--hl-variable); }
 .hljs-tag, .hljs-name, .hljs-selector-id, .hljs-selector-class { color: var(--hl-tag); }
