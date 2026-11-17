@@ -10,11 +10,15 @@ draft: false
 
 ## 生成一个站 {#init}
 
+需要 Node.js 20 或更高。`npx` 不用单独装，它是 npm 的子命令，装 Node.js 时一起就有。不确定就跑 `npx --version`，有版本号就行。
+
 ```bash
 npx @lightwiki/cli init my-wiki
 cd my-wiki
 npx @lightwiki/cli dev .
 ```
+
+`npx` 干的事是：跑一个 npm 包里的命令。本地没装过就临时下载，跑完缓存起来，下次几秒就好。所以这个仓库没有 `package.json`，也不需要 `npm install`。
 
 用 yarn / pnpm 的话换成：
 
