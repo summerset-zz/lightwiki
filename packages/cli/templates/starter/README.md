@@ -73,8 +73,6 @@ npx @lightwiki/cli dev .
 
 想把 `index.md` 改名成 `home.md`，地址就跟着变成 `/docs/home/`，而 `/docs/` 会没人管（构建能过，但 `wiki check` 会报缺首页）。所以：改文件名等于改地址。
 
-`/docs/` 是自动生成的目录页，不用手写。
-
 ### frontmatter
 
 每页开头一段 `---` 包住的 YAML，决定这页怎么被索引、排在侧栏哪里：
@@ -145,12 +143,14 @@ npx @lightwiki/cli build .      # 产物在 ./dist
 
 ```
 dist/
-├── index.html                  首页（跳到默认语言）
-├── docs/index.html             目录页
-├── docs/start/index.html       每一页
-├── categories/…                分类页
-├── assets/                     样式、脚本
-└── meta.json / sitemap.xml     给搜索与爬虫
+├── index.html                  一行跳转，进默认语言首页
+├── 404.html                    静态托管约定的 404 页（没有 404.md 时用主题的兑底页）
+├── docs/index.html             首页（来自 content/zh/index.md）
+├── docs/start/index.html       其余每一页，一页一个目录
+├── categories/…                页面写了 categories 才有这一层
+├── assets/                     样式、脚本、图片
+├── meta.json                   构建时间、页数、产物形态
+└── search-index.json           站内搜索的索引
 ```
 
 影响地址形态的开关（`basePath`、`urlStyle`）都在 `wiki.config.ts` 里，默认是目录式（`/docs/start/`），适合所有静态托管。
