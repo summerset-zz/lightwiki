@@ -175,6 +175,21 @@ export function shouldInlineSearch(config: LoadedConfig): boolean {
   return config.inline || config.urlStyle === 'file';
 }
 
+/**
+ * 给站内绝对路径加上 basePath，**幂等**：已经带前缀时原样返回。
+ *
+ * 与 `assetHref` 的区别在这里：那个处理的是作者手写的 `/assets/x`（保证不含前缀），
+ * 这里的输入可能来自配置（作者可能已经自己拼了前缀），所以要先判重。
+ * 非站内地址（`https://`、`mailto:`、`//cdn`）原样返回。
+ */
+export function withBasePath(path: string, config: LoadedConfig): string {
+  if (!path.startsWith('/') || path.startsWith('//')) return path;
+
+  const base = normalizeBasePath(config.basePath);
+  if (!base) return path;
+  return path === base || path.startsWith(`${base}/`) ? path : `${base}${path}`;
+}
+
 /** 资源路径（图片等）只加 basePath，不改语言、不改扩展名 */
 export function assetHref(src: string, config: LoadedConfig): string {
   if (!src.startsWith('/') || src.startsWith('//')) return src;

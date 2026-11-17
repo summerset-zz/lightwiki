@@ -1,11 +1,17 @@
 <%
 // 分类清单：显示名 + 页面数，链到该分类页。
 // 数据来自 it.site.categoryList（已按配置声明顺序排好，未声明的排在后面）。
+//
+// 篇数用 `counts[当前语言]` 而不是 `count`（全语言合计）：分类页本身是按语言
+// 生成的，用合计数字会出现「写着 5 篇、点进去只有 3 篇」。
+// 当前语言里没有页面的分类直接不列。
 // 产出 markdown 列表而不是 HTML —— 样式交给站点自己的 CSS。
-const categories = it.site.categoryList;
+const categories = it.site.categoryList
+  .map((c) => ({ ...c, n: c.counts?.[it.lang] ?? 0 }))
+  .filter((c) => c.n > 0);
 const lines =
   categories.length === 0
     ? ['暂无分类。']
-    : categories.map((c) => `- [${c.label}](/categories/${c.slug}/)（${c.count} 篇）`);
+    : categories.map((c) => `- [${c.label}](/categories/${c.slug}/)（${c.n} 篇）`);
 %>
 <%= lines.join('\n') %>

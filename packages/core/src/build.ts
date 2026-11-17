@@ -9,7 +9,7 @@ import { buildLinkReport, normUrl, type LinkReport } from './links.js';
 import { assetList, injectPageAssets, pageAssetUrl, resolvePageAsset, scriptList } from './page-assets.js';
 import { createRenderer } from './render.js';
 import { relativeUrl, rewriteRelativeLinks } from './relative.js';
-import { categoryOutputPath, INDEX_SLUG, indexOutputPath, langPrefix, normalizeBasePath, pageUrl, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath } from './routes.js';
+import { categoryOutputPath, INDEX_SLUG, indexOutputPath, langPrefix, normalizeBasePath, pageUrl, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath, withBasePath } from './routes.js';
 import { buildSearchIndex, injectSearchIndex } from './search.js';
 import {
   createCategoryView,
@@ -240,13 +240,16 @@ export async function buildSite(
         }
 
         // 跳转地址在 file 模式下要跟着相对化（meta refresh 与 JS 都要用）；
-        // canonical 必须是绝对地址，否则对搜索引敬没有意义。
+        // canonical 必须是绝对地址，否则对搜索引擎没有意义。
+        //
+        // `rule.to` 是作者写的站内路径，不含 basePath。两条路径都要补上：
+        // 少了它，项目站点（`/<repo>/`）上 meta refresh 会跳到域名根，canonical 也会指错。
         const html = await renderer.renderLayout('redirect', {
           site: siteInfo,
           from: rule.from,
           to: rule.to,
-          href: relativeMode ? relativeUrl(rule.to, relative, config) : rule.to,
-          canonical: `${config.siteUrl.replace(/\/+$/, '')}${rule.to}`,
+          href: relativeMode ? relativeUrl(rule.to, relative, config) : withBasePath(rule.to, config),
+          canonical: `${config.siteUrl.replace(/\/+$/, '')}${withBasePath(rule.to, config)}`,
         });
         await emit(relative, html);
         taken.add(relative);

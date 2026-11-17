@@ -64,7 +64,15 @@ export const NOT_FOUND_SLUG = '404';
 export interface CategoryInfo {
   slug: string;
   label: string;
+  /** 全语言合计的篇数 */
   count: number;
+  /**
+   * 每种语言各有多少篇。
+   *
+   * 分类页本身是按语言生成的，所以目录宏（`{{catalog}}`）要看的是这个，
+   * 不是 `count` —— 多语言站上那会把别的语言的篇数也算进来。
+   */
+  counts: Record<string, number>;
 }
 
 /** 搜索索引对模板暴露的部分：只要位置，不要数据（数据在页面里或 json 里） */
@@ -232,21 +240,27 @@ export function createSiteInfo(
 
   const summaries = published.map(summarize).sort(order);
 
-  const categoryCounts = new Map<string, number>();
+  const categoryCounts = new Map<string, Record<string, number>>();
   for (const summary of summaries) {
     for (const slug of summary.categories) {
-      categoryCounts.set(slug, (categoryCounts.get(slug) ?? 0) + 1);
+      const per = categoryCounts.get(slug) ?? {};
+      per[summary.lang] = (per[summary.lang] ?? 0) + 1;
+      categoryCounts.set(slug, per);
     }
   }
 
   const declared = Object.keys(config.categories);
   const undeclared = [...categoryCounts.keys()].filter((slug) => !declared.includes(slug)).sort();
   const categoryList: CategoryInfo[] = [...declared.filter((slug) => categoryCounts.has(slug)), ...undeclared].map(
-    (slug) => ({
-      slug,
-      label: config.categories[slug] ?? slug,
-      count: categoryCounts.get(slug) ?? 0,
-    }),
+    (slug) => {
+      const counts = categoryCounts.get(slug) ?? {};
+      return {
+        slug,
+        label: config.categories[slug] ?? slug,
+        count: Object.values(counts).reduce((sum, n) => sum + n, 0),
+        counts,
+      };
+    },
   );
 
   return {
