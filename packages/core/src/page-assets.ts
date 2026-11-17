@@ -66,6 +66,20 @@ export interface ResolvedAsset {
 }
 
 /**
+ * 是不是站外地址。
+ *
+ * 两种写法都算：带协议的（`https:`、`data:`、`mailto:`）与协议相对的（`//cdn…/x.js`）。
+ * 这类引用我们管不着 —— 原样透传给产物，不查本地文件、不加 basePath，
+ * 内联模式也不动它（`inline.ts` 的 `resolveTarget()` 同样按这条判）。
+ *
+ * 注意单斜杠开头的 `/assets/x.js` 不算外链，那是站内路径。
+ */
+export function isExternalUrl(reference: string): boolean {
+  const raw = reference.trim();
+  return /^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.startsWith('//');
+}
+
+/**
  * 把一条引用解析成真实文件。找不到返回 null（由调用方决定报到哪去）。
  * `../` 之类一律拒绝：内容里的路径不该有机会跑出 assets 目录。
  */

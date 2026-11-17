@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 import type { AssetFile } from './assets.js';
+import { isExternalUrl } from './page-assets.js';
 
 /**
  * 单文件产物（`inline: true`）的 HTML 后处理。
@@ -156,7 +157,8 @@ export function inlineHtml(
     const key = resolveTarget(href, pagePath, basePath);
     const asset = key ? bundle.get(key) : undefined;
     if (!key || !asset) {
-      report.missing.push(href);
+      // 外链（CDN）本来就不在资源表里，原样保留即可，别当成「缺失」去吓人
+      if (!isExternalUrl(href)) report.missing.push(href);
       return tag;
     }
 
@@ -173,7 +175,7 @@ export function inlineHtml(
       const key = resolveTarget(url, pagePath, basePath);
       const asset = key ? bundle.get(key) : undefined;
       if (!key || !asset) {
-        report.missing.push(url);
+        if (!isExternalUrl(url)) report.missing.push(url);
         return match;
       }
 

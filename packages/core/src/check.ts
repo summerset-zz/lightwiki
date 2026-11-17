@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import type { LoadedConfig } from './config.js';
 import { loadContent, type ContentProblem } from './content.js';
 import { buildLinkReport, type LinkReport } from './links.js';
-import { assetList, resolvePageAsset, scriptList } from './page-assets.js';
+import { assetList, isExternalUrl, resolvePageAsset, scriptList } from './page-assets.js';
 import { layoutCandidates } from './render.js';
 import { INDEX_SLUG } from './routes.js';
 import type { TitleConflict } from './resolve.js';
@@ -179,10 +179,13 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
   for (const page of pages) {
     const file = `${page.lang}/${page.slug}`;
     for (const reference of assetList(page.data.styles)) {
+      // 站外地址不查本地文件（CDN 上的东西我们看不见）
+      if (isExternalUrl(reference)) continue;
       if (resolvePageAsset(config, reference)) continue;
       assetIssues.push({ file, field: 'styles', reference });
     }
     for (const entry of scriptList(page.data.scripts)) {
+      if (isExternalUrl(entry.src)) continue;
       if (resolvePageAsset(config, entry.src)) continue;
       assetIssues.push({ file, field: 'scripts', reference: entry.src });
     }

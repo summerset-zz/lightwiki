@@ -6,7 +6,7 @@ import { loadContent, type ContentProblem, type Page } from './content.js';
 import { createSiteInfo } from './context.js';
 import { createInlineBundle, inlineHtml, type InlineBundle } from './inline.js';
 import { buildLinkReport, normUrl, type LinkReport } from './links.js';
-import { assetList, injectPageAssets, pageAssetUrl, resolvePageAsset, scriptList } from './page-assets.js';
+import { assetList, injectPageAssets, isExternalUrl, pageAssetUrl, resolvePageAsset, scriptList } from './page-assets.js';
 import { createRenderer } from './render.js';
 import { relativeUrl, rewriteRelativeLinks } from './relative.js';
 import { categoryOutputPath, INDEX_SLUG, indexOutputPath, langPrefix, normalizeBasePath, pageUrl, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath, withBasePath } from './routes.js';
@@ -98,6 +98,8 @@ export async function buildSite(
    */
   const pageAssetsOf = (page: Page): { styles: string[]; scripts: Array<{ src: string; module: boolean }> } => {
     const resolveOne = (ref: string, field: string): string | null => {
+      // 站外地址（CDN）原样透传：不查本地文件，也不加 basePath
+      if (isExternalUrl(ref)) return ref.trim();
       const hit = resolvePageAsset(config, ref);
       if (!hit) {
         warnings.push({
