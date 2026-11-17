@@ -117,3 +117,5 @@ draft: false
 一页的地址来自文件名，不是标题。`content/zh/basics/markdown.md` 就是 `/docs/basics/markdown/`，标题只出现在导航、搜索和双链里。改文件名等于换地址，外部链接和双链都会断。
 
 目录怎么摆、首页是哪一页，见 [目录结构](/docs/start/structure)。开头那段 YAML 写什么，见 [frontmatter](/docs/basics/frontmatter)。
+
+正文里想插入一段由站内数据算出来的列表或表格，那是另一套机制，见 [模板](/docs/basics/templates)。
