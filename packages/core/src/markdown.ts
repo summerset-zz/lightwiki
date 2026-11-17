@@ -5,7 +5,8 @@ import type { PageInfo, SiteInfo } from './context.js';
 import type { Highlighter } from './highlight.js';
 import type { MacroRegistry } from './macros.js';
 import type { LinkResolver } from './resolve.js';
-import { assetHref, langPrefix, localizeHref, normalizeBasePath, pageBase } from './routes.js';
+import { pageLinkKey } from './links.js';
+import { assetHref, langPrefix, localizeHref, pageBase } from './routes.js';
 
 /**
  * 只声明我们真正用到的 token 字段。
@@ -349,22 +350,12 @@ const MAX_MACRO_DEPTH = 20;
  * `/docs/x` 与 `/zh/docs/x` 当成两个不同的东西。
  */
 function isRedLink(href: string, env: RenderEnv): boolean {
-  if (!href.startsWith('/') || href.startsWith('//')) return false;
   const known = env.knownUrls;
   if (!known) return false;
-
-  let path = href.split('#')[0]?.split('?')[0] ?? '';
-  const base = normalizeBasePath(env.config.basePath);
-  if (base && path.startsWith(base)) path = path.slice(base.length) || '/';
-  if (!path) return false;
-
-  // 资源与分类页不参与判定：前者不是页面，后者的存在性由分类列表决定
-  if (path === '/assets' || path.startsWith('/assets/')) return false;
-  if (/^(?:\/[^/]+)?\/categories(?:\/|$)/.test(path)) return false;
-  // 带扩展名的当资源（`/style.css`、`/search-index.json`）
-  if (/\.[a-z0-9]{1,5}$/i.test(path)) return false;
-
-  return !known.has(path.replace(/\/+$/, '') || '/');
+  // 与 `buildLinkReport` 共用同一份判据：资源、分类页、外链都不算页面
+  const key = pageLinkKey(href, env.config);
+  if (key === null) return false;
+  return !known.has(key);
 }
 
 function recordUnresolved(

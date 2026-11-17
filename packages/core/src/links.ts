@@ -28,10 +28,38 @@ export function normUrl(url: string, config: LoadedConfig): string {
   return next === '' ? '/' : next;
 }
 
-function hrefToKey(href: string, config: LoadedConfig): string {
-  const withoutHash = href.split('#')[0] ?? href;
-  const withoutQuery = withoutHash.split('?')[0] ?? withoutHash;
-  return normUrl(withoutQuery, config);
+/**
+ * 把一条站内链接归一化成「页面键」；不该拿去做存在性比对的返回 null。
+ *
+ * 三类不算页面：
+ * - 站外地址（`//cdn…`，外链本来就不检查可达性）
+ * - 资源：`/assets/…`、以及带扩展名的 `/style.css`、`/search-index.json`
+ * - 分类页：它们由分类列表决定，不来自 `content/`
+ *
+ * **渲染层与 check 必须共用这一份判据。** 曾经两边各写一套，结果页面上的红链
+ * 样式跳过了资源，而 `wiki check` 照样把 `/assets/agents.md` 报成红链。
+ */
+export function pageLinkKey(href: string, config: LoadedConfig): string | null {
+  if (!href.startsWith('/') || href.startsWith('//')) return null;
+
+  let path = href.split('#')[0]?.split('?')[0] ?? '';
+  const base = normalizeBasePath(config.basePath);
+  if (base && path.startsWith(base)) path = path.slice(base.length) || '/';
+  if (!path) return null;
+
+  if (path === '/assets' || path.startsWith('/assets/')) return null;
+
+  // 分类页：`/categories/x/` 或 `/<语言>/categories/x/`。
+  // **只有已配置的语言代码才算那一段** —— 用「任意一段」会误伤 `/docs/categories/`
+  // 这种内容页（`docs` 是内容前缀，不是语言）。
+  const segs = path.split('/').filter(Boolean);
+  const langAt = segs[0] !== undefined && config.content[segs[0]] !== undefined ? 1 : 0;
+  if (segs[langAt] === 'categories') return null;
+
+  // 带扩展名的当资源（`/style.css`、`/search-index.json`）
+  if (/\.[a-z0-9]{1,5}$/i.test(path)) return null;
+
+  return path.replace(/\/+$/, '') || '/';
 }
 
 /**
@@ -57,8 +85,8 @@ export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport
   for (const page of published) {
     for (const link of page.links) {
       if (link.external) continue;
-      if (!link.href.startsWith('/')) continue;
-      const key = hrefToKey(link.href, config);
+      const key = pageLinkKey(link.href, config);
+      if (key === null) continue;
       if (!known.has(key)) {
         redLinks.push({ from: page.url, href: link.href });
         continue;
