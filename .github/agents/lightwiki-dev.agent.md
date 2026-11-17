@@ -59,6 +59,13 @@ argument-hint: "要做什么？例如：实现 deploy 的 fs 目标 / 修分类�
 
 ## 约束
 
+- **碰 npm 一律显式指定官方 registry**：`--registry=https://registry.npmjs.org`。
+  本机的全局 registry 指向 `mirrors.cloud.tencent.com`（只读镜像），取 `@lightwiki/*` 会
+  `E525 SSL Handshake Failed`，`npm publish` 更会被镜像直接挡掉（报 `ENEEDAUTH`，很容易
+  误判成 token 问题）。这条适用于所有 `npm view` / `npm publish` / `npx @lightwiki/...`。
+  正式发版走打 tag 触发 `.github/workflows/publish.yml`（CI 用的是官方地址，不需要这个参数）；
+  本地只做「发布后验证」，例如
+  `npx --yes --registry=https://registry.npmjs.org @lightwiki/cli@x.y.z init /tmp/probe`。
 - **不要跑打包**。这个项目没有 build 步骤：各包 `exports` 指向 `src/*.ts`，`tsx` 直接执行。
 - **不要创建后台任务**（`Start-Job`、`Start-Process`、`nohup`、`&`）。除 dev server 外不要留任何常驻进程。
 - **不要用终端命令改源码文件**（PowerShell 会把中文按 GBK 解码再写回，整片乱码）。一律用编辑工具。
