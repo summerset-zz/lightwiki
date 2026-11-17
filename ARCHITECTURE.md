@@ -103,7 +103,7 @@ markdown-it (html, linkify)
 0.3 起没有 `index` 布局：首页由内容里的 `index.md` 提供，与普通页同一条路径。
 
 引擎是 Eta。**`autoTrim` 必须关闭**——宏产出的是 markdown，标签后的换行是语义的一部分。
-
+**片段复用（`it.partials`）**：Eta 实例的 `views` 指向 `<内容根>/layouts`，皮肤可以 `include('nav', it)` 引用同目录下的片段，不用把同一段 HTML 抄进每个皮肤。主题包**不在** `views` 里——主题的皮肤不能假设用户仓库里有某个文件，否则空站点连页面都渲染不出来。所以主题那边必须先问 `it.partials.nav`（由 `view.ts` 的 `detectPartials()` 按 `layouts/nav.eta` 是否存在算出来）再决定要不要 include。`redirect` 皮肤不参与。
 **内联模式由后处理完成，不靠布局判断**：`inline: true` 时，`inline.ts` 在 HTML 生成后把 `<link rel="stylesheet">` 换成 `<style>`、`<script src>` 换成内联脚本、其余资源换成 data URI。布局照常写 `<link>`——用户覆盖的布局也能享受内联，不需要主题配合。
 
 ### 7.1 搜索与「查看源码」的边界

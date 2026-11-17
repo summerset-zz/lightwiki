@@ -66,6 +66,7 @@ layout: landing
 | `it.nav` | 全站导航，按分组排好 |
 | `it.sidebar` | 侧栏，默认等于 `nav`；页面写了 `sidebarCategory` 就换成那个分类的页面 |
 | `it.index` | 只有一个 `url`，指向首页 |
+| `it.partials` | 内容仓库里提供了哪些可选片段，目前只有 `nav`，见下面那节 |
 
 `it.page` 在普通内容页里有这些：
 
@@ -139,6 +140,38 @@ frontmatter 写 `layout: landing`，这一页就用它。
 ```
 
 `group.section` 为空时是一组没有分组的页面。`item.current` 标记当前页，`aria-current="page"` 靠它加。
+
+## 所有页面共用的片段 {#partials}
+
+想把同一段 HTML 放进每一个页面（比如顶栏），别抄进每个皮肤。在内容仓库的 `layouts/` 下建一个 `nav.eta`，主题就会替你插到 `<body>` 开头：
+
+```eta
+<header class="topnav">
+  <a href="<%= it.index.url %>"><%= it.site.title %></a>
+  <nav>
+<% for (const group of it.nav) { %>
+    <% if (group.section) { %><p><%= group.label %></p><% } %>
+<% for (const item of group.pages) { %>
+    <a href="<%= item.url %>"><%= item.title %></a>
+<% } %>
+<% } %>
+  </nav>
+</header>
+```
+
+放好就生效，`doc`、`category`、`not-found` 三个皮肤都会带上它，不需要覆盖任何一个。
+
+为什么它能自动生效：只要 `layouts/nav.eta` 存在，`it.partials.nav` 就是 `true`，主题的皮肤据此决定要不要 `include`。文件不存在时是 `false`，主题不会去碰一个不存在的文件。
+
+自己写皮肤时也能用同样的写法：
+
+```eta
+<% if (it.partials.nav) { %><%~ include('nav', it) %><% } %>
+```
+
+`include` 的第二个参数要显式传 `it`，不传的话片段里拿不到任何数据。路径相对内容仓库的 `layouts/` 解析，主题包不在这个查找范围内，所以主题的皮肤不会依赖你仓库里有什么文件。
+
+`redirect` 皮肤不插这一层：它是跳转页，多一段导航没有意义。
 
 ## 正文要原样输出 {#html}
 
