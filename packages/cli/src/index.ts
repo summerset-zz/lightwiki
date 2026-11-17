@@ -21,6 +21,7 @@ const USAGE = `轻维基 CLI
   --strict      红链与孤页也视为失败
   --name        init 时的站点名，默认取目录名
   --force       init 时覆盖已存在的文件（默认跳过）
+  --no-watch    dev 时关掉「改了 packages/*/src 自动重启」的监护层
 
 退出码：0 正常；1 有错误；2 用法错误`;
 
@@ -97,6 +98,8 @@ async function run(args: string[]): Promise<number> {
       strict: { type: 'boolean', default: false },
       name: { type: 'string' },
       force: { type: 'boolean', default: false },
+      watch: { type: 'boolean' },
+      'no-watch': { type: 'boolean' },
     },
   });
 
@@ -124,6 +127,19 @@ async function run(args: string[]): Promise<number> {
   const config = await loadConfig(root);
 
   if (command === 'dev') {
+    const { CHILD_ENV, sourceRoots, supervise } = await import('./supervise.js');
+
+    // 在 monorepo 源码里跑时默认开监护（改了包代码自动重启）；`--no-watch` 关掉。
+    // `--watch` 只是把默认值写明白，方便脚本里读。
+    const watchSetting =
+      values.watch === true ? true : values['no-watch'] === true ? false : undefined;
+    const roots = watchSetting === false ? [] : sourceRoots();
+    const supervised = Boolean(process.env[CHILD_ENV]);
+
+    if (roots.length > 0 && !supervised) {
+      return supervise({ argv: ['dev', ...rest], roots });
+    }
+
     const { startDevServer } = await import('@lightwiki/dev');
     const port = values.port ? Number(values.port) : undefined;
     if (port !== undefined && (!Number.isInteger(port) || port <= 0 || port > 65535)) {
@@ -134,12 +150,16 @@ async function run(args: string[]): Promise<number> {
     const server = await startDevServer(config, {
       port,
       host: values.host,
+      supervised,
       onRebuild: (info) => line(`  重建 · ${info.pages} 篇 · ${info.ms} ms`),
     });
 
     line(`预览地址：${server.url}`);
     line(`  内容：${Object.entries(config.content).map(([lang, dir]) => `${lang}=${dir}`).join(' · ')}`);
     line('  改动内容或模板会自动刷新；按 Ctrl+C 退出。');
+    if (supervised) {
+      line('  改了 packages/*/src 会自动重启；也可以 POST /__lightwiki/restart 手动触发。');
+    }
 
     await new Promise<void>((done) => {
       const stop = (): void => {

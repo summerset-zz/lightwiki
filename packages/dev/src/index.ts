@@ -29,9 +29,17 @@ export interface DevServerOptions {
   host?: string;
   /** 端口被占用时向上尝试多少个，默认 10 */
   portRange?: number;
+  /** 是否由 `wiki dev` 的监护层拉起（决定了 `/__lightwiki/restart` 能不能用） */
+  supervised?: boolean;
   /** 每次重建后的回调，CLI 用它打印状态 */
   onRebuild?: (info: { pages: number; ms: number }) => void;
 }
+
+/**
+ * 请求重启时的退出码。监护层看到它就会重新拉起 dev server。
+ * 与 `packages/cli/src/supervise.ts` 的 RESTART_CODE 保持一致。
+ */
+export const RESTART_EXIT_CODE = 75;
 
 export interface DevServerHandle {
   url: string;
@@ -76,8 +84,19 @@ const MIME: Record<string, string> = {
 
 const EVENTS_PATH = '/__lightwiki/events';
 
+/**
+ * 手动重启端点：POST 一下就让监护层换个新进程（改完 packages/*\/src 后想立刻生效时用）。
+ * 不在监护模式下报 501，而不是偷偷退掉用户的服务器。
+ */
+const RESTART_PATH = '/__lightwiki/restart';
+
 function reloadSnippet(base: string): string {
-  return `<script>(function(){var es=new EventSource(${JSON.stringify(base + EVENTS_PATH)});es.onmessage=function(){location.reload()};})();</script>`;
+  // 两个触发条件：
+  // - onmessage：内容变了，服务端推 reload
+  // - onopen 且之前断过：进程被重启过，断开期间那条 reload 已经丢了，连上就补一次刷新
+  return `<script>(function(){var es=new EventSource(${JSON.stringify(
+    base + EVENTS_PATH,
+  )});var down=false;es.onmessage=function(){location.reload()};es.onerror=function(){down=true};es.onopen=function(){if(down){down=false;location.reload()}};})();</script>`;
 }
 
 async function loadState(config: LoadedConfig): Promise<DevState> {
@@ -288,6 +307,20 @@ export async function startDevServer(
           return;
         }
 
+        if (pathname === `${base}${RESTART_PATH}` || pathname === RESTART_PATH) {
+          if (options.supervised !== true) {
+            res.writeHead(501, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('这个 dev server 不是被 wiki dev 监护启动的，没法自己重启；请手动重启它\n');
+            return;
+          }
+          res.writeHead(202, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('restarting\n');
+          process.stderr.write('  收到重启请求，重启中…\n');
+          // 先把响应推出去再退，否则浏览器那边是「连接被重置」而不是一句 restarting
+          setImmediate(() => process.exit(RESTART_EXIT_CODE));
+          return;
+        }
+
         const route = resolveDevRoute(config, state, pathname);
 
         if (route.kind === 'redirect') {
@@ -396,9 +429,17 @@ export async function startDevServer(
     async close() {
       if (timer) clearTimeout(timer);
       for (const watcher of watchers) watcher.close();
+
+      // 先登记 close 的回调再断开连接：浏览器断开的 SSE 会立刻重连，
+      // 慢一拍就有新连接挤进来把 close 拖住（表现就是「正在关闭监听…」之后再也不动）。
+      const closed = new Promise<void>((done) => {
+        server.close(() => done());
+        server.closeAllConnections();
+      });
+
       for (const client of clients) client.end();
       clients.clear();
-      await new Promise<void>((done) => server.close(() => done()));
+      await closed;
     },
   };
 }

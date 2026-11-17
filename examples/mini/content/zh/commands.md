@@ -1,15 +1,16 @@
 ---
 title: 命令
-keywords: 命令, cli, build, check, dev, deploy, inline, 校验
-description: wiki dev / check / build / deploy 四个子命令分别做什么。
+keywords: 命令, cli, init, build, check, dev, deploy, inline, 校验, 自动重启
+description: wiki init / dev / check / build / deploy 五个子命令分别做什么。
 section: reference
 order: 1
-updated: 2026-11-16
+updated: 2026-11-17
 draft: false
 categories: [official]
 ---
 
 ```bash
+npx @lightwiki/cli init   <目录>                 # 生成新站点
 npx @lightwiki/cli dev    <目录> [-p 端口]       # 本地预览
 npx @lightwiki/cli check  <目录> [--strict]      # 只校验，不产出
 npx @lightwiki/cli build  <目录> [-o 输出目录]    # 产出静态站点
@@ -18,11 +19,33 @@ npx @lightwiki/cli deploy <目录> [-o 输出目录]    # 为发布产出（目�
 
 工具还没装的话 `npx` 会自动下载。装了开发依赖（`npm i -D @lightwiki/cli`）之后，`npx wiki` 就是同一组命令。
 
+## init {#init}
+
+把起始模板（配置、示例内容、`AGENTS.md`、Pages workflow）落到目录里，`--name` 指定站点名，默认取目录名。
+
+已有文件不会被覆盖，除非加 `--force`。
+
 ## dev {#dev}
 
 在内存里渲染，**不写磁盘**。内容、布局、宏文件改动会自动重建并刷新页面。
 
 默认 `127.0.0.1:5173`，端口被占会自动往上试。
+
+### 改工具本身的代码时 {#dev-supervise}
+
+在工具仓库里跑 `yarn wiki dev <目录>` 时，`wiki dev` 会额外套一层**监护进程**：
+
+```
+监护进程   盯 packages/*/src，一变就把子进程重新拉起来
+  └─ 子进程   真正的 dev server
+```
+
+因为 dev server 是在进程内 `import` core 的，ESM 模块缓存清不掉，改了包代码只能换进程。有了这一层，**改完代码不用重启，刷新一下就生效**（浏览器也会自己刷新）。
+
+- 重启一律直接结束子进程：进程一退，监听的 socket 由系统回收，下一任占回同一个端口，地址不会变
+- 子进程自己崩了（语法错误之类）不会把终端一起关掉，改完文件会自动再拉起来
+- 手动触发：`curl -X POST http://127.0.0.1:5173/__lightwiki/restart`
+- `--no-watch` 关掉这层；从 npm 装下来的包里没有 `packages/`，不会启用
 
 ## check {#check}
 

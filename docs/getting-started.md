@@ -31,6 +31,8 @@ yarn wiki dev examples/mini
 
 打开输出里的地址（默认 `http://127.0.0.1:5173`），看够了按 `Ctrl+C` 关掉。
 
+在工具仓库里跑 `wiki dev` 会额外套一层监护进程：改 `packages/*/src` 会自动换掉 dev 子进程（端口不变，浏览器自动刷新），所以改工具代码不需要手动重启。
+
 ## 3. 建你自己的内容仓库
 
 内容仓库只需要两样东西：`wiki.config.ts` 和 `content/<语言>/*.md`。不需要 `package.json`，也没有构建脚本。
