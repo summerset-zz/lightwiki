@@ -114,8 +114,10 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
   }
 
   const unresolved: UnresolvedIssue[] = [];
+  let undefinedMacros = 0;
   for (const page of pages) {
     for (const item of page.unresolved) {
+      if (item.undefinedMacro) undefinedMacros += 1;
       unresolved.push({
         file: `${page.lang}/${page.slug}`,
         kind: item.kind,
@@ -150,9 +152,15 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     }
   }
 
-  // 未定义的宏会让产物里直接露出 `{{...}}` 原文，算错误；
-  // 未解析的内链与红链同级，是「目标还没写」的正常状态。
-  const macroErrors = unresolved.filter((item) => item.kind === 'macro').length;
+  // 未定义的宏会让产物里直接露出 `{{...}}` 原文。这是不是错，取决于站点怎么选：
+  // 默认（show）算错——露花括号通常是漏搬了宏；显式选 hide 或给了处理函数，
+  // 说明作者清楚自己在做什么，那就只当提示。
+  // 展开失败（循环引用、模板抛错）无论怎么配都是错。
+  const macroFailures = unresolved.filter(
+    (item) => item.kind === 'macro' && !item.message.startsWith('未定义的宏'),
+  ).length;
+  const undefinedIsError = (config.macros?.undefined ?? 'show') === 'show';
+  const macroErrors = macroFailures + (undefinedIsError ? undefinedMacros : 0);
 
   // 页面自己指定的布局：文件名不对或文件不在，构建都会直接抛错，不如先点出来
   const layoutIssues: LayoutIssue[] = [];

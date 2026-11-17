@@ -49,6 +49,19 @@ sidebarCategory: syntax
 
 ## YAML 写坏了会降级 {#lenient}
 
-真实内容里会出现 `keywords: "@font-face", src, local` 这种非法 YAML（漏了方括号）。严格解析会让整站失败，所以解析失败时会退回逐行读取，并在 `wiki check` 里报一条**警告**。
+严格解析会让整站失败，所以解析失败时会退回逐行读取，并在 `wiki check` 里报一条**警告** —— 降级可以，静默吞掉不行。警告里会带上解析器给的行列号，比如「line 3, column 53」。
 
-降级可以，静默吞掉不行。
+踩得最多的两种：
+
+```yaml
+# ① 值里有「冒号 + 空格」会被当成嵌套键
+description: ... travel in: a TTF or OTF ...     # ✗
+description: '... travel in: a TTF or OTF ...'   # ✓ 加引号
+
+# ② 引号只包住了一部分
+keywords: "@font-face", src, local               # ✗ 「, src」裸露在外面
+keywords: ['@font-face', src, local]             # ✓
+keywords: '@font-face, src, local'               # ✓
+```
+
+`updated` 写错（`2026/11/07`）也会被拦下，但那是 schema 的错，不是 YAML 的错 —— 两者会分别报。

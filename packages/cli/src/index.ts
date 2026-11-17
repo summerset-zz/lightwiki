@@ -63,6 +63,16 @@ function printOutcome(result: BuildResult): number {
     line(`  警告 ${result.warnings.length} 处（wiki check 可看详情）`);
   }
 
+  if (result.undefinedMacros > 0) {
+    const how =
+      result.undefinedMacroMode === 'hide'
+        ? "已隐藏（macros.undefined = 'hide'）"
+        : result.undefinedMacroMode === 'custom'
+          ? '已交给自定义函数处理'
+          : "产物里保留原文（macros.undefined = 'show'）";
+    line(`  提示：${result.undefinedMacros} 处未定义的宏，${how}`);
+  }
+
   if (result.problems.length > 0) {
     section(`有 ${result.problems.length} 篇因 frontmatter 错误被跳过`);
     for (const problem of result.problems) {

@@ -5,7 +5,7 @@ import type { PageInfo, SiteInfo } from './context.js';
 import type { Highlighter } from './highlight.js';
 import type { MacroRegistry } from './macros.js';
 import type { LinkResolver } from './resolve.js';
-import { assetHref, localizeHref } from './routes.js';
+import { assetHref, langPrefix, localizeHref, normalizeBasePath, pageBase } from './routes.js';
 
 /**
  * 只声明我们真正用到的 token 字段。
@@ -19,6 +19,7 @@ interface MdToken {
   children: MdToken[] | null;
   attrGet(name: string): string | null;
   attrSet(name: string, value: string): void;
+  attrJoin(name: string, value: string): void;
 }
 
 function asTokens(tokens: unknown): MdToken[] {
@@ -59,6 +60,8 @@ export interface UnresolvedRef {
   kind: 'wikilink' | 'macro';
   target: string;
   message: string;
+  /** 只是一个尚未定义的宏（区别于循环引用、模板抛错这类真错误） */
+  undefinedMacro?: boolean;
 }
 
 export interface RenderEnv {
@@ -72,6 +75,11 @@ export interface RenderEnv {
   pageInfo?: PageInfo;
   /** 全站信息，即宏里的 `it.site` */
   siteInfo?: SiteInfo;
+  /**
+   * 全站所有页面的 URL（含 basePath、语言前缀，不带尾斜杠）。
+   * 判定红链用：链接指向的地址不在这张表里，就是还没写的页面。
+   */
+  knownUrls?: Set<string>;
   /** 渲染期收集：未解析的内链与未定义的宏 */
   unresolved?: UnresolvedRef[];
   /** 渲染期收集：宏登记的分类 */
@@ -204,6 +212,9 @@ export function createMarkdown(options: MarkdownOptions = {}): MarkdownIt {
             if (isExternal) {
               token.attrSet('rel', 'nofollow noopener');
               if (safeHost(href) !== siteHost) token.attrSet('target', '_blank');
+            } else if (isRedLink(href, env)) {
+              // 指向还不存在的页面：标成红链，样式交给主题（同 MediaWiki 的 `.new`）
+              token.attrJoin('class', 'redlink');
             }
           }
         } else if (token.type === 'image') {
@@ -327,8 +338,64 @@ function parseMacroCall(src: string): ParsedMacro | null {
 /** 宏展开嵌套上限：宏是手工组合的，正常不会深过个位数 */
 const MAX_MACRO_DEPTH = 20;
 
-function recordUnresolved(env: RenderEnv, target: string, message: string): void {
-  (env.unresolved ??= []).push({ kind: 'macro', target, message });
+/**
+ * 这条站内链接是不是「红链」—— 指向一个还不存在的页面。
+ *
+ * 判据是**真实 URL 集合**（构建时所有页面地址都已知），而不是猜前缀：从别处搬来的
+ * 内容常留着原站的路径（`/credits/maker/google`），它们同样该被点名。
+ * 资源、分类页、带扩展名的路径一律不算。
+ *
+ * 传进来的 `href` 应该已经过 `localizeHref()`，否则非默认语言的页面会把
+ * `/docs/x` 与 `/zh/docs/x` 当成两个不同的东西。
+ */
+function isRedLink(href: string, env: RenderEnv): boolean {
+  if (!href.startsWith('/') || href.startsWith('//')) return false;
+  const known = env.knownUrls;
+  if (!known) return false;
+
+  let path = href.split('#')[0]?.split('?')[0] ?? '';
+  const base = normalizeBasePath(env.config.basePath);
+  if (base && path.startsWith(base)) path = path.slice(base.length) || '/';
+  if (!path) return false;
+
+  // 资源与分类页不参与判定：前者不是页面，后者的存在性由分类列表决定
+  if (path === '/assets' || path.startsWith('/assets/')) return false;
+  if (/^(?:\/[^/]+)?\/categories(?:\/|$)/.test(path)) return false;
+  // 带扩展名的当资源（`/style.css`、`/search-index.json`）
+  if (/\.[a-z0-9]{1,5}$/i.test(path)) return false;
+
+  return !known.has(path.replace(/\/+$/, '') || '/');
+}
+
+function recordUnresolved(
+  env: RenderEnv,
+  target: string,
+  message: string,
+  undefinedMacro = false,
+): void {
+  (env.unresolved ??= []).push({ kind: 'macro', target, message, undefinedMacro });
+}
+
+/**
+ * 未定义的宏在产物里留下什么。
+ *
+ * - `show`（默认）：保留原文，一眼能看出漏了什么
+ * - `hide`：留空
+ * - 函数：自己决定（返回值当纯文本插入，不会再走一遍 markdown 解析）
+ *
+ * 三种都在 `build` / `check` 里报提示 —— 沉默才是问题，不是花括号。
+ */
+function undefinedMacroText(env: RenderEnv, name: string, raw: string): string | null {
+  const mode = env.config.macros?.undefined ?? 'show';
+  if (mode === 'hide') return null;
+  if (typeof mode === 'function') {
+    try {
+      return mode(name, raw);
+    } catch {
+      return raw;
+    }
+  }
+  return raw;
 }
 
 /** 宏展开失败时，把原文作为已转义的段落留在产物里 */
@@ -354,7 +421,7 @@ function expandMacro(
 ): string | null {
   const registry = env.macros;
   if (!registry || !registry.has(name)) {
-    recordUnresolved(env, name, registry ? `未定义的宏：${name}` : '宏未启用');
+    recordUnresolved(env, name, registry ? `未定义的宏：${name}` : '宏未启用', true);
     onFailure();
     return null;
   }
@@ -425,8 +492,10 @@ function macroRule(state: any, silent: boolean): boolean {
   const raw = rest.slice(0, call.length);
 
   const text = expandMacro(env, call.name, call.args, call.named, () => {
+    const fallback = undefinedMacroText(env, call.name, raw);
+    if (fallback === null) return;
     const token = state.push('text', '', 0);
-    token.content = raw;
+    token.content = fallback;
   });
 
   if (text !== null) {

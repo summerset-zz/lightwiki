@@ -93,6 +93,20 @@ export const frontmatterSchema = z
 
 export type Frontmatter = z.infer<typeof frontmatterSchema>;
 
+/**
+ * 未定义的宏怎么处理。
+ *
+ * 内容仓库经常是「从别处搬来的」—— 原来的宏没跟着搬过来。默认保留原文（显眼，
+ * 一眼能看出漏了什么）；不想在产物里露出花括号就换成 `'hide'`，或者给个函数自己决定。
+ * 三种选择都不影响构建成功，但都会在构建输出里报一条提示。
+ */
+const undefinedMacroHandler = z.union([
+  z.enum(['show', 'hide']),
+  z.custom<(name: string, raw: string) => string>((value) => typeof value === 'function', {
+    message: 'macros.undefined 只能是 show / hide，或一个函数 (name, raw) => string',
+  }),
+]);
+
 export const siteConfigSchema = z.object({
   title: z.string().min(1),
   siteUrl: z.string().url('siteUrl 需要一个完整 URL'),
@@ -108,6 +122,14 @@ export const siteConfigSchema = z.object({
   categories: z.record(z.string(), z.string()).default({}),
   theme: z.string().default('@lightwiki/theme-default'),
   outputDir: z.string().default('dist'),
+
+  /** 宏相关的行为开关 */
+  macros: z
+    .object({
+      /** 未定义的宏：`show`（默认，保留原文）/ `hide`（删掉）/ 自定义函数 */
+      undefined: undefinedMacroHandler.optional(),
+    })
+    .default({}),
 
   /**
    * 内容页的路径前缀。

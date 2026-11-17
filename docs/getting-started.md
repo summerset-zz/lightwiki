@@ -117,6 +117,7 @@ export default {
 | `docsDir` | `docs` | 内容页的路径前缀。`'wiki'` → `/wiki/a/`；`''` → `/a/`（直接挂在语言根下） |
 | `inline` | `false` | 单文件产物：CSS/JS/图片全部塞进页面，产物里只剩 `.html` |
 | `search` | `{ enabled: true, excerpt: 300 }` | 站内搜索。`excerpt` 是每页索引里的正文摘要长度（字符），`enabled: false` 连索引都不产出 |
+| `macros` | `{ undefined: 'show' }` | 未定义的宏怎么处理：`'show'` 保留 `{{原文}}`、`'hide'` 删掉、或给个 `(name, raw) => string` 函数。三种都会在构建时提示 |
 | `theme` | `@lightwiki/theme-default` | 主题包名、git 地址或相对路径 |
 | `highlight` | `{ enabled: true, languages: [] }` | 代码高亮；`languages` 里加 highlight.js 的语言名 |
 | `markdown` | — | 函数，拿到 markdown-it 实例，见「扩展与样式」 |

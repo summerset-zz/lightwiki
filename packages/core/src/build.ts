@@ -38,6 +38,10 @@ export interface BuildResult {
   inlineStats: { css: number; scripts: number; media: number } | null;
   /** 产物总体积（字节） */
   bytes: number;
+  /** 未定义的宏有几处（产物里保留原文 / 隐藏 / 自定义，看配置） */
+  undefinedMacros: number;
+  /** 当前对未定义宏的处理方式，CLI 据此拼提示文案 */
+  undefinedMacroMode: 'show' | 'hide' | 'custom';
 }
 
 export async function buildSite(
@@ -295,6 +299,13 @@ export async function buildSite(
     );
   }
 
+  const undefinedMacroList = pages.flatMap((page) =>
+    page.unresolved.filter((item) => item.undefinedMacro).map((item) => item.target),
+  );
+  const rawMacroMode = config.macros?.undefined ?? 'show';
+  const undefinedMacroMode =
+    typeof rawMacroMode === 'function' ? 'custom' : rawMacroMode;
+
   return {
     outputDir,
     pageCount: published.length,
@@ -305,5 +316,7 @@ export async function buildSite(
     inline: bundle !== null,
     inlineStats: bundle ? inlineTotals : null,
     bytes,
+    undefinedMacros: undefinedMacroList.length,
+    undefinedMacroMode,
   };
 }

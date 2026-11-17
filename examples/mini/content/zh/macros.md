@@ -57,6 +57,26 @@ categories: [syntax]
 {{pages(section: reference)}}
 ```
 
+## 宏没定义怎么办 {#undefined}
+
+内容经常是从别处搬来的，原来站点自带的宏不一定跟着过来。这种「未定义的宏」怎么落地由站点配置决定：
+
+```ts
+// wiki.config.ts
+export default {
+  // 默认：保留 {{原文}}，一眼能看出漏了什么
+  macros: { undefined: 'show' },
+  // 或者：直接删掉
+  // macros: { undefined: 'hide' },
+  // 或者：自己决定（返回值当纯文本插入，不会再走一遍 markdown）
+  // macros: { undefined: (name, raw) => `[缺失的宏：${name}]` },
+};
+```
+
+三种都不影响构建能不能过，但**都会在构建输出里报一行提示**（几处、怎么处理的），`wiki check` 也照旧列出来。沉默才是真问题。
+
+一个小区别：选默认的 `'show'` 时，`wiki check` 把未定义宏算**错误**（露花括号通常是漏搬了）；显式选了 `'hide'` 或给了函数，说明你知道自己在做什么，就只当提示。
+
 ## 宏产出的是文本 {#text}
 
 展开结果会跟正文一样再过一遍解析器，所以宏模板里可以直接写 markdown：

@@ -108,6 +108,8 @@ interface ParsedFrontmatter {
   data: Record<string, unknown>;
   content: string;
   lenient: boolean;
+  /** YAML 解析器说的第一句人话（通常带行号与哪一行） */
+  reason?: string;
 }
 
 function parseFrontmatter(raw: string): ParsedFrontmatter {
@@ -117,10 +119,23 @@ function parseFrontmatter(raw: string): ParsedFrontmatter {
   try {
     const parsed = matter(raw);
     return { data: parsed.data as Record<string, unknown>, content: parsed.content, lenient: false };
-  } catch {
+  } catch (error) {
     const fallback = lenientFrontmatter(raw);
-    return { ...fallback, lenient: true };
+    return { ...fallback, lenient: true, reason: yamlReason(error) };
   }
+}
+
+/**
+ * 把 YAML 库的异常压缩成一行。
+ *
+ * 典型原因就两种，而且都很好改：
+ * - 值里有 `: `（冒号+空格）→ 被当成了嵌套键，加引号即可；
+ * - `keywords: "a", b, c` → 引号只包住了第一个，后面抸在外面。
+ */
+function yamlReason(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  const first = error.message.split('\n')[0] ?? error.message;
+  return first.replace(/^YAMLException:\s*/, '').trim();
 }
 
 /**
@@ -181,7 +196,9 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
       if (parsed.lenient) {
         warnings.push({
           file: `${dir}/${relativePath}`,
-          messages: ['frontmatter 不是合法 YAML，已按宽松模式逐行读取'],
+          messages: [
+            `frontmatter 不是合法 YAML，已按宽松模式逐行读取${parsed.reason ? `：${parsed.reason}` : ''}`,
+          ],
         });
       }
 
@@ -222,6 +239,9 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
 
   const siteInfo = createSiteInfo(config, seeds);
 
+  // 红链判定用：所有已登记页面的地址（去掉尾斜杠与 .html），与链接写法对齐
+  const knownUrls = new Set(seeds.map((seed) => seed.url.replace(/\.html$/, '').replace(/\/+$/, '') || '/'));
+
   // 阶段 3：渲染
   const pages: Page[] = seeds.map((seed) => {
     const pageInfo = buildPageInfo(seed);
@@ -232,6 +252,7 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
       macros,
       pageInfo,
       siteInfo,
+      knownUrls,
       unresolved: [],
       categories: new Set<string>(),
     };

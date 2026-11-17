@@ -42,6 +42,9 @@ body {
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+/* 红链：指向还不存在的页面。同 MediaWiki 的 .new，但改个说得清的名字 */
+a.redlink { color: var(--redlink, #c0392b); text-decoration: underline dotted; }
+a.redlink:hover { text-decoration: underline; }
 
 /* —— 侧栏 —— */
 .sidebar {

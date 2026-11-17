@@ -4,7 +4,7 @@ keywords: 链接, link, 双链, wikilink, 内链
 description: 站内链接会自动补语言前缀，双链可以按 slug 或标题解析，外链自动加 nofollow。
 section: syntax
 order: 4
-updated: 2026-11-15
+updated: 2026-11-17
 draft: false
 categories: [syntax]
 ---
@@ -20,6 +20,20 @@ categories: [syntax]
 效果：见 [宏](/docs/macros)。
 
 在英文页里，同一个写法会自动变成 `/en/docs/macros`。跳转逻辑只处理 `/docs` 这一棵路径，其他站内路径（比如工具页）原样输出。
+
+## 红链 {#redlink}
+
+指向**还不存在的页面**的站内链接会被标上一个 `class="redlink"`（同 MediaWiki 的 `.new`，只是换了个说得清的名字），默认样式是红字 + 虚线下划线。
+
+```md
+见 [还没写的页](/docs/nothing-here)。
+```
+
+效果：见 [还没写的页](/docs/nothing-here)。
+
+判定靠的是构建时已经知道的全部页面地址：不在表里、又不是资源（`/assets/`、带扩展名）与分类页，就算红链。所以从别处搬来的内容里那些原站路径（`/credits/maker/google`）也会一起被点名。
+
+它不影响构建能不能过，只是让你一眼看到「这里还差一页」。
 
 ## 双链 {#wikilink}
 
