@@ -13,8 +13,8 @@
 
 | 任务 | 先读这些 |
 |---|---|
-| 写主站文档 | `site/content/zh/*.md` → `site/wiki.config.ts` |
-| 写内容、改配置、建站 | `docs/getting-started.md` → `tests/mini/content/zh/*.md` |
+| 写主站文档 | `site/content/*.md` → `site/wiki.config.ts` |
+| 写内容、改配置、建站 | `docs/getting-started.md` → `tests/mini/content/*.md` |
 | 改主题或皮肤 | `packages/theme-default/layouts/*.eta` → `site/` 里「皮肤」一页 |
 | 改核心（解析、路由、构建） | `ARCHITECTURE.md` → `packages/core/src/` |
 | 想知道某项设计为什么这么定 | `ARCHITECTURE.md` 的对应章节 |

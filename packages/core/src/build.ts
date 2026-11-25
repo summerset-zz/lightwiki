@@ -294,7 +294,7 @@ export async function buildSite(
     }
   }
 
-  // 根目录跳转到默认语言首页，方便 file:// 双击直接看。
+  // 首页不在根上时（`urlPrefix` / `docsDir` 非空），根目录写一张跳转到首页的页面。
   // 若首页本身就在根上（`docsDir: ''`），产物已经是 index.html，不再多写一张跳转页。
   const homeHref = pageUrl(config, INDEX_SLUG);
   if (indexOutputPath(config) !== 'index.html') {

@@ -139,7 +139,7 @@ markdown-it (html, linkify)
 
 ```
 dist/
-├── index.html                 跳转到默认语言
+├── index.html                 首页（`docsDir` 与 `urlPrefix` 都为空时）；不为空时是一行跳转
 ├── 404.html
 ├── docs/<slug>/index.html
 ├── categories/<slug>/index.html
@@ -170,9 +170,9 @@ dist/
 | frontmatter 字段/格式、`section` 不在允许列表、标题重复 | **失败** |
 | 未定义的宏 | **失败**（产物里会露出 `{{…}}` 原文） |
 | 红链、未解析的内链、孤页、分类提示、宽松解析警告 | 提示（`--strict` 时红链与孤页失败） |
-| 缺译 | 提示 |
+| 缺译 | 无（单语言，已移除） |
 
-孤页 = 没有正文链接指向它，**排除每种语言的入口页**（排序第一的那页）。
+孤页 = 没有正文链接指向它，**排除首页**（slug 为 `index` 的那页）；没写首页时退回排序第一的那页。
 
 红链只有一份判据：`links.ts` 的 `pageLinkKey()`，渲染层（`markdown.ts` 的 `isRedLink`）与 `check`（`buildLinkReport`）共用它。它把链接归一化成页面键（剥 `basePath`、去尾斜杠与 `.html`），再与 `knownUrls` 比对。**相对路径按当前页的 URL 解析**（与浏览器一致，基准是页面所在目录，不是站点根），所以要传 `page.url` 进去。`urlStyle: 'file'` 下只解析**以 `.html` 结尾**的相对路径（产物形态就是 `a.html` 互链），其余当静态文件；同时 `.html` 会被当成页面而不是资源 —— 不去后缀的话 file 站里 `/docs/a.html` 既不算入链也查不出红链，整站报孤页。`#锚点`、`?查询`、带协议的地址与带扩展名的资源同样不参与。`knownUrls` 必须用 `normUrl()` 构造，否则部署在子路径时渲染层会把每条站内链接都染成红链。
 

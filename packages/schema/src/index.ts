@@ -205,7 +205,7 @@ export const siteConfigSchema = z.object({
   inline: z.boolean().default(false),
 
   /**
-   * 旧地址 → 新地址。`from` / `to` 都写**最终 URL**（含语言前缀），工具不做推断。
+   * 旧地址 → 新地址。`from` / `to` 都写**最终 URL**（含 `basePath` 与 `urlPrefix`），工具不做推断。
    *
    * 默认生成 JS 跳转页，因为用户可能只有 GitHub Pages 这类没有服务端的托管；
    * 换成 `server` 则输出 Netlify / Cloudflare Pages 认的 `_redirects`（真 301）。
@@ -378,7 +378,7 @@ export interface SiteConfigInput {
    */
   inline?: boolean;
 
-  /** 旧地址 → 新地址。`from` / `to` 都写**最终 URL**（含语言前缀），工具不做推断 */
+  /** 旧地址 → 新地址。`from` / `to` 都写**最终 URL**（含 `basePath` 与 `urlPrefix`），工具不做推断 */
   redirects?: Array<{ from: string; to: string; status?: number }>;
 
   /**

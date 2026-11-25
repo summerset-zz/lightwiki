@@ -12,7 +12,7 @@ argument-hint: "要做什么？例如：加搜索索引 / 修分类页链接 / �
 
 | 任务 | 读这些 |
 |---|---|
-| 写内容、改配置 | `docs/getting-started.md` → `tests/mini/content/zh/*.md` |
+| 写内容、改配置 | `docs/getting-started.md` → `tests/mini/content/*.md` |
 | 改主题或布局 | `packages/theme-default/layouts/*.eta` → 手册里的「布局」一页 |
 | 改核心（解析、路由、构建） | `ARCHITECTURE.md` → `packages/core/src/` |
 | 想知道某项设计为什么这么定 | `ARCHITECTURE.md` 的对应章节 |
@@ -48,7 +48,7 @@ argument-hint: "要做什么？例如：加搜索索引 / 修分类页链接 / �
 ```
 刚才把 redirectMode 从三值改成四值，新增 'auto'。
 要更新：
-- tests/mini/content/zh/commands.md 的重定向一节
+- tests/mini/content/commands.md 的重定向一节
 - docs/getting-started.md 里 redirectMode 那一行
 不要改任何代码。
 ```
@@ -89,7 +89,7 @@ argument-hint: "要做什么？例如：加搜索索引 / 修分类页链接 / �
 
 - 会影响已发布 URL 或产物形态的改动；
 - 需要用户凭据、推送、公开发布的操作；
-- 产品取舍（例如分类 slug 策略、默认语言前缀、是否支持某语法）。
+- 产品取舍（例如分类 slug 策略、URL 前缀、是否支持某语法）。
 
 ## 输出
 

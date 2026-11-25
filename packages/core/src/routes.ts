@@ -22,7 +22,7 @@ export function pageBase(config: LoadedConfig): string {
 }
 
 /**
- * 首页的 slug：`index.md` 就是该语言的首页。
+ * 首页的 slug：`index.md` 就是首页。
  *
  * 以前首页是构建器自动生成的目录页，现在这一页由作者提供 —— 想炫酷、想纯 HTML、
  * 想只是一句话，都是同一份 frontmatter 说了算。
@@ -102,9 +102,9 @@ function splitHash(href: string): { path: string; hash: string } {
 /**
  * 改写正文里的站内链接。
  *
- * 作者写的是「默认语言视角」的路径：`/docs/gsub-gpos`、`/categories/syntax`。
+ * 作者按「内容页根」写路径：`/gsub-gpos`、`/categories/syntax`。
  * 两件事在构建期补上：
- * - 非默认语言要加语言前缀，否则中文站会跳到英文页；
+ * - `urlPrefix` 非空时补前缀（多语言站靠它把两门语言分开）；
  * - directory 模式下补尾斜杠，静态托管不必依赖 301 重定向。
  *
  * **必须幂等**：双链解析出来的已经是带 basePath 的产物 URL（`page.url`），

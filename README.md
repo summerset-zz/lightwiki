@@ -63,7 +63,7 @@ docs/               上手文档与设计决策
 
 ```bash
 yarn type:check                        # 类型检查，不产出文件
-yarn wiki check tests/mini --strict    # 语法回归：frontmatter / 红链 / 孤页 / 缺译
+yarn wiki check tests/mini --strict    # 语法回归：frontmatter / 红链 / 孤页
 yarn wiki build tests/mini             # 构建，产物在 tests/mini/dist（--inline 出单文件）
 yarn wiki check site                   # 主站文档自检
 yarn wiki dev site                     # 本地预览主站，改内容或皮肤自动刷新

@@ -4,7 +4,7 @@
 
 ```bash
 npx @lightwiki/cli dev      # 本地预览，改内容自动刷新
-npx @lightwiki/cli check    # 校验 frontmatter、红链、孤页、缺译
+npx @lightwiki/cli check    # 校验 frontmatter、红链、孤页
 npx @lightwiki/cli build    # 构建静态站点
 npx @lightwiki/cli build .  # 产出到 ./dist
 ```
@@ -13,7 +13,7 @@ npx @lightwiki/cli build .  # 产出到 ./dist
 
 ```bash
 mkdir my-wiki && cd my-wiki
-echo "export default { title: '我的知识库', siteUrl: 'https://example.com', content: 'content/zh' }" > wiki.config.ts
+echo "export default { title: '我的知识库', siteUrl: 'https://example.com', content: 'content' }" > wiki.config.ts
 npx @lightwiki/cli dev .
 ```
 

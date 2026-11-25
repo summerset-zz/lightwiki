@@ -35,7 +35,7 @@ yarn wiki dev tests/mini
 
 ## 3. 建你自己的内容仓库
 
-内容仓库只需要两样东西：`wiki.config.ts` 和 `content/<语言>/*.md`。不需要 `package.json`，也没有构建脚本。
+内容仓库只需要两样东西：`wiki.config.ts` 和 `content/*.md`。不需要 `package.json`，也没有构建脚本。
 
 ### 方式 A：一条命令生成（推荐）
 
@@ -70,11 +70,11 @@ mkdir my-wiki && cd my-wiki
 export default {
   title: '我的知识库',
   siteUrl: 'https://example.com',
-  content: 'content/zh',
+  content: 'content',
 };
 ```
 
-再建 `content/zh/index.md`：
+再建 `content/index.md`：
 
 ```md
 ---
@@ -94,7 +94,7 @@ title: 首页
 export default {
   title: '我的知识库',
   siteUrl: 'https://example.com',
-  content: 'content/zh',
+  content: 'content',
 };
 ```
 
@@ -104,7 +104,7 @@ export default {
 |---|---|---|
 | `title` | **必填** | 站点名，进页面 `<title>` 与侧栏顶部 |
 | `siteUrl` | **必填** | 站点完整地址，用于拼接绝对链接 |
-| `content` | **必填** | 内容目录（相对内容根），整个站只有这一处，如 `'content/zh'` |
+| `content` | **必填** | 内容目录（相对内容根），整个站只有这一处，如 `'content'` |
 | `lang` | `zh` | 语言代码，只用于 `<html lang>` 与 `it.page.lang`，不参与路由 |
 | `urlPrefix` | `''` | URL 前缀。`''` → `/a/`；`'zh'` → `/zh/a/`。多语言站为每门语言写一份配置 |
 | `sections` | `[]` | 分组顺序，就是侧栏的顺序；页面 `section` 不在列表里会报错 |
@@ -137,17 +137,17 @@ export default {
 
 **没有**这些东西：没有 `package.json`（不需要）、没有构建脚本（工具负责）、没有配置文件散落在各处（就一个 `wiki.config.ts`）。
 
-页面文件名的规则：`content/zh/api/v1.md` → slug `api/v1` → `/docs/api/v1/`。**文件名就是身份**，改名等于删一篇加一篇。
+页面文件名的规则：`content/api/v1.md` → slug `api/v1` → `/api/v1/`。**文件名就是身份**，改名等于删一篇加一篇。
 
 ### 首页就是 index.md {#home}
 
-`content/<语言>/index.md` **就是该语言的首页**（`/docs/`），没有「自动生成的目录页」。
+`content/index.md` **就是首页**（`/`），没有「自动生成的目录页」。
 
 目录要列什么由你决定：正文里放 `{{catalog}}`（按分类）或 `{{pages(section: 分组名)}}`（按分组），不想列就写别的。想要纯 HTML 的封面，给它配 `layout: landing`，正文留空。
 
-**每种语言都必须有 `index.md`**，缺了那个语言的首页会 404，`wiki check` 会报错。
+**内容目录里必须有 `index.md`**，缺了首页会 404，`wiki check` 会报 `no home page`。
 
-唯一的例外是 **`404.md`**：slug 为 `404` 的页面会被输出成根目录的 `404.html`，不会生成 `/docs/404/`。
+唯一的例外是 **`404.md`**：slug 为 `404` 的页面会被输出成根目录的 `404.html`，不会生成 `/404/`。
 
 ## 6. 构建
 
@@ -175,14 +175,15 @@ npx @lightwiki/cli build <内容目录>     # 产出到 <内容目录>/dist
 
 ```
 dist/
-├── index.html                      跳转到默认语言（docsDir 为空时这里就是首页）
+├── index.html                      首页（content/index.md）
 ├── 404.html                        静态托管的 404 页
-├── docs/index.html                 首页（content/<语言>/index.md）
-├── docs/<slug>/index.html          其余内容页
+├── <slug>/index.html               其余内容页
 ├── categories/<slug>/index.html    分类页
 ├── assets/                         图片与编译后的 CSS
 └── meta.json                       构建时间与工具信息
 ```
+
+`docsDir` 或 `urlPrefix` 非空时，内容页会多一层前缀；首页也跟过去，根目录的 `index.html` 就变成一张跳转页。
 
 加 `--inline`（或在配置里写 `inline: true`）会得到**单文件产物**：
 
@@ -245,7 +246,7 @@ dist/
 如果用的是能读工作区的 AI（Copilot、Cursor、Codex 等），让它按这个顺序读：
 
 1. **`AGENTS.md`** —— 项目约定与阅读顺序，从这儿开始
-2. **`tests/mini/content/zh/*.md`** —— 语法手册的**源文件**（直接读 markdown，不需要构建；产物里的 HTML 反而不好读）
+2. **`tests/mini/content/*.md`** —— 语法手册的**源文件**（直接读 markdown，不需要构建；产物里的 HTML 反而不好读）
 3. **`docs/getting-started.md`** —— 就是这一页，配置与目录约定
 
 要改工具本身（不是内容）才需要读 `ARCHITECTURE.md`。
@@ -264,6 +265,6 @@ dist/
 ## 10. 卡住了怎么办
 
 - **`npx @lightwiki/cli build` 说找不到配置** → 内容目录里没有 `wiki.config.ts`，或者目录传错了
-- **页面地址不对** → 地址由 slug 推导，没有单独的配置项；非默认语言会带 `/<lang>` 前缀
+- **页面地址不对** → 地址由 `content` 下的相对路径推得，没有单独的配置项；`urlPrefix`、`docsDir` 会加在前面
 - **样式没了** → 检查模板里的 CSS 路径是否带 `basePath`；主题样式在 `/assets/theme/`
 - **代码块没颜色** → 语言名可能拼错，或不在 `highlight.languages` 里；`xml` 覆盖 html/svg/eta

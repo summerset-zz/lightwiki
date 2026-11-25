@@ -16,7 +16,7 @@ argument-hint: "要写什么？例如：给重定向新增的 auto 模式补一�
 
 | 可以改 | 不要改 |
 |---|---|
-| `site/content/zh/**/*.md`（主站，用户术语） | `packages/**`、`templates/**` |
+| `site/content/**/*.md`（主站，用户术语） | `packages/**`、`templates/**` |
 | `tests/mini/content/**/*.md`（回归测试，代码术语） | `site/wiki.config.ts` 的配置值 |
 | `docs/*.md`、`README.md`、`AGENTS.md`、`ARCHITECTURE.md` | 任何 `.eta` / `.ts` 文件 |
 
@@ -25,9 +25,9 @@ argument-hint: "要写什么？例如：给重定向新增的 auto 模式补一�
 ## 写之前先读
 
 1. **`.github/writing-style.md`** —— 行文风格硬规定（不用角括号、不用破折号、定义句先回答「是什么」、术语表、内链写法）。**每一页都要按它写。**
-2. `.github/../site/wiki.config.ts` 与 `site/content/zh/` 现有页 —— 确认文件名、slug、title、section 与已写的内链。
+2. `.github/../site/wiki.config.ts` 与 `site/content/` 现有页 —— 确认文件名、slug、title、section 与已写的内链。
 3. `ARCHITECTURE.md` §10「已实现 / 未实现」—— **别把没做的写成做了**，这是文档最容易失真的地方。
-4. `tests/mini/content/zh/` 里的一两页当参考：那边讲的是同一套语法，但用的是代码术语（布局 / 宏），**不要直接抄术语**。
+4. `tests/mini/content/` 里的一两页当参考：那边讲的是同一套语法，但用的是代码术语（布局 / 宏），**不要直接抄术语**。
 
 ## 写作约定
 
