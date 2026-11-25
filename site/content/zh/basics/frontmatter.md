@@ -1,10 +1,10 @@
 ---
 title: frontmatter
-keywords: frontmatter, 元数据, metadata, yaml, title, description, keywords, section, order, updated, draft, layout, styles, scripts, categories, sidebarCategory
+keywords: frontmatter, 元数据, metadata, yaml, title, description, keywords, section, order, updated, draft, layout, styles, scripts, categories, sidebarCategory, frontmatterInjection, lightwiki-page-data, js
 description: 页面开头两个 --- 之间的 YAML，决定这页叫什么、排在哪、用哪套皮肤，以及写坏了会怎样。
 section: basics
 order: 2
-updated: 2026-11-17
+updated: 2026-11-23
 draft: false
 ---
 
@@ -88,3 +88,50 @@ keywords: ['@font-face', src, local]    # 好
 `title` 在同一语言内不能重复。双链 `[[标题]]` 靠它解析，重复就会让 `wiki check` 报 duplicate title 并失败。
 
 反过来，改 `title` 只会让按标题写的双链断掉，页面地址不变：地址来自文件名。两种写法的取舍见 [Markdown 与扩展语法](/docs/basics/markdown)。
+
+## 在浏览器里读 {#browser}
+
+页面里的 JS 可以通过一个 JSON 标签读到这一页的 frontmatter，不必自己解析源码。这个开关属于[站点配置](/docs/advanced/config)，在 `wiki.config.ts` 里打开：
+
+```ts
+frontmatterInjection: true,
+```
+
+默认是 `false`，因为打开后每页的 frontmatter 都会交给浏览器。开启后，每个内容页的 `</body>` 前多出一个标签：
+
+```html
+<script type="application/json" id="lightwiki-page-data">{ ... }</script>
+```
+
+标签里是这一页的结构化元数据，不含整篇正文。读法：
+
+```js
+const data = JSON.parse(document.getElementById('lightwiki-page-data').textContent);
+data.title;                // 页面标题
+data.categories;           // ['syntax']
+data.frontmatter.myOwnKey; // frontmatter 里自己写的键
+```
+
+脚本怎么挂到页面上，见 [JavaScript](/docs/basics/javascript)。
+
+标签里有哪些字段：
+
+| 字段 | 内容 |
+|---|---|
+| `lang` / `slug` / `url` | 语言、文件名、站点地址 |
+| `outputPath` / `relativePath` | 产物路径、源文件相对内容根的路径 |
+| `title` | 页面标题，必填 |
+| `description` / `section` / `updated` | frontmatter 里的同名值，没写的是空串 |
+| `order` | 组内排序，没写是 `null` |
+| `draft` | 是否草稿，没写是 `false` |
+| `keywords` / `categories` | 数组。写成 `"a, b"` 也会拆成两项 |
+| `frontmatter` | frontmatter 原样，值保持文件里的写法 |
+
+frontmatter 里的自定义键同时平铺在顶层，`data.myOwnKey` 和 `data.frontmatter.myOwnKey` 都拿得到。自定义键与上面的结构化字段重名时（比如写了 `url:`、`lang:`），顶层保留结构化值，原值只在 `data.frontmatter` 里。
+
+几条边界：
+
+- 只有内容页有这个标签。分类页和 404 页没有。
+- 里面的 `<` 一律写成 `\u003c`，frontmatter 里出现 `</script>` 也不会截断标签，`JSON.parse` 之后拿到的是原字符。
+- 改过默认皮肤 `doc` 的站点同样有效，不需要在皮肤里另写代码。
+- 默认关闭，只在页面确实要读的时候开。

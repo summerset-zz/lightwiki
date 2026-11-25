@@ -4,7 +4,7 @@ keywords: 高亮, highlight, 代码块, 语言, highlight.js, eta
 description: 代码块围栏带上语言名就会上色。这一页讲内置了哪些语言、怎么加别的、怎么改配色。
 section: basics
 order: 9
-updated: 2026-11-17
+updated: 2026-11-22
 draft: false
 ---
 
@@ -57,13 +57,14 @@ highlight.js 没有 Eta。官方定义里最接近的是 `erb`，同样是 HTML 
 
 `erb` 只声明了 Ruby 子语言，没注册 ruby 时 `<% %>` 那段完全不工作。
 
-内置的 `eta` 自己定了三条规则：
+内置的 `eta` 自己定了这几条规则：
 
 - 整块按 HTML 解析
 - `<% ... %>` 里面按 JavaScript 解析
 - `<%# ... %>` 认作注释
+- 标记本身（`<%` / `<%=` / `<%~` / `%>`）用 `hljs-meta` 上色，和正文里模板调用的 `{{ }}` 同一个颜色
 
-结果是 HTML 标签和模板里的 JS 都有颜色，注释也有。写 `eta` 才用上这个定义。
+结果是 HTML 标签、模板里的 JS、注释、以及标记本身都有颜色。写 `eta` 才用上这个定义。
 
 `ejs` 不指向它。按别名表，`ejs` 落到 `xml`，整块只按 HTML 解析，模板里的 JS 没有颜色。
 
@@ -82,6 +83,56 @@ highlight: {
 > 写名字时先按真名找。配 `vue` 会用 highlight.js 官方的 Vue 定义，不是别名表里的 `xml`。真名没注册时才退回别名。
 
 配好之后围栏里直接写那个名字，比如 `python`。
+
+## 皮肤里的代码块 {#skin}
+
+皮肤（`layouts/*.eta`）产出的是整页最终 HTML，不经过 markdown 解析器，正文围栏那套规则管不到它。手写 `<pre>` 或 `<code>` 时加一个 `lang` 属性，构建阶段会用同一个 highlight.js 再染一遍。
+
+下面两段是要原样粘进 `.eta` 的 HTML。写在 `<pre>` 上：
+
+```html
+<pre lang="markdown"><code>## 小标题
+
+- 一条列表</code></pre>
+```
+
+写在 `<code>` 上效果一样：
+
+```html
+<pre><code lang="ts">const n: number = 1;</code></pre>
+```
+
+两个都写 `lang` 时以 `<code>` 的为准。语言名跟围栏完全一致，别名表也照用：`js` `ts` `md` `yml` `eta` 都能认。
+
+皮肤里写的是最终 HTML，代码内容要自己转义，用 `&lt;` 而不是 `<`，否则浏览器会先把尖括号当成标签：
+
+```html
+<pre lang="html"><code>&lt;div class="note"&gt;文字&lt;/div&gt;</code></pre>
+```
+
+几条边界：
+
+| 写法 | 结果 |
+|---|---|
+| `<pre lang="yaml">` | 染色 |
+| `<code lang="yaml">` | 染色 |
+| `<pre><code class="language-yaml">` | 不染色，保持纯文本 |
+
+只认 `lang` 是刻意的。markdown 已经染过的块上同样有 `class="language-xxx"`，按它判断会把同一段代码染第二遍。
+
+染色后的 `<code>` 会被补上 `class="language-<语言名>"`，配色照旧走 `.hljs-*` 那套变量，跟正文代码块一致。
+
+语言名写错（比如 `lang="nosuchlang"`）不会中断构建，那一块保持纯文本，`wiki build` 打一条警告：
+
+```
+code block: unknown highlight language "nosuchlang" (kept as plain text)
+```
+
+配置了 `highlight.enabled: false` 时整段不动，也不会报未知语言。
+
+`lang="markdown"`（或 `md`）的块如果第一行就是 `---`，开头那段 frontmatter 按 YAML 染色，后面的正文仍按 markdown 染。整块都交给 markdown 的话，后面的 `---` 会被当成标题分隔线，frontmatter 反而是错的。
+
+同一种块里的 `{{…}}` 模板调用会拆开上色（highlight.js 的 markdown 语法不认它）：`{{` 与 `}}` 用 `hljs-meta`，模板名用 `hljs-title function_`，位置参数用 `hljs-string`，命名参数的键（`键: 值` 的键）用 `hljs-attr`。调用里带反引号原样字符串时整段不拆 —— highlight.js 已经在那里面插了标记，硬拆会把标记弄坏。只影响颜色，不影响内容。
 
 ## 关掉高亮 {#off}
 

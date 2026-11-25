@@ -4,7 +4,7 @@ keywords: less, 样式, 高亮, highlight, 插件, plugin, markdown-it
 description: 样式表能不能用 Less、代码块怎么染色、以及怎么往 markdown 管线上加东西。
 section: reference
 order: 2
-updated: 2026-11-15
+updated: 2026-11-22
 draft: false
 categories: [official]
 ---
@@ -38,9 +38,9 @@ assets/theme-extra.less   →   assets/theme-extra.css
 
 ## 代码高亮 {#highlight}
 
-内置这些语言：`xml`（含 html/svg/vue/eta）、`css`、`javascript`、`typescript`、`markdown`、`json`、`bash`、`yaml`、`diff`、`less`、`scss`、`ini`、`plaintext`。
+内置这些语言：`xml`（`html` / `svg` / `vue` 走它）、`css`、`javascript`、`typescript`、`markdown`、`json`、`bash`、`yaml`、`diff`、`less`、`scss`、`ini`、`plaintext`，外加一个自己定义的 `eta`（HTML 里夹 `<% %>`，内层按 JS 解析）。
 
-常用别名会自动映射：`js`→javascript、`ts`→typescript、`md`→markdown、`yml`→yaml、`html`→xml、**`eta`→xml**。
+常用别名会自动映射：`js`→javascript、`ts`→typescript、`md`→markdown、`yml`→yaml、`html`→xml。
 
 要加别的语言，在配置里列 highlight.js 的**语言名**：
 
@@ -51,6 +51,23 @@ highlight: {
 ```
 
 构建时按需加载，不用就不加载。写错的语言名不会报错，只是那个代码块不高亮。
+
+正文里直接写裸 HTML 也会染色，不用覆盖皮肤：
+
+<pre lang="ts"><code>const n: number = 1;</code></pre>
+
+皮肤（`layouts/*.eta`）里的 `<pre>` / `<code>` 同理，标了 `lang` 就在构建阶段上色。只认 `lang` 属性：`<code lang="ts">` 有效，`<code class="language-ts">` 不触发——后者是染色之后的产物，按它判断会重复染色。内容里的 `<` 要写成 `&lt;`。
+
+`lang="markdown"` 的块如果以 `---` 开头，开头那段 frontmatter 按 YAML 染色，其余仍按 markdown：
+
+<pre lang="markdown"><code>---
+title: 例子
+---
+
+正文段落，下面是列表。
+
+- 一
+- 二</code></pre>
 
 关闭高亮：
 

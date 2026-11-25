@@ -59,6 +59,10 @@ const ALIASES: Record<string, string> = {
  * 纯逻辑块从「只剩 tag/name 两类」变成「keyword/property/tag/name 四类」，
  * `<%# 注释 %>` 也有了颜色。
  *
+ * 标记本身（`<%` / `<%=` / `%>`）用 `beginScope` / `endScope` 单独染成 `hljs-meta`：
+ * 它们会落到 xml 子语言里当普通文本，看着和正文一样。注意 hljs 不允许这两个选项
+ * 与 `excludeBegin` / `excludeEnd` 同时出现（会直接抛错），所以这里是「不排除 + 单独标注」。
+ *
  * 依赖 `xml` 与 `javascript` 已注册，所以必须在 BUILTIN 之后注册。
  */
 const ETA_DEFINITION = (h: typeof hljs) => ({
@@ -69,9 +73,9 @@ const ETA_DEFINITION = (h: typeof hljs) => ({
     {
       begin: /<%[%~=-]?/,
       end: /[-%]?%>/,
+      beginScope: 'meta',
+      endScope: 'meta',
       subLanguage: 'javascript',
-      excludeBegin: true,
-      excludeEnd: true,
     },
   ],
 });
@@ -95,6 +99,40 @@ function loadLanguage(name: string): boolean {
   }
 }
 
+/**
+ * `const|let|var` 后面紧跟的那个标识符。
+ *
+ * highlight.js 的 JS 语法**没有「声明名字」这条规则**（它是纯正则，没有作用域概念），
+ * 所以 `const look = {}` 里 `look` 是纯文本 —— 这是和 VS Code 观感差得最明显的一处。
+ * 用 lookbehind 限定位置，解构（`const {…}` / `const […]`）、字符串与注释里的同名片段
+ * 都不会被误伤。
+ */
+const DECLARED_NAME_RE = /(?<=(?:const|let|var)\s+)[A-Za-z_$][\w$]*/;
+
+/**
+ * 重注册一个内置语法，在它的 `contains` 最前面插一条「声明名字」规则。
+ *
+ * 从语言包重新拿一份**原始定义**再包一层，不要在 `getLanguage()` 拿到的已编译对象上改 ——
+ * 那里面是编译过的 mode，再编译一次会重复处理。
+ */
+function addDeclaredNames(name: string): void {
+  try {
+    const factory = requireLang(`highlight.js/lib/languages/${name}`) as (
+      h: typeof hljs,
+    ) => Record<string, unknown>;
+    hljs.registerLanguage(name, ((h: typeof hljs) => {
+      const base = factory(h);
+      const contains = Array.isArray(base.contains) ? base.contains : [];
+      return {
+        ...base,
+        contains: [{ className: 'variable', match: DECLARED_NAME_RE }, ...contains],
+      };
+    }) as never);
+  } catch {
+    // 拿不到原始定义就保持原样：只是少一种颜色，不该让高亮整个失效
+  }
+}
+
 export async function createHighlighter(config: LoadedConfig): Promise<Highlighter> {
   const enabled = config.highlight.enabled;
   const registered = new Set<string>();
@@ -103,6 +141,9 @@ export async function createHighlighter(config: LoadedConfig): Promise<Highlight
     for (const name of BUILTIN) {
       if (loadLanguage(name)) registered.add(name);
     }
+    // 声明名字本来不上色，这里给 JS / TS 补上（见 DECLARED_NAME_RE）
+    addDeclaredNames('javascript');
+    addDeclaredNames('typescript');
     // 排在 BUILTIN 之后：它把 `<% %>` 内部交给 javascript、其余交给 xml
     hljs.registerLanguage('eta', ETA_DEFINITION as never);
     registered.add('eta');

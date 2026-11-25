@@ -1,7 +1,7 @@
 ---
 description: "轻维基（lightwiki）的功能开发搭档：评估可行性、小步实现、每步验证、同步文档。用于实现新功能、修 bug、改渲染管线或主题、排查构建与预览问题。"
 name: 轻维基开发
-tools: [read, search, edit, execute, todo, web, agent, open_browser_page, navigate_page, read_page, run_playwright_code]
+tools: [vscode, execute, read, agent, edit, search, web, browser, todo]
 agents: [Explore, 轻维基文档]
 argument-hint: "要做什么？例如：加搜索索引 / 修分类页链接 / 改渲染管线"
 ---

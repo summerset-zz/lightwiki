@@ -4,7 +4,7 @@ keywords: 皮肤, layout, layouts, eta, 模板覆盖, doc.eta, html 骨架
 description: 皮肤是整页的 HTML 骨架，一个文件一页。这一页讲皮肤放在哪、怎么换、里面能拿到哪些数据，以及资源路径为什么必须自己拼。
 section: basics
 order: 4
-updated: 2026-11-17
+updated: 2026-11-22
 draft: false
 ---
 
@@ -185,6 +185,16 @@ frontmatter 写 `layout: landing`，这一页就用它。
 
 用 `<%= it.page.html %>` 会把整篇正文转义成源码，页面上直接显示一堆尖括号。`<%~` 与 `<%=` 的区别在 [模板](/docs/basics/templates) 一页讲过。
 
+## 皮肤里的代码块要自己标语言 {#code-blocks}
+
+正文里的围栏由 markdown 解析器上色，皮肤绕过了那一步，`<pre>` 里的代码默认是纯文本。给 `<pre>` 或 `<code>` 加 `lang` 属性，构建时会补上颜色：
+
+```eta
+<pre lang="ts"><code>const x: number = 1;</code></pre>
+```
+
+代码内容里有 `<` 时要写成 `&lt;`。语言名能写什么、写错会怎样，见 [代码高亮](/docs/basics/code-highlight)。
+
 ## 资源路径要自己拼 {#assets}
 
 皮肤里写 `/assets/style.css`，本地看着没问题，部署到 GitHub Pages 的项目站就 404，因为站点根不在域名根上。
@@ -204,6 +214,20 @@ frontmatter 写 `layout: landing`，这一页就用它。
 ```
 
 对比一下：正文里写 `![](/assets/x.png)` 会被构建自动加上前缀，皮肤里不会，两者规则不同。
+
+## 皮肤里的链接不算内容链接 {#content-links}
+
+皮肤里写的 `<a href="/docs/a">` 在页面上能点、能跳转，但它不参与正文那套链接检查。`wiki check` 的红链与孤页判定只看**正文**里被 markdown 渲染出来的链接，导航、侧栏、皮肤里直接写的 `<a>` 一律不计 —— 既不算入链，也不会被标红链。
+
+最直接的后果：把首页内容整块写在皮肤里，皮肤链过去的页面仍会被报成孤页。几种做法，按省事程度排：
+
+| 做法 | 效果 |
+|---|---|
+| 在首页正文里也链一次目标页 | 孤页消失，最省事 |
+| 把首页那几条链接改成正文里的 `{{pages}}` 或 `[](...)` | 链接由 markdown 产出，照常计入 |
+| 忽略这条提示 | 孤页不是失败项，`--strict` 时才算 |
+
+另外，皮肤里的 `href` 不会被改写语言前缀，也不会被补 `directory` 模式的尾斜杠 —— 那两道改写只作用于正文。多语言站的皮肤要自己拼 `it.site.base` 与语言段。
 
 ## 页面级样式与脚本 {#page-assets}
 

@@ -108,6 +108,7 @@ defaultLanguage: 'zh',
 | `highlight.languages` | `[]` | 额外加载的 highlight.js 语言名，如 `'ruby'`、`'go'`（用法见 [代码高亮](/docs/basics/code-highlight)） |
 | `search.enabled` | `true` | 站内搜索开关 |
 | `search.excerpt` | `300` | 索引里保留的正文摘要长度（字符），`0` 表示只要标题 |
+| `frontmatterInjection` | `false` | 把每页的元数据（模板里的 `it.page`，只去掉整篇原文）注入 `<script type="application/json" id="lightwiki-page-data">`，供页面里的 JS 读取。见 [frontmatter](/docs/basics/frontmatter#browser) |
 | `macros.undefined` | `'show'` | 未定义模板的处理方式 |
 | `markdown` | 无 | 站点级 markdown-it 插件入口，签名 `(md) => void` |
 

@@ -19,7 +19,8 @@ import {
   type UnresolvedRef,
 } from './markdown.js';
 import { createSiteInfo, pageInfoOf, type PageInfo } from './context.js';
-import { createHighlighter } from './highlight.js';
+import { createHighlighter, type Highlighter } from './highlight.js';
+import { normUrl } from './links.js';
 import { loadMacros } from './macros.js';
 import { LinkResolver, type TitleConflict } from './resolve.js';
 import { outputPathFor, pageUrl } from './routes.js';
@@ -59,6 +60,11 @@ export interface LoadedContent {
   warnings: ContentProblem[];
   /** 同一语言内标题撞车的情况；撞了内链就是不明确的 */
   conflicts: TitleConflict[];
+  /**
+   * 正文渲染用的高亮器。构建时交给 HTML 出口，给皮肤里手写的
+   * `<pre lang="x">` / `<code lang="x">` 染色，两处用的是同一份语言注册表。
+   */
+  highlight: Highlighter;
 }
 
 function stripQuotes(value: string): string {
@@ -239,8 +245,10 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
 
   const siteInfo = createSiteInfo(config, seeds);
 
-  // 红链判定用：所有已登记页面的地址（去掉尾斜杠与 .html），与链接写法对齐
-  const knownUrls = new Set(seeds.map((seed) => seed.url.replace(/\.html$/, '').replace(/\/+$/, '') || '/'));
+  // 红链判定用：所有已登记页面的地址，与 `pageLinkKey()` 的归一化完全一致
+  // （去 basePath、去尾斜杠与 .html）。两边必须同源，否则部署到子路径时
+  // 渲染层会把每一条站内链接都染成红链。
+  const knownUrls = new Set(seeds.map((seed) => normUrl(seed.url, config)));
 
   // 阶段 3：渲染
   const pages: Page[] = seeds.map((seed) => {
@@ -278,7 +286,7 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
     };
   });
 
-  return { pages, problems, warnings, conflicts: resolver.conflicts };
+  return { pages, problems, warnings, conflicts: resolver.conflicts, highlight: highlighter };
 }
 
 /**

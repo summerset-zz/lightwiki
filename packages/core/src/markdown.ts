@@ -348,12 +348,15 @@ const MAX_MACRO_DEPTH = 20;
  *
  * 传进来的 `href` 应该已经过 `localizeHref()`，否则非默认语言的页面会把
  * `/docs/x` 与 `/zh/docs/x` 当成两个不同的东西。
+ *
+ * 相对路径也在这里判：基准是**当前页的 URL**（`it.page.url`），与浏览器一致。
+ * 判不出来（file 模式、没有 pageInfo）时 `pageLinkKey()` 返回 null，不算红链。
  */
 function isRedLink(href: string, env: RenderEnv): boolean {
   const known = env.knownUrls;
   if (!known) return false;
   // 与 `buildLinkReport` 共用同一份判据：资源、分类页、外链都不算页面
-  const key = pageLinkKey(href, env.config);
+  const key = pageLinkKey(href, env.config, env.pageInfo?.url);
   if (key === null) return false;
   return !known.has(key);
 }

@@ -5,6 +5,7 @@
   --bg: #ffffff;
   --line: #e6e6e9;
   --accent: #0a58ca;
+  --accent-highlight: #3d8bf8;
   --code-bg: #f5f5f7;
   --sidebar-w: 15rem;
   --toc-w: 13rem;
@@ -17,11 +18,14 @@
     --bg: #161618;
     --line: #2c2c30;
     --accent: #7aa7ff;
+    --accent-highlight: #afcaff;
     --code-bg: #212125;
   }
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -40,11 +44,24 @@ body {
   padding: 0 1.5rem;
 }
 
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
 /* 红链：指向还不存在的页面。同 MediaWiki 的 .new，但改个说得清的名字 */
-a.redlink { color: var(--redlink, #c0392b); text-decoration: underline dotted; }
-a.redlink:hover { text-decoration: underline; }
+a.redlink {
+  color: var(--redlink, #c0392b);
+  text-decoration: underline dotted;
+}
+
+a.redlink:hover {
+  text-decoration: underline;
+}
 
 /* —— 侧栏 —— */
 .sidebar {
@@ -65,7 +82,9 @@ a.redlink:hover { text-decoration: underline; }
   font-size: 1rem;
 }
 
-.nav-group { margin-bottom: 1.25rem; }
+.nav-group {
+  margin-bottom: 1.25rem;
+}
 
 .nav-section {
   margin: 0 0 0.4rem;
@@ -75,7 +94,8 @@ a.redlink:hover { text-decoration: underline; }
   text-transform: uppercase;
 }
 
-.sidebar ul, .toc ul {
+.sidebar ul,
+.toc ul {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -88,11 +108,21 @@ a.redlink:hover { text-decoration: underline; }
   color: var(--fg);
 }
 
-.sidebar li a:hover { background: var(--code-bg); text-decoration: none; }
-.sidebar li a.current { color: var(--accent); font-weight: 600; }
+.sidebar li a:hover {
+  background: var(--code-bg);
+  text-decoration: none;
+}
+
+.sidebar li a.current {
+  color: var(--accent);
+  font-weight: 600;
+}
 
 /* —— 正文 —— */
-.content { padding: 2rem 0 4rem; min-width: 0; }
+.content {
+  padding: 2rem 0 4rem;
+  min-width: 0;
+}
 
 .content h1 {
   margin: 0 0 0.5rem;
@@ -112,16 +142,81 @@ a.redlink:hover { text-decoration: underline; }
   border-left: 3px solid var(--line);
   color: var(--fg-dim);
   font-size: 0.85rem;
+} 
+
+.prose {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.87);
 }
 
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  outline: none;
+  font-weight: 600;
+  line-height: 1.5;
+  position: relative
+}
+
+
+
 .prose h2 {
-  margin: 2.5rem 0 0.75rem;
-  padding-top: 0.5rem;
-  font-size: 1.35rem;
+  letter-spacing: -.02em;
+  margin: 4rem 0 1.8rem;
+  padding-top: 1.8rem;
+  font-size: 1.5rem;
   border-top: 1px solid var(--line);
 }
 
-.prose h3 { margin: 1.75rem 0 0.5rem; font-size: 1.1rem; }
+/* 正文经常以 `##` 开头，页首那条分隔线与 4rem 留白只会在第一屏空出一大块 */
+.prose>h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.prose h3 {
+  letter-spacing: -.01em;
+  margin: 3rem 0 1.25rem;
+  font-size: 1.25rem;
+}
+
+.prose h2+h3 {
+  margin-top: 0
+}
+
+.prose h4 {
+  margin: 1.8rem 0 1rem;
+  font-size: 1.05rem
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 1.8rem 0
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose summary {
+  margin-bottom: 1.2em
+}
+
+.prose a {
+  color: var(--accent);
+  font-weight: 500;
+  transition: color 0.25s
+}
+
+.prose a:hover {
+  color: var(--accent-highlight)
+}
+
 
 .prose code {
   padding: 0.1em 0.35em;
@@ -138,13 +233,32 @@ a.redlink:hover { text-decoration: underline; }
   background: var(--code-bg);
 }
 
-.prose pre code { padding: 0; background: none; }
+.prose pre code {
+  padding: 0;
+  background: none;
+}
 
 .prose blockquote {
-  margin: 1.25rem 0;
-  padding: 0.25rem 1rem;
+  margin: 1rem 0;
+  padding-left: 1rem;
+  transition: border-color 0.5s;
   border-left: 3px solid var(--line);
   color: var(--fg-dim);
+}
+
+.prose blockquote>p {
+  margin: 0;
+  transition: color 0.5s
+}
+
+.prose li {
+  margin: 0.1rem 0;
+  position: relative
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.25rem
 }
 
 .prose table {
@@ -154,17 +268,27 @@ a.redlink:hover { text-decoration: underline; }
   font-size: 0.92rem;
 }
 
-.prose th, .prose td {
+.prose th,
+.prose td {
   padding: 0.45rem 0.7rem;
   border: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
 }
 
-.prose th { background: var(--code-bg); }
+.prose th {
+  background: var(--code-bg);
+}
 
-.prose figure { margin: 1.75rem 0; }
-.prose img, .prose svg { max-width: 100%; height: auto; }
+.prose figure {
+  margin: 1.75rem 0;
+}
+
+.prose img,
+.prose svg {
+  max-width: 100%;
+  height: auto;
+}
 
 .section-sources {
   margin-top: 3rem;
@@ -174,8 +298,17 @@ a.redlink:hover { text-decoration: underline; }
   color: var(--fg-dim);
 }
 
-.section-sources h2 { font-size: 1rem; margin: 0 0 0.5rem; border: 0; padding: 0; }
-.section-sources ul { margin: 0; padding-left: 1.1rem; }
+.section-sources h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+  border: 0;
+  padding: 0;
+}
+
+.section-sources ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
 
 /* —— 搜索 —— */
 .search {
@@ -218,11 +351,26 @@ a.redlink:hover { text-decoration: underline; }
   color: var(--fg);
 }
 
-.search-results li + li { border-top: 1px solid var(--line); }
+.search-results li+li {
+  border-top: 1px solid var(--line);
+}
+
 .search-results li a:hover,
-.search-results li.active a { background: var(--code-bg); text-decoration: none; }
-.search-section { flex: none; color: var(--fg-dim); font-size: 0.75rem; }
-.search-empty { padding: 0.5rem 0.6rem; color: var(--fg-dim); }
+.search-results li.active a {
+  background: var(--code-bg);
+  text-decoration: none;
+}
+
+.search-section {
+  flex: none;
+  color: var(--fg-dim);
+  font-size: 0.75rem;
+}
+
+.search-empty {
+  padding: 0.5rem 0.6rem;
+  color: var(--fg-dim);
+}
 
 /* —— 查看源码 —— */
 .source-view {
@@ -232,7 +380,10 @@ a.redlink:hover { text-decoration: underline; }
   font-size: 0.85rem;
 }
 
-.source-view summary { cursor: pointer; color: var(--fg-dim); }
+.source-view summary {
+  cursor: pointer;
+  color: var(--fg-dim);
+}
 
 .source-view pre {
   overflow-x: auto;
@@ -241,6 +392,8 @@ a.redlink:hover { text-decoration: underline; }
   background: var(--code-bg);
   font-size: 0.8rem;
   line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* —— 右侧 TOC —— */
@@ -254,19 +407,41 @@ a.redlink:hover { text-decoration: underline; }
   font-size: 0.85rem;
 }
 
-.toc li a { display: block; padding: 0.15rem 0; color: var(--fg-dim); }
-.toc li.lv3 { padding-left: 0.9rem; }
-.toc li.lv4, .toc li.lv5, .toc li.lv6 { padding-left: 1.8rem; }
+.toc li a {
+  display: block;
+  padding: 0.15rem 0;
+  color: var(--fg-dim);
+}
 
-.index-list { padding-left: 1.1rem; }
+.toc li.lv3 {
+  padding-left: 0.9rem;
+}
+
+.toc li.lv4,
+.toc li.lv5,
+.toc li.lv6 {
+  padding-left: 1.8rem;
+}
+
+.index-list {
+  padding-left: 1.1rem;
+}
 
 @media (max-width: 1100px) {
-  .shell { grid-template-columns: var(--sidebar-w) minmax(0, 1fr); }
-  .toc { display: none; }
+  .shell {
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  }
+
+  .toc {
+    display: none;
+  }
 }
 
 @media (max-width: 820px) {
-  .shell { grid-template-columns: minmax(0, 1fr); }
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .sidebar {
     position: static;
     max-height: none;
@@ -277,43 +452,126 @@ a.redlink:hover { text-decoration: underline; }
 
 /* —— 代码高亮（highlight.js token） —— */
 :root {
-  --hl-keyword: #a626a4;
-  --hl-string: #3f7f3f;
+  --hl-keyword: #569CD6;
+  --hl-string: #CE9178;
   --hl-number: #986801;
   --hl-comment: #9a9aa0;
   --hl-function: #2962b8;
   --hl-variable: #c1374a;
-  --hl-tag: #c1374a;
-  --hl-attr: #986801;
+  --hl-tag: #569CD6;
+  --hl-attr: #9CDCFE;
   --hl-meta: #6b6b70;
+  --hl-eta-meta: #FFD700;
+  --hl-md-template: #FFD700;
+}
+
+/* Eta 语言的元数据颜色 */
+:root .language-eta .hljs-meta {
+  color: var(--hl-eta-meta);
+}
+
+/* Markdown 模板颜色 */
+:root .language-markdown .hljs-meta {
+  color: var(--hl-md-template);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --hl-keyword: #c678dd;
-    --hl-string: #98c379;
+    --hl-keyword: #569CD6;
+    --hl-string: #CE9178;
     --hl-number: #d19a66;
     --hl-comment: #5c6370;
     --hl-function: #61afef;
     --hl-variable: #e06c75;
-    --hl-tag: #e06c75;
-    --hl-attr: #d19a66;
+    --hl-tag: #569CD6;
+    --hl-attr: #9CDCFE;
     --hl-meta: #9a9aa0;
+    --hl-eta-meta: #FFD700;
+    --hl-md-template: #FFD700;
   }
 }
 
-.hljs-comment, .hljs-quote { color: var(--hl-comment); font-style: italic; }
-.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag { color: var(--hl-keyword); }
-.hljs-string, .hljs-regexp, .hljs-addition, .hljs-template-tag { color: var(--hl-string); }
-.hljs-number, .hljs-property, .hljs-symbol { color: var(--hl-number); }
+.hljs-comment,
+.hljs-quote {
+  color: var(--hl-comment);
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-doctag {
+  color: var(--hl-keyword);
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-template-tag {
+  color: var(--hl-string);
+}
+
+.hljs-number,
+.hljs-symbol {
+  color: var(--hl-number);
+}
+
 /* attr 单独一条：它的变量本来是空挂的（值跟 number 一样但改了没效果），
    分开写才让人能单独调属性名的颜色 */
-.hljs-attr { color: var(--hl-attr); }
-.hljs-title, .hljs-title.function_, .hljs-title.class_, .hljs-section { color: var(--hl-function); }
-.hljs-variable, .hljs-template-variable { color: var(--hl-variable); }
-.hljs-tag, .hljs-name, .hljs-selector-id, .hljs-selector-class { color: var(--hl-tag); }
-.hljs-built_in, .hljs-type, .hljs-params { color: var(--hl-function); }
-.hljs-meta, .hljs-comment .hljs-doctag { color: var(--hl-meta); }
-.hljs-emphasis { font-style: italic; }
-.hljs-strong { font-weight: 700; }
-.hljs-deletion { color: var(--hl-variable); }
+/* 属性名：HTML 属性、对象字面量的键、成员访问（`it.args`）在 VS Code 里是同一个颜色 */
+.hljs-attr,
+.hljs-property {
+  color: var(--hl-attr);
+}
+
+.hljs-title,
+.hljs-title.function_,
+.hljs-title.class_,
+.hljs-section {
+  color: var(--hl-function);
+}
+
+/* 变量名（含 `const look` 的 look、SCSS 的 $x）跟属性同色：#9CDCFE */
+.hljs-variable,
+.hljs-template-variable {
+  color: var(--hl-attr);
+}
+
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: var(--hl-tag);
+}
+
+.hljs-built_in,
+.hljs-type {
+  color: var(--hl-function);
+}
+
+/* 函数形参：VS Code 按变量色显示，不是函数名色 */
+.hljs-params {
+  color: var(--hl-attr);
+}
+
+/* `this` / `self` / `super`：hljs 标成 variable.language_，VS Code 按关键字色 */
+.hljs-variable.language_ {
+  color: var(--hl-keyword);
+}
+
+.hljs-meta,
+.hljs-comment .hljs-doctag {
+  color: var(--hl-meta);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 700;
+}
+
+.hljs-deletion {
+  color: var(--hl-variable);
+}

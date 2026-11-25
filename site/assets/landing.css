@@ -1,0 +1,243 @@
+/*
+ * 首页（/docs/）专用样式。
+ *
+ * 由 `content/zh/index.md` 的 frontmatter `styles: landing.css` 加载，
+ * 路径相对 `assets/`。别把主题已有的东西抄进来 —— 变量（--line / --fg-dim /
+ * --accent / --code-bg）由 assets/theme/style.css 提供，这一份只写首页版式。
+ */
+
+/* 行内 code：主题那条写在 `.prose code` 里，而首页的正文是皮肤里手写的，
+   不在 `.prose` 容器里，所以这里补一份同样的样式。
+   用 `:not(pre) > code` 只命中行内的，代码块里的 `<code>` 不受影响。 */
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  background: var(--code-bg);
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.hero,
+.band {
+  padding: 4rem 1.5rem;
+}
+
+.band+.band {
+  border-top: 1px solid var(--line);
+}
+
+.wrap {
+  max-width: 60rem;
+  margin: 0 auto;
+}
+
+.wrap-wide {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.hero {
+  text-align: center;
+  padding-top: 5rem;
+  padding-bottom: 4.5rem;
+}
+
+.hero h1 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  letter-spacing: -0.02em;
+}
+
+.hero .tagline {
+  margin: 0 0 1.5rem;
+  font-size: 1.15rem;
+  color: var(--fg-dim);
+}
+
+.hero p {
+  margin: 0 0 0.6rem;
+}
+
+.hero .note {
+  font-size: 0.9rem;
+  color: var(--fg-dim);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin: 2rem 0 0;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.15rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  color: #fff;
+  opacity: 0.9;
+}
+
+.band {}
+
+.band h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.45rem;
+}
+
+.band .lead {
+  margin: 0 0 2rem;
+  color: var(--fg-dim);
+}
+
+.pair {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+.pair>div {
+  min-width: 0;
+}
+
+.pair-label {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim);
+}
+
+.pair pre {
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--code-bg);
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.pair .result {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.features li {
+  padding-left: 1.2rem;
+  position: relative;
+}
+
+.features li::before {
+  content: "·";
+  position: absolute;
+  left: 0.3rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.foot {
+  padding: 3rem 1.5rem 4rem;
+  border-top: 1px solid var(--line);
+}
+
+.foot p {
+  margin: 0 0 0.5rem;
+  color: var(--fg-dim);
+  font-size: 0.9rem;
+}
+
+.source-view {
+  margin-top: 1.5rem;
+}
+
+.source-view summary {
+  cursor: pointer;
+  color: var(--fg-dim);
+  font-size: 0.9rem;
+}
+
+.source-view pre {
+  margin: 0.75rem 0 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--code-bg);
+  overflow-x: auto;
+  font-size: 0.82rem;
+}
+
+@media (min-width: 44rem) {
+  .pair {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .features {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* 源码一排、结果横跨整行：两块源码并排在上面，第三块（结果）单独占一行。
+   源码超过两块时给容器加 `is-three`，上面那排变三栏，结果照样横跨整行。 */
+@media (min-width: 44rem) {
+  .pair-result {
+    grid-template-columns: 1fr 1fr;
+    /* 覆盖 .pair 的 start：上排两块要等高，靠 stretch + 内部 flex 撑满 */
+    align-items: stretch;
+  }
+
+  .pair-result > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* 上排每一格变成纵向 flex，让里面的 <pre> 吃掉剩余高度 → 两块看着一样高 */
+  .pair-result > :not(:last-child) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pair-result > :not(:last-child) pre {
+    flex: 1 1 auto;
+  }
+
+  /* 栏位只有十来字宽，代码折行比横向截断好读 */
+  .pair-result pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (min-width: 60rem) {
+  .pair-result.is-three {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

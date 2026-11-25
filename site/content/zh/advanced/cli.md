@@ -72,9 +72,9 @@ npx @lightwiki/cli build . -o public    # 产物写到 public/
 
 ## dev 起本地预览 {#dev}
 
-`wiki dev <目录>` 启动预览服务，默认地址 `http://127.0.0.1:5173`。端口被占用会自动往上试，以启动输出里的地址为准。
+`wiki dev <目录>` 启动预览服务，默认地址 `http://127.0.0.1:5173`。端口被占用会自动往上试，以启动输出里的地址为准。`Ctrl+C` 停止。
 
-改内容与皮肤会自动重建并刷新页面，`Ctrl+C` 停止。
+改内容、模板（`macros/`）与皮肤会自动重建并刷新页面；改 `assets/` 里的静态资源只刷新，不重建（资源是请求时现读的，`.less` 也是现编译）。改 `wiki.config.ts` 需要重启。
 
 命令行工具直接从工具仓库源码里跑时（安装位置在 `packages/` 下），会额外开一层源码监护：`packages/*/src` 一有改动就把 dev 子进程换掉，端口不变。从 npm 装的版本没有这一层，`--no-watch` 用来关掉它。
 
@@ -107,6 +107,8 @@ npx @lightwiki/cli build . -o public    # 产物写到 public/
 | `orphan page(s)` | 没有任何页面链到它 | 否，`--strict` 时算 |
 | `category note(s)` | 分类没在配置里声明，或 `sidebarCategory` 没有成员 | 否 |
 | `missing translation(s)` | 某页在别的语言里没有对应页 | 否，纯提示 |
+
+「链到它」只算**正文链接**：markdown 渲染出来的 `[]()`、双链、以及模板展开后落进正文的链接。导航、侧栏、皮肤里直接写的 `<a>` 都不算入链，也不算红链。所以把首页内容整块写在皮肤里时，它链过去的那几页仍会被报成孤页。原因与取舍见 [皮肤](/docs/basics/skins#content-links)。
 
 `--strict` 只把红链与孤页这两项升级为失败，其它提示项不受影响。
 

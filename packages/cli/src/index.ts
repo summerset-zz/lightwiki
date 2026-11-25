@@ -71,7 +71,14 @@ function printArtifact(result: BuildResult, elapsed: number): void {
 
 function printOutcome(result: BuildResult): number {
   if (result.warnings.length > 0) {
-    line(`  warnings: ${result.warnings.length} (run wiki check for details)`);
+    // 这些警告里有 build 阶段才会出现的（皮肤代码块的未知语言、内联时缺资源），
+    // `wiki check` 看不到它们，所以直接把前几条打出来，别只说「去跑 check」。
+    section(`${result.warnings.length} warning(s)`);
+    for (const warning of result.warnings.slice(0, 10)) {
+      line(`  ! ${warning.file}`);
+      for (const message of warning.messages) line(`      - ${message}`);
+    }
+    if (result.warnings.length > 10) line(`  ... ${result.warnings.length - 10} more`);
   }
 
   if (result.undefinedMacros > 0) {

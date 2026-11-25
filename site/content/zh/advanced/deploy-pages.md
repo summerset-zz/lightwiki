@@ -53,7 +53,9 @@ const basePath = env.LIGHTWIKI_BASE_PATH ?? '/';
 
 所以本地预览是 `/`，线上自动变成 `/<仓库名>/`。仓库改名也不用动配置。字段本身见 [站点配置](/docs/advanced/config)。
 
-## 工具版本写死在 workflow 里 {#cli-version}
+## 工具版本写在哪 {#cli-version}
+
+起始模板的 workflow 用 `npx` 直接跑，版本写在命令里：
 
 ```yaml
 run: npx --yes @lightwiki/cli@0.3.0 build .
@@ -62,6 +64,36 @@ run: npx --yes @lightwiki/cli@0.3.0 build .
 写死版本是为了构建可复现。升级工具时只改这一个数字。
 
 > 别写成 `^0.3.0`。0.x 的 caret 只覆盖 `0.3.x`，下个 minor 就取不到，站点会一直停在旧版本。
+
+### 仓库里有 package.json 时 {#cli-version-local}
+
+把 CLI 装成本地依赖（见 [快速上手（会用命令行）](/docs/start/quickstart-dev#init-local)）之后，版本号出现在两处：`pages.yml` 里的 `@0.3.0`，和 `package.json` 的 `devDependencies`。workflow 里的 `npx` **不会**去读 `package.json`，所以两处都要改，否则就是「本地跑新版本、CI 还在用旧版本构建」。
+
+也可以让 CI 直接读 `package.json`，把版本收敛到一处：装完依赖再跑 script。
+
+```yaml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm            # 可选：按 lockfile 缓存下载
+
+      - run: npm ci             # 没有 package-lock.json 时换成 npm install
+
+      - name: 构建
+        env:
+          LIGHTWIKI_BASE_PATH: /${{ github.event.repository.name }}/
+          LIGHTWIKI_SITE_URL: https://${{ github.repository_owner }}.github.io
+        run: npm run build
+```
+
+以后升级只改 `package.json`，再跑一次 `npm install` 让 lockfile 跟上，两个文件一起提交。
+
+|  | 写死在 workflow | 交给 package.json |
+| --- | --- | --- |
+| 要改的文件 | `pages.yml` | `package.json` |
+| 版本来源 | 命令里 | `devDependencies` |
+| CI 多一步 | 无 | `npm ci` |
+| 要提交 lockfile | 不用 | 要 |
 
 ## 不需要任何密钥 {#secrets}
 

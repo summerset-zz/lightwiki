@@ -105,6 +105,9 @@ markdown-it (html, linkify)
 引擎是 Eta。**`autoTrim` 必须关闭**——宏产出的是 markdown，标签后的换行是语义的一部分。
 **片段复用（`it.partials`）**：Eta 实例的 `views` 指向 `<内容根>/layouts`，皮肤可以 `include('nav', it)` 引用同目录下的片段，不用把同一段 HTML 抄进每个皮肤。主题包**不在** `views` 里——主题的皮肤不能假设用户仓库里有某个文件，否则空站点连页面都渲染不出来。所以主题那边必须先问 `it.partials.nav`（由 `view.ts` 的 `detectPartials()` 按 `layouts/nav.eta` 是否存在算出来）再决定要不要 include。`redirect` 皮肤不参与。
 **内联模式由后处理完成，不靠布局判断**：`inline: true` 时，`inline.ts` 在 HTML 生成后把 `<link rel="stylesheet">` 换成 `<style>`、`<script src>` 换成内联脚本、其余资源换成 data URI。布局照常写 `<link>`——用户覆盖的布局也能享受内联，不需要主题配合。
+**皮肤里的代码块也由后处理上色**：皮肤产出的是最终 HTML，不经过 markdown 解析器。所以标了 `lang` 的 `<pre>` / `<code>`（`<code>` 优先）由 `code-blocks.ts` 在 HTML 出口交给 highlighter 染色，产物里补上 `class="language-x"`。**build 与 dev 两个出口都要调**（`build.ts` 的 `emit` 与 `dev/src/index.ts` 的 `inject`），只改一处就会出现「预览和产物不一样」。`lang="markdown"` 且以 `---` 开头时，frontmatter 段改用 `yaml` 规则单独染 —— hljs 的 markdown 语法不认识 frontmatter，会把后面的 `---` 当成标题分隔线。内容是转义过的（`&lt;`），染色前先解实体；已经带 `hljs-` 的块跳过，避免二次处理；语言不认识时原样保留并在构建警告里点名。注意**只有 `lang` 属性触发**，`class="language-x"` 不触发——否则会把 markdown 刚生成的高亮结果再染一遍。
+
+**页面元数据交给浏览器也靠后处理**：`frontmatterInjection: true` 时，`page-data.ts` 把 `pageInfoOf()` 的结果（减去 `markdown`）写成 `<script type="application/json" id="lightwiki-page-data">` 插到 `</body>` 前。用 `application/json` 而不是 `window.__DATA__ = {...}`，是为了让它只作为数据存在（不执行、不受 CSP 限制），主题的 JS 用 `JSON.parse(textContent)` 读。同样**build 与 dev 两个出口都要调**；JSON 里的 `<` 一律转成 `\u003c`，否则 frontmatter 里一个 `</script>` 就能把标签截断。分类页与 404 没有 frontmatter，它们的 `emit` 调用不带 `page`，自然不注入。默认关闭：它会把每页的 frontmatter 原样交给浏览器。
 
 ### 7.1 搜索与「查看源码」的边界
 
@@ -165,9 +168,11 @@ dist/
 
 孤页 = 没有正文链接指向它，**排除每种语言的入口页**（排序第一的那页）。
 
+红链只有一份判据：`links.ts` 的 `pageLinkKey()`，渲染层（`markdown.ts` 的 `isRedLink`）与 `check`（`buildLinkReport`）共用它。它把链接归一化成页面键（剥 `basePath`、去尾斜杠与 `.html`），再与 `knownUrls` 比对。**相对路径按当前页的 URL 解析**（与浏览器一致，基准是页面所在目录，不是站点根），所以要传 `page.url` 进去。`urlStyle: 'file'` 下只解析**以 `.html` 结尾**的相对路径（产物形态就是 `a.html` 互链），其余当静态文件；同时 `.html` 会被当成页面而不是资源 —— 不去后缀的话 file 站里 `/docs/a.html` 既不算入链也查不出红链，整站报孤页。`#锚点`、`?查询`、带协议的地址与带扩展名的资源同样不参与。`knownUrls` 必须用 `normUrl()` 构造，否则部署在子路径时渲染层会把每条站内链接都染成红链。
+
 ## 10. 已实现 / 未实现
 
-**已实现**：三阶段渲染、双链（slug/标题/锚点）、宏（三种形态、组合、循环检测、行内与块级）、`it.page`/`it.site`、分类与分类页、404、重定向（js/server/both）、代码高亮、Less、markdown 插件钩子、dev server（SSE 热刷新 + 源码监护自动重启）、全部 check 项、可移植产物、单文件产物（`inline`）、`urlStyle: 'directory'` 与 `'file'` 两种形态（含相对链接）、站内搜索（索引 + 默认主题的搜索框）、查看源码、按页面指定布局（`layout`）、页面级样式/脚本（`styles` / `scripts`，可逐条声明 ESM）、`docsDir` 可配、未定义宏的可配置处理、红链标记。
+**已实现**：三阶段渲染、双链（slug/标题/锚点）、宏（三种形态、组合、循环检测、行内与块级）、`it.page`/`it.site`、分类与分类页、404、重定向（js/server/both）、代码高亮（正文围栏 + 皮肤里 `<pre lang>` / `<code lang>` 的代码块）、Less、markdown 插件钩子、dev server（SSE 热刷新 + 源码监护自动重启）、全部 check 项、可移植产物、单文件产物（`inline`）、`urlStyle: 'directory'` 与 `'file'` 两种形态（含相对链接）、站内搜索（索引 + 默认主题的搜索框）、查看源码、按页面指定布局（`layout`）、页面级样式/脚本（`styles` / `scripts`，可逐条声明 ESM）、`docsDir` 可配、未定义宏的可配置处理、红链标记。
 
 **不打算做**：
 
@@ -199,9 +204,13 @@ dist/
 | 加一种行内语法 | `markdown.ts` 的 ruler 注册 + 实现 → `tests/mini` 加一节 |
 | 改资源管线 | `assets.ts` → `build.ts` 的调用处 → `dev` 的 asset 分支 |
 | 改内联规则（哪些标签、哪种 data URI） | `inline.ts` 的 `inlineHtml` / `MIME` 表 |
+| 改皮肤代码块的触发方式（目前是 `lang` 属性） | `code-blocks.ts` 的 `highlightCodeBlocks` → `build.ts` 的 `emit` |
 | 改相对链接改写规则 | `relative.ts` 的 `relativeUrl` / `isPageUrl` |
+| 改红链判据（哪些算页面、相对路径怎么解析） | `links.ts` 的 `pageLinkKey`（渲染层与 check 共用） |
+| 改 dev 监听哪些目录 | `dev/src/index.ts` 的 `collectWatchTargets`（`rebuild` 与 `reload` 两类） |
 | 改搜索命中策略或结果样式 | `theme-default/assets/search.js` 的 `score`、`style.css` 的 `.search-*` |
 | 改索引里放什么 | `search.ts` 的 `buildSearchIndex` → `site.search.excerpt` 配置 |
+| 改交给浏览器的元数据（`lightwiki-page-data`） | `page-data.ts` 的 `pageDataOf` / `injectPageData` → `build.ts` 的 `emit` 与 `dev` 的 `inject` |
 
 改完至少跑：`yarn type:check`、`yarn wiki check tests/mini`、`yarn wiki build tests/mini`。
 

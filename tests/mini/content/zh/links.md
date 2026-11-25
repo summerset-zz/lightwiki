@@ -21,6 +21,12 @@ categories: [syntax]
 
 在英文页里，同一个写法会自动变成 `/en/docs/macros`。跳转逻辑只处理 `/docs` 这一棵路径，其他站内路径（比如工具页）原样输出。
 
+相对路径也能用，但基准是**当前页所在的目录**，与浏览器一致。这一页在 `/docs/links/`，所以 `./macros` 落到 `/docs/links/macros`（不存在），`../macros` 才回到 `/docs/macros`。
+
+效果：[用相对路径过去的宏](../macros)。
+
+`urlStyle: 'file'` 下产物就是 `a.html`，所以只认以 `.html` 结尾的相对路径（后缀会去掉再比），其余相对路径当静态文件跳过。
+
 ## 红链 {#redlink}
 
 指向**还不存在的页面**的站内链接会被标上 `class="redlink"`（同 MediaWiki 的 `.new`，只是换了个说得清的名字），主题给它的样式是红字 + 虚线下划线。

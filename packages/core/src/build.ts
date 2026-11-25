@@ -3,10 +3,12 @@ import { dirname, join, resolve } from 'node:path';
 import { collectAssets, copyAssets } from './assets.js';
 import type { LoadedConfig } from './config.js';
 import { loadContent, type ContentProblem, type Page } from './content.js';
+import { highlightCodeBlocks } from './code-blocks.js';
 import { createSiteInfo } from './context.js';
 import { createInlineBundle, inlineHtml, type InlineBundle } from './inline.js';
 import { buildLinkReport, normUrl, type LinkReport } from './links.js';
 import { assetList, injectPageAssets, isExternalUrl, pageAssetUrl, resolvePageAsset, scriptList } from './page-assets.js';
+import { injectPageData, pageDataOf } from './page-data.js';
 import { createRenderer } from './render.js';
 import { relativeUrl, rewriteRelativeLinks } from './relative.js';
 import { categoryOutputPath, INDEX_SLUG, indexOutputPath, langPrefix, normalizeBasePath, pageUrl, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath, withBasePath } from './routes.js';
@@ -61,7 +63,7 @@ export async function buildSite(
     inlineMode === rawConfig.inline ? rawConfig : { ...rawConfig, inline: inlineMode };
 
   const outputDir = resolve(config.root, options.outDir ?? config.outputDir);
-  const { pages, problems, warnings } = await loadContent(config);
+  const { pages, problems, warnings, highlight } = await loadContent(config);
 
   // 未解析的内链/未定义的宏进 build 的警告列表，否则产物里会静默露出占位或原文
   for (const page of pages) {
@@ -92,6 +94,7 @@ export async function buildSite(
     : null;
 
   const reportedMissing = new Set<string>();
+  const reportedUnknownLang = new Set<string>();
   const inlineTotals = { css: 0, scripts: 0, media: 0 };
 
   /**
@@ -149,6 +152,19 @@ export async function buildSite(
       content = injectPageAssets(content, resolved.styles, resolved.scripts);
     }
 
+    // 皮肤（`layouts/*.eta`）产出的是最终 HTML，不经过 markdown 解析器，
+    // 所以标了 `lang` 的 `<pre>` / `<code>` 要在这里补一道高亮。
+    const codeBlocks = highlightCodeBlocks(content, highlight);
+    content = codeBlocks.html;
+    for (const lang of codeBlocks.unknown) {
+      if (reportedUnknownLang.has(lang)) continue;
+      reportedUnknownLang.add(lang);
+      warnings.push({
+        file: relative,
+        messages: [`code block: unknown highlight language "${lang}" (kept as plain text)`],
+      });
+    }
+
     if (bundle) {
       // 注意传 content 而不是 html：页面级 styles / scripts 是刚插进去的，
       // 拿原始 html 去内联会把它们整个丢掉（曾经就是这样，单文件产物里少样式）
@@ -179,6 +195,12 @@ export async function buildSite(
         content,
         buildSearchIndex(config, published, { fromPath: relative }),
       );
+    }
+
+    // 页面元数据（`frontmatterInjection`）：同样最后插，JSON 里没有待内联的地址。
+    // 分类页 / 404 没有 frontmatter，它们的调用不带 `page`，自然跳过。
+    if (options.page && config.frontmatterInjection) {
+      content = injectPageData(content, pageDataOf(options.page));
     }
 
     const target = join(outputDir, relative);

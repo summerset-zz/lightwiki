@@ -29,6 +29,8 @@ export {
 export { buildLinkReport, normUrl, type LinkReport, type RedLink } from './links.js';
 export { compileLess, collectAssets, copyAssets, type AssetFile } from './assets.js';
 export { createHighlighter, type Highlighter } from './highlight.js';
+// 皮肤里 `<pre lang>` / `<code lang>` 的代码块高亮：build 与 dev 共用同一个出口
+export { highlightCodeBlocks } from './code-blocks.js';
 export { loadMacros,
   listMacroNames,
   type MacroBase,
@@ -81,6 +83,8 @@ export {
   type SearchEntry,
   type SearchOptions,
 } from './search.js';
+// 页面元数据注入（`frontmatterInjection`）：build 与 dev 共用同一个出口
+export { injectPageData, pageDataOf, PAGE_DATA_ID } from './page-data.js';
 export {
   buildNav,
   buildSidebar,

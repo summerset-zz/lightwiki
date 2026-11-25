@@ -12,19 +12,23 @@ import {
   createPageView,
   createRenderer,
   createSiteInfo,
+  highlightCodeBlocks,
   injectPageAssets,
+  injectPageData,
   injectSearchIndex,
   langPrefix,
   loadContent,
   normalizeBasePath,
   normUrl,
   pageAssetUrl,
+  pageDataOf,
   pageUrl,
   resolvePageAsset,
   scriptList,
   SEARCH_INDEX_FILE,
   shouldInlineSearch,
   INDEX_SLUG,
+  type Highlighter,
   type LoadedConfig,
   type Page,
   type SiteInfo,
@@ -57,6 +61,8 @@ export interface DevState {
   pages: Page[];
   byUrl: Map<string, Page>;
   siteInfo: SiteInfo;
+  /** 皮肤里 `<pre lang>` / `<code lang>` 染色用；与构建共用同一份注册表 */
+  highlight: Highlighter;
 }
 
 export type DevRoute =
@@ -105,11 +111,11 @@ function reloadSnippet(base: string): string {
 }
 
 async function loadState(config: LoadedConfig): Promise<DevState> {
-  const { pages } = await loadContent(config);
+  const { pages, highlight } = await loadContent(config);
   const byUrl = new Map<string, Page>();
   // 草稿也在索引里：草稿不进导航，但在 dev 下应该能按地址打开
   for (const page of pages) byUrl.set(normUrl(page.url, config), page);
-  return { pages, byUrl, siteInfo: createSiteInfo(config, pages) };
+  return { pages, byUrl, siteInfo: createSiteInfo(config, pages), highlight };
 }
 
 function indexUrlOf(config: LoadedConfig, lang: string): string {
@@ -220,11 +226,21 @@ function safeJoin(rootDir: string, rest: string): string {
   return target.startsWith(prefix) ? target : join(rootDir, '\u0000invalid');
 }
 
-function collectWatchTargets(config: LoadedConfig): string[] {
-  const targets = Object.values(config.content).map((dir) => resolve(config.root, dir));
-  targets.push(resolve(config.root, 'layouts'));
-  targets.push(config.themeDir);
-  return targets;
+/**
+ * 开发期要盯的目录，分两类：
+ *
+ * - `rebuild`：改了要重新解析与渲染（内容、皮肤、模板）。
+ * - `reload`：改了只需让浏览器重新取。`assets/` 里的文件是**每次请求现读**的
+ *   （`.less` 现编译），不用重建；但浏览器不重取就还是旧的，所以推一条 reload。
+ *
+ * `wiki.config.ts` 不在这里：配置只在启动时读一次，改它需要重启 dev server。
+ */
+function collectWatchTargets(config: LoadedConfig): { rebuild: string[]; reload: string[] } {
+  const rebuild = Object.values(config.content).map((dir) => resolve(config.root, dir));
+  rebuild.push(resolve(config.root, 'layouts'));
+  rebuild.push(resolve(config.root, 'macros'));
+  rebuild.push(config.themeDir);
+  return { rebuild, reload: [resolve(config.root, config.assetsDir)] };
 }
 
 export async function startDevServer(
@@ -239,6 +255,18 @@ export async function startDevServer(
   const watchers: FSWatcher[] = [];
 
   let timer: NodeJS.Timeout | undefined;
+  let reloadTimer: NodeJS.Timeout | undefined;
+
+  function pushReload(): void {
+    for (const client of clients) client.write('data: reload\n\n');
+  }
+
+  /** 静态资源变了：不重建，直接让浏览器重取 */
+  function scheduleReload(): void {
+    if (reloadTimer) clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(pushReload, 120);
+  }
+
   function scheduleRebuild(): void {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
@@ -253,12 +281,12 @@ export async function startDevServer(
           const message = error instanceof Error ? error.message : String(error);
           process.stderr.write(`rebuild failed: ${message}\n`);
         }
-        for (const client of clients) client.write('data: reload\n\n');
+        pushReload();
       })();
     }, 200);
   }
 
-  for (const target of collectWatchTargets(config)) {
+  for (const target of collectWatchTargets(config).rebuild) {
     try {
       watchers.push(watch(target, { recursive: true }, () => scheduleRebuild()));
     } catch {
@@ -266,18 +294,37 @@ export async function startDevServer(
     }
   }
 
+  for (const target of collectWatchTargets(config).reload) {
+    try {
+      watchers.push(watch(target, { recursive: true }, () => scheduleReload()));
+    } catch {
+      // 同上：没建 `assets/` 的站点也要能开 dev
+    }
+  }
+
   async function render(route: DevRoute): Promise<string | null> {
     const searchInline = config.search.enabled && shouldInlineSearch(config);
 
-    const inject = (html: string): string => {
-      // file / inline 模式下浏览器拿不到 json（fetch 被 file:// 挡），索引跟着页面走
-      const withSearch = searchInline
-        ? injectSearchIndex(html, buildSearchIndex(config, state.pages))
-        : html;
+    // 元数据要在 reload 脚本之前插：reload 必须紧贴 `</body>`，否则它后面那些
+    // 注入的 JSON 会挡住「打开时先刷新」的判断（两者都只是顺序约定，但保持一致好排查）
+    const inject = (html: string, page?: Page): string => {
+      // 皮肤里的 `<pre lang="x">` 只有构建时才会染色，dev 也得过同一道，
+      // 否则预览与产物长得不一样（作者会以为属性写错了）。
+      let out = highlightCodeBlocks(html, state.highlight).html;
 
-      return withSearch.includes('</body>')
-        ? withSearch.replace('</body>', `${reloadSnippet(base)}</body>`)
-        : withSearch + reloadSnippet(base);
+      // file / inline 模式下浏览器拿不到 json（fetch 被 file:// 挡），索引跟着页面走
+      if (searchInline) {
+        out = injectSearchIndex(out, buildSearchIndex(config, state.pages));
+      }
+
+      // 与产物保持同一套字段：`it.page` 去掉整篇原文
+      if (page && config.frontmatterInjection) {
+        out = injectPageData(out, pageDataOf(page));
+      }
+
+      return out.includes('</body>')
+        ? out.replace('</body>', `${reloadSnippet(base)}</body>`)
+        : out + reloadSnippet(base);
     };
 
     if (route.kind === 'page') {
@@ -286,7 +333,7 @@ export async function startDevServer(
         createPageView(config, state.pages, route.page, state.siteInfo) as unknown as Record<string, unknown>,
       );
       const assets = pageAssetLinks(config, route.page);
-      return inject(injectPageAssets(html, assets.styles, assets.scripts));
+      return inject(injectPageAssets(html, assets.styles, assets.scripts), route.page);
     }
 
     if (route.kind === 'category') {
@@ -450,6 +497,7 @@ export async function startDevServer(
     port,
     async close() {
       if (timer) clearTimeout(timer);
+      if (reloadTimer) clearTimeout(reloadTimer);
       for (const watcher of watchers) watcher.close();
 
       // 先登记 close 的回调再断开连接：浏览器断开的 SSE 会立刻重连，

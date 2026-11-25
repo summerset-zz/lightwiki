@@ -110,6 +110,9 @@ export const frontmatterSchema = z
 
 export type Frontmatter = z.infer<typeof frontmatterSchema>;
 
+/** 未定义模板的替换函数：拿到模板名与原始写法，返回替换后的文本 */
+export type UndefinedMacroHandler = (name: string, raw: string) => string;
+
 /**
  * 未定义的宏怎么处理。
  *
@@ -119,18 +122,23 @@ export type Frontmatter = z.infer<typeof frontmatterSchema>;
  */
 const undefinedMacroHandler = z.union([
   z.enum(['show', 'hide']),
-  z.custom<(name: string, raw: string) => string>((value) => typeof value === 'function', {
+  z.custom<UndefinedMacroHandler>((value) => typeof value === 'function', {
     message: 'macros.undefined must be show / hide, or a function (name, raw) => string',
   }),
 ]);
 
 export const siteConfigSchema = z.object({
+  /** 站点名，进 `<title>`、侧栏顶部与导航 brand */
   title: z.string().min(1),
+  /** 完整站点地址。canonical、重定向页的绝对地址、站外链接判定都用它 */
   siteUrl: z.string().url('siteUrl must be a full URL'),
+  /** 部署前缀。`/` 与空串视为无前缀，其余规范成 `/sub`（补前导斜杠、去末尾斜杠） */
   basePath: z.string().default('/'),
+  /** 默认语言：地址不带语言前缀。必须是 `content` 的键，见文件末尾的 superRefine */
   defaultLanguage: z.string().default('zh'),
   /** 语言代码 → 该语言的内容目录（相对内容根目录） */
   content: z.record(z.string(), z.string()),
+  /** 资源来源目录。只影响「从哪读」，产物里固定落在 `assets/` */
   assetsDir: z.string().default('assets'),
   /** 内容里允许出现的 section 取值与顺序；留空则不校验 */
   sections: z.array(z.string()).default([]),
@@ -138,7 +146,12 @@ export const siteConfigSchema = z.object({
   sectionLabels: z.record(z.string(), z.string()).default({}),
   /** 分类 slug → 显示名。未声明的分类用 slug 当显示名 */
   categories: z.record(z.string(), z.string()).default({}),
+  /**
+   * 主题包名，或主题目录。`./` 开头与绝对路径按目录解析，其余按包名解析；
+   * 都解析不到时**静默回落到内置主题**（不报错），所以写错路径的表现是「样式没变」。
+   */
   theme: z.string().default('@lightwiki/theme-default'),
+  /** 构建输出目录（相对内容根）。每次构建前整个清空 */
   outputDir: z.string().default('dist'),
 
   /** 宏相关的行为开关 */
@@ -191,6 +204,10 @@ export const siteConfigSchema = z.object({
       }),
     )
     .default([]),
+  /**
+   * 重定向产物形态：`js` 生成 HTML 跳转页（没有服务端的托管用）、
+   * `server` 只输出 `_redirects`（Netlify / Cloudflare Pages 认的真 301）、`both` 都做。
+   */
   redirectMode: z.enum(['js', 'server', 'both']).default('js'),
 
   /**
@@ -219,6 +236,18 @@ export const siteConfigSchema = z.object({
       excerpt: z.number().int().min(0).default(300),
     })
     .default({ enabled: true, excerpt: 300 }),
+
+  /**
+   * 把当前页的元数据以 JSON 注入 HTML，供页面里的 JS 读取。
+   *
+   * 注入的是模板里 `it.page` 那一份（`slug` / `url` / `lang` / 归一化后的
+   * `keywords`、`categories`，以及 `frontmatter` 原对象），只去掉整篇原文 `markdown`。
+   * 放进 `<script type="application/json" id="lightwiki-page-data">`，走 HTML 后处理，
+   * 所以覆盖过皮肤也会生效。
+   *
+   * 默认关闭：它会把每页的 frontmatter 交给浏览器，不需要就别开。
+   */
+  frontmatterInjection: z.boolean().default(false),
 
   /**
    * 站点级 markdown-it 插件入口。
@@ -252,7 +281,139 @@ export const siteConfigSchema = z.object({
 });
 
 export type SiteConfig = z.infer<typeof siteConfigSchema>;
-export type SiteConfigInput = z.input<typeof siteConfigSchema>;
+
+/**
+ * 用户写在 `wiki.config.ts` 里的形状。
+ *
+ * 为什么手写而不是 `z.input<typeof siteConfigSchema>`：zod 推导出来的是映射类型，
+ * schema 字段上的 JSDoc **不会**带过去（实测 `getDocumentationComment()` 全空），
+ * 用户在配置里悬停时什么说明也看不到。所以「给人读的」写在这里，
+ * 「给机器验的」仍然是 `siteConfigSchema`。
+ *
+ * 两份不许漂移：文件末尾那条 `assertConfigInput` 断言把它和 `z.input` 逐字段比对，
+ * 少一个字段、多一个必填，`yarn type:check` 当场失败。
+ */
+export interface SiteConfigInput {
+  /** 站点名。进 `<title>`、侧栏顶部与导航 brand，必填且非空 */
+  title: string;
+
+  /**
+   * 站点完整地址，必须带协议（写成 `example.com` 会被拦）。
+   * 用于 canonical、重定向页的绝对地址、`it.site.siteUrl` 与站外链接判定。
+   */
+  siteUrl: string;
+
+  /**
+   * 部署前缀。`'/'` 与 `''` 都表示无前缀，其余规范成 `'/sub'`。
+   * GitHub Pages 项目站要写 `'/仓库名'`；和实际部署位置对不上时，链接与资源全部 404。
+   */
+  basePath?: string;
+
+  /**
+   * 默认语言。它的页面地址不带语言前缀，根目录的入口页也按它算。
+   * **必须是 `content` 的某个键**，否则配置直接加载失败。
+   */
+  defaultLanguage?: string;
+
+  /**
+   * 语言代码 → 内容目录（相对内容根）。至少一项，目录名不必等于语言代码。
+   * 每种语言都必须有 `index.md`，缺了 `wiki check` 判失败。
+   */
+  content: Record<string, string>;
+
+  /** 静态资源目录名（相对内容根）。只改「从哪读」，产物里固定落在 `assets/` */
+  assetsDir?: string;
+
+  /**
+   * 允许出现的 `section` 取值与侧栏顺序。空数组表示不校验；
+   * 写了之后页面用了表外的 `section`，`wiki check` 会点名。
+   */
+  sections?: string[];
+
+  /** `section` slug → 显示名。未声明的回落到 slug 本身 */
+  sectionLabels?: Record<string, string>;
+
+  /** 分类 slug → 显示名。未声明的回落到 slug；分类页自动生成在 `/categories/<slug>/` */
+  categories?: Record<string, string>;
+
+  /**
+   * 主题包名，或主题目录。`./` 开头与绝对路径按目录解析，其余按包名解析；
+   * 解析不到时静默回落到内置主题，写错路径的表现是「样式没变」。
+   */
+  theme?: string;
+
+  /** 构建输出目录（相对内容根）。每次构建前会被整个清空 */
+  outputDir?: string;
+
+  /** 模板（`macros/*.eta`）相关的行为开关 */
+  macros?: {
+    /**
+     * 未定义的模板：`'show'`（默认，保留 `{{原文}}`，一眼能看出漏了什么）/
+     * `'hide'`（删掉）/ 自定义函数。三种都不让构建失败，但都会在输出里提示。
+     */
+    undefined?: 'show' | 'hide' | UndefinedMacroHandler;
+  };
+
+  /**
+   * 内容页的路径前缀，只接受单段名字（字母、数字、`_`、`-`）或空串。
+   * `'wiki'` → `/wiki/a/`；`''` → `/a/`，此时会和 `assets/`、`categories/`
+   * 这些保留段抢位置，由 `wiki check` 点名。
+   */
+  docsDir?: string;
+
+  /**
+   * 链接形态。`'directory'` → `a/b/`；`'file'` → `a/b.html`，
+   * 并把站内链接改成相对路径（给 `file://` 与 CHM 用）。
+   */
+  urlStyle?: 'directory' | 'file';
+
+  /**
+   * 单文件产物：CSS / JS / 图片 / 搜索索引全部塞进页面，产物里只剩 `.html`。
+   * 代价是每页带一份样式，全站体积随页数线性增长。
+   */
+  inline?: boolean;
+
+  /** 旧地址 → 新地址。`from` / `to` 都写**最终 URL**（含语言前缀），工具不做推断 */
+  redirects?: Array<{ from: string; to: string; status?: number }>;
+
+  /**
+   * 重定向产物形态：`'js'` 生成 HTML 跳转页（没有服务端的托管用）、
+   * `'server'` 只输出 `_redirects`（Netlify / Cloudflare Pages 认的真 301）、`'both'` 都做。
+   */
+  redirectMode?: 'js' | 'server' | 'both';
+
+  /** 代码块高亮 */
+  highlight?: {
+    /** 关闭后代码块只保留转义后的纯文本，不含高亮标记 */
+    enabled?: boolean;
+    /** 额外加载的 highlight.js 语言名，如 `'ruby'`、`'go'`；内置语言不用写 */
+    languages?: string[];
+  };
+
+  /** 站内搜索。工具只生成索引，搜索框与结果列表在主题里 */
+  search?: {
+    /** `false` 时连索引都不产出 */
+    enabled?: boolean;
+    /** 每页索引里保留的正文摘要长度（字符）；`0` 表示只要标题 */
+    excerpt?: number;
+  };
+
+  /**
+   * 把当前页的元数据（`it.page`，去掉整篇原文）注入
+   * `<script type="application/json" id="lightwiki-page-data">`，供页面里的 JS 读取。
+   */
+  frontmatterInjection?: boolean;
+
+  /** 站点级 markdown-it 插件入口：`(md) => { md.use(plugin) }` */
+  markdown?: MarkdownSetup;
+}
+
+// 手写接口与 zod 推导的类型必须逐字一致，否则 type:check 失败。
+// `Equal` 用双泛型比较，能分辨 optional 与 required、多字段与少字段。
+type Equal<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
+const assertConfigInput: Equal<SiteConfigInput, z.input<typeof siteConfigSchema>> = true;
+void assertConfigInput;
 
 /** 站点级的 markdown-it 插件入口：拿到的就是 markdown-it 实例 */
 export type MarkdownSetup = (md: unknown) => void;
