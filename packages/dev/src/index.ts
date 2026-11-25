@@ -167,6 +167,10 @@ export function resolveDevRoute(
 
   for (const candidate of candidates) {
     if (candidate === '/') {
+      // 首页挂在根上时（`docsDir` 与 `urlPrefix` 都为空），这一页自己就是 `/`。
+      // 直接交给它，别再 302 —— 否则 location 还是 `/`，浏览器会无限重定向。
+      const home = state.byUrl.get(candidate);
+      if (home) return { kind: 'page', page: home };
       return { kind: 'redirect', location: indexUrlOf(config) };
     }
 
@@ -226,7 +230,7 @@ function safeJoin(rootDir: string, rest: string): string {
  * `wiki.config.ts` 不在这里：配置只在启动时读一次，改它需要重启 dev server。
  */
 function collectWatchTargets(config: LoadedConfig): { rebuild: string[]; reload: string[] } {
-  const rebuild = Object.values(config.content).map((dir) => resolve(config.root, dir));
+  const rebuild = [resolve(config.root, config.content)];
   rebuild.push(resolve(config.root, 'layouts'));
   rebuild.push(resolve(config.root, 'macros'));
   rebuild.push(config.themeDir);

@@ -229,7 +229,7 @@ async function run(args: string[]): Promise<number> {
     });
 
     line(`preview: ${server.url}`);
-    line(`  content: ${Object.entries(config.content).map(([lang, dir]) => `${lang}=${dir}`).join(' | ')}`);
+    line(`  content: ${config.content}`);
     line('  Edits to content and layouts reload automatically. Press Ctrl+C to stop.');
     if (supervised) {
       line('  Changes under packages/*/src restart the server; you can also POST /__lightwiki/restart.');
