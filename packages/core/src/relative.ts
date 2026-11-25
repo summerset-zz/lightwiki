@@ -2,9 +2,9 @@ import { posix } from 'node:path';
 import type { LoadedConfig } from './config.js';
 import { normalizeBasePath, urlToOutputPath } from './routes.js';
 
-/** 语言代码段（`/zh/...`） */
-function isLangSegment(segment: string, config: LoadedConfig): boolean {
-  return config.content[segment] !== undefined;
+/** 第一段是不是配置的 `urlPrefix`（`/zh/...` 里的 `zh`） */
+function isPrefixSegment(segment: string, config: LoadedConfig): boolean {
+  return config.urlPrefix !== '' && segment === config.urlPrefix;
 }
 
 /**
@@ -21,7 +21,7 @@ function isPageUrl(path: string, config: LoadedConfig, pageKeys?: Set<string>): 
 
   if (pageKeys) return pageKeys.has(`/${segs.join('/')}`);
 
-  const categoryAt = isLangSegment(segs[0] ?? '', config) ? 1 : 0;
+  const categoryAt = isPrefixSegment(segs[0] ?? '', config) ? 1 : 0;
   return segs[categoryAt] === 'categories';
 }
 

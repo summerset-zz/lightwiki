@@ -26,8 +26,8 @@ export const PAGE_DATA_ID = 'lightwiki-page-data';
  * `markdown` 是整篇原文（含 frontmatter），每页几 KB，而它就是页面本身 ——
  * 想给读者看源码由皮肤的「查看源码」负责，不该每页都塞进一份 JSON。
  */
-export function pageDataOf(page: PageInfoInput): Record<string, unknown> {
-  const { markdown: _markdown, ...rest } = pageInfoOf(page);
+export function pageDataOf(page: PageInfoInput, lang: string): Record<string, unknown> {
+  const { markdown: _markdown, ...rest } = pageInfoOf(page, lang);
   return rest;
 }
 

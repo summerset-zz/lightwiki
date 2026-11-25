@@ -51,7 +51,7 @@ scripts:
     module: true
 ```
 
-引外部库的完整例子（含 CDN 与本地各自的代价）见 [引用外部库](/docs/advanced/external-libs)。
+引外部库的完整例子（含 CDN 与本地各自的代价）见 [引用外部库](/advanced/external-libs)。
 
 ## module 与普通脚本 {#module}
 
@@ -95,7 +95,7 @@ scripts: [app.js]
 1. 主题的 `assets/theme/search.js`，站内搜索开着时才有
 2. 这一页 `scripts` 里声明的，按声明顺序
 
-皮肤不需要为脚本留占位，正常写出 `</body>` 就行。皮肤里没有这个标签时，脚本附在文件末尾。皮肤本身怎么写见 [皮肤](/docs/basics/skins)。
+皮肤不需要为脚本留占位，正常写出 `</body>` 就行。皮肤里没有这个标签时，脚本附在文件末尾。皮肤本身怎么写见 [皮肤](/basics/skins)。
 
 ## 主题自带的搜索脚本 {#search}
 
@@ -126,7 +126,7 @@ x zh/index -> scripts: nope.js
 
 站外地址不在这项检查里：CDN 上的东西我们看不见，域名写错也不会报，只会在浏览器控制台里失败。
 
-字段本身的位置与规则见 [frontmatter](/docs/basics/frontmatter)。
+字段本身的位置与规则见 [frontmatter](/basics/frontmatter)。
 
 ## 内联模式 {#inline}
 
@@ -138,4 +138,4 @@ module 脚本内联后仍然保留 `type="module"`，`import` / `export` 照常�
 
 > 体积会明显变大：每页都带一份脚本、一份样式、一份全站搜索索引。100 页的站，光索引就是每页几十 KB。单文件产物适合把一页单独发出去，不适合做站时默认开着。
 
-同一次构建里样式表也会一起内联。样式怎么编译见 [样式与 Less](/docs/basics/styles)，图片等资源的路径规则见 [静态资源](/docs/basics/assets)。
+同一次构建里样式表也会一起内联。样式怎么编译见 [样式与 Less](/basics/styles)，图片等资源的路径规则见 [静态资源](/basics/assets)。

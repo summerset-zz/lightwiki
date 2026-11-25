@@ -37,7 +37,7 @@ categories: [typography, reference]
 categories: typography, reference
 ```
 
-构建时会去掉首尾空格、去掉重复项。这个字段的其它细节见 [frontmatter](/docs/basics/frontmatter)。
+构建时会去掉首尾空格、去掉重复项。这个字段的其它细节见 [frontmatter](/basics/frontmatter)。
 
 ## 显示名放在配置里 {#config}
 
@@ -56,17 +56,16 @@ slug 会出现在两处：分类页的地址，以及 `wiki check` 的提示文�
 
 ## 分类页是自动生成的 {#generated}
 
-构建时，每种语言 × 每个实际被页面用到的分类，各生成一页。
+构建时，每个实际被页面用到的分类各生成一页。
 
 | 情况 | 地址 |
 |---|---|
-| 默认语言 | `/categories/typography/` |
-| 非默认语言 | `/en/categories/typography/` |
+| 默认 | `/categories/typography/` |
 | `urlStyle: 'file'` | `/categories/typography.html` |
 
 没被任何页面用到的分类不会生成页。所以在配置里先声明一堆分类，不会产生空页。
 
-分类页没有正文，只有标题和页面列表。它用主题的 `category` 皮肤，想改样子就覆盖 `layouts/category.eta`。皮肤的写法见 [皮肤](/docs/basics/skins)。
+分类页没有正文，只有标题和页面列表。它用主题的 `category` 皮肤，想改样子就覆盖 `layouts/category.eta`。皮肤的写法见 [皮肤](/basics/skins)。
 
 ## 没有分类总览页 {#catalog}
 
@@ -78,7 +77,7 @@ slug 会出现在两处：分类页的地址，以及 `wiki check` 的提示文�
 
 它列出所有分类，每行 `- [显示名](/categories/<slug>/)（N 篇）`，按配置里声明的顺序排，未声明的排在后面按 slug 排。
 
-N 只算**当前语言**的篇数，与分类页列出的范围一致；当前语言里没有页面的分类不列。
+N 是该分类的篇数，与分类页列出的范围一致；没有页面的分类不列。
 
 ## 列某个分类下的页面 {#list}
 
@@ -86,7 +85,7 @@ N 只算**当前语言**的篇数，与分类页列出的范围一致；当前�
 {{pages(category: typography)}}
 ```
 
-只列当前语言的页面，换语言不会串。参数写法与模板机制见 [模板](/docs/basics/templates)。
+只列这个分类下的页面。参数写法与模板机制见 [模板](/basics/templates)。
 
 ## 未声明的分类 {#undeclared}
 
@@ -129,4 +128,4 @@ sidebarCategory "typography" has no pages; the sidebar falls back to site naviga
 
 语言在 `it.lang`。分类页没有 `it.page`，因为它不对应某个内容文件；`it.nav`、`it.site`、`it.index` 与普通页面一致。
 
-皮肤怎么写，见 [皮肤](/docs/basics/skins)。
+皮肤怎么写，见 [皮肤](/basics/skins)。

@@ -43,14 +43,24 @@ const CONFIG_FILES = [
  *
  * 用动态 import 而不是读 JSON：配置里迟早要放函数（例如自定义 slug 规则），
  * 而 TS 配置在 tsx / Vite 下都能直接跑，不需要预编译。
+ *
+ * `options.file` 明确指定文件名（相对内容根）；多语言站用它给每门语言写一份配置，
+ * 各自跑一次构建。
  */
-export async function loadConfig(root: string): Promise<LoadedConfig> {
+export async function loadConfig(
+  root: string,
+  options: { file?: string } = {},
+): Promise<LoadedConfig> {
   const absRoot = resolve(root);
-  const configFile = CONFIG_FILES.map((name) => join(absRoot, name)).find((p) => existsSync(p));
+  const configFile = options.file
+    ? resolve(absRoot, options.file)
+    : CONFIG_FILES.map((name) => join(absRoot, name)).find((p) => existsSync(p));
 
-  if (!configFile) {
+  if (!configFile || !existsSync(configFile)) {
     throw new Error(
-      `no site config found in ${absRoot}. Create one of: ${CONFIG_FILES.join(' / ')}`,
+      options.file
+        ? `config file not found: ${configFile}`
+        : `no site config found in ${absRoot}. Create one of: ${CONFIG_FILES.join(' / ')}`,
     );
   }
 

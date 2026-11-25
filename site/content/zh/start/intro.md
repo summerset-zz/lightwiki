@@ -53,11 +53,11 @@ draft: false
 
 你的设备还应当安装`nodejs`，版本大于或等于`20`。
 
-如果你需要版本控制、多用户协作和[发布到github pages](/docs/advanced/deploy-pages)功能，你还应当安装`git`。
+如果你需要版本控制、多用户协作和[发布到github pages](/advanced/deploy-pages)功能，你还应当安装`git`。
 
-> 不知道怎么安装nodejs和git？没关系。我们准备了[纯新人用的指导](/docs/start/quickstart-ai)。
+> 不知道怎么安装nodejs和git？没关系。我们准备了[纯新人用的指导](/start/quickstart-ai)。
 > 
-> 如果你已是代码大佬，可以从[开发者指导](/docs/start/quickstart-dev)开始。
+> 如果你已是代码大佬，可以从[开发者指导](/start/quickstart-dev)开始。
 
 此外，轻维基的文档站点是用轻维基的默认皮肤生成的。在每一页的底部，你可以点击展开`查看源码`来对比我们是怎么写的。
 
@@ -68,6 +68,6 @@ draft: false
 
 ## 接下来读什么 {#next}
 
-- 不写代码、想让 AI 代劳 → [快速上手（纯新人）](/docs/start/quickstart-ai)
-- 已经是代码大佬 → [快速上手（开发者）](/docs/start/quickstart-dev)
-- 想先弄清文件放哪 → [目录结构](/docs/start/structure)
+- 不写代码、想让 AI 代劳 → [快速上手（纯新人）](/start/quickstart-ai)
+- 已经是代码大佬 → [快速上手（开发者）](/start/quickstart-dev)
+- 想先弄清文件放哪 → [目录结构](/start/structure)

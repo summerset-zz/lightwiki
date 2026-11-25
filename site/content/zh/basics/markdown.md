@@ -19,13 +19,13 @@ draft: false
 - 带显示文字：`[[start/structure|看目录]]`
 - 带锚点：`[[basics/frontmatter#fields]]`
 
-构建时它们全部被解析成真实链接，产物里看不到方括号。上面第一条解析出来的就是 [目录结构](/docs/start/structure)。
+构建时它们全部被解析成真实链接，产物里看不到方括号。上面第一条解析出来的就是 [目录结构](/start/structure)。
 
 解析顺序固定为先 slug、再标题。slug 来自文件名，最稳；标题来自 frontmatter，改标题就会断链。同一个写法如果正好是某页的 slug、又是另一页的标题，按 slug 那一页算。
 
 目标找不到时，页面上留一段不带链接的占位文字，鼠标停上去会提示没找到，`wiki check` 把它列成未解析的内链。
 
-本站自己的正文一般直接写 `[文字](/docs/start/structure)`，双链是给习惯 MediaWiki 的人留的写法。
+本站自己的正文一般直接写 `[文字](/start/structure)`，双链是给习惯 MediaWiki 的人留的写法。
 
 ## 红链 {#redlink}
 
@@ -33,9 +33,9 @@ draft: false
 
 判定依据是构建时已经知道的所有页面地址。不在地址表里的站内路径，只要不像资源（`/assets/` 下面、带 `.css` 这类扩展名），也不像分类页，就算红链。从别处搬来的内容留着原站路径，会一起被点名。
 
-页面链接一律以 `/` 开头，写默认语言视角的地址：`[结构](/docs/start/structure)`。非默认语言的语言前缀与 directory 模式的尾斜杠由构建补上，部署在子路径时 `basePath` 也会加上。
+页面链接一律以 `/` 开头：`[结构](/start/structure)`。directory 模式的尾斜杠由构建补上，部署在子路径时 `basePath` 也会加上。
 
-相对路径同样会被检查，但解析基准是**当前页所在的目录**，与浏览器一致，不是站点根，也不是 `content/` 目录。所以 `/docs/start/intro/` 里写 `./guide` 落到 `/docs/start/intro/guide`，写 `docs/guide` 落到 `/docs/start/intro/docs/guide`，两条几乎必然不存在。要跨页引用就写以 `/` 开头的地址。
+相对路径同样会被检查，但解析基准是**当前页所在的目录**，与浏览器一致，不是站点根，也不是 `content/` 目录。所以 `/start/intro/` 里写 `./guide` 落到 `/start/intro/guide`，写 `docs/guide` 落到 `/start/intro/docs/guide`，两条几乎必然不存在。要跨页引用就写以 `/` 开头的地址。
 
 几种不参与判定的写法：
 
@@ -62,7 +62,7 @@ draft: false
 
 本页每个二级标题都这么写。这一节写的是 `{#anchors}`，所以 [点这里](#anchors) 能跳回来。
 
-同一份内容的中英两版建议用同一个 id，这样 `#anchors` 在两种语言下都跳得到。
+id 取英文短词最省事：改中文标题时不用跟着改 `{#...}`，别人存下来的锚点也不会断。
 
 ## 行内 HTML {#html}
 
@@ -123,12 +123,12 @@ draft: false
 
 修订号写固定的版本号（`oldid`），不要写页面地址：上游一改，署名就指到另一版了。
 
-整篇都是改编的话，改用 frontmatter 的 `source*` 一组字段，见 [frontmatter](/docs/basics/frontmatter)。
+整篇都是改编的话，改用 frontmatter 的 `source*` 一组字段，见 [frontmatter](/basics/frontmatter)。
 
 ## 页面身份是文件名 {#next}
 
-一页的地址来自文件名，不是标题。`content/zh/basics/markdown.md` 就是 `/docs/basics/markdown/`，标题只出现在导航、搜索和双链里。改文件名等于换地址，外部链接和双链都会断。
+一页的地址来自文件名，不是标题。`content/zh/basics/markdown.md` 就是 `/basics/markdown/`，标题只出现在导航、搜索和双链里。改文件名等于换地址，外部链接和双链都会断。
 
-目录怎么摆、首页是哪一页，见 [目录结构](/docs/start/structure)。开头那段 YAML 写什么，见 [frontmatter](/docs/basics/frontmatter)。
+目录怎么摆、首页是哪一页，见 [目录结构](/start/structure)。开头那段 YAML 写什么，见 [frontmatter](/basics/frontmatter)。
 
-正文里想插入一段由站内数据算出来的列表或表格，那是另一套机制，见 [模板](/docs/basics/templates)。代码块怎么上色、支持哪些语言，见 [代码高亮](/docs/basics/code-highlight)。
+正文里想插入一段由站内数据算出来的列表或表格，那是另一套机制，见 [模板](/basics/templates)。代码块怎么上色、支持哪些语言，见 [代码高亮](/basics/code-highlight)。

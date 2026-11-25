@@ -70,8 +70,6 @@ layout: landing
 </html>
 ```
 
-> `/docs/` 那个目录页是**自动生成**的，不属于内容页，所以它不读 frontmatter 里的 `layout`；要改它就直接覆盖 `layouts/index.eta`。
-
 ## 语法 {#syntax}
 
 模板引擎是 Eta，就是带 JS 的 HTML：

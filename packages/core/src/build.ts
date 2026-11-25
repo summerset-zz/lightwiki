@@ -11,7 +11,7 @@ import { assetList, injectPageAssets, isExternalUrl, pageAssetUrl, resolvePageAs
 import { injectPageData, pageDataOf } from './page-data.js';
 import { createRenderer } from './render.js';
 import { relativeUrl, rewriteRelativeLinks } from './relative.js';
-import { categoryOutputPath, INDEX_SLUG, indexOutputPath, langPrefix, normalizeBasePath, pageUrl, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath, withBasePath } from './routes.js';
+import { categoryOutputPath, INDEX_SLUG, indexOutputPath, normalizeBasePath, pageUrl, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath, withBasePath } from './routes.js';
 import { buildSearchIndex, injectSearchIndex } from './search.js';
 import {
   createCategoryView,
@@ -69,7 +69,7 @@ export async function buildSite(
   for (const page of pages) {
     for (const item of page.unresolved) {
       warnings.push({
-        file: `${page.lang}/${page.slug}`,
+        file: page.slug,
         messages: [`${item.kind === 'macro' ? 'macro' : 'wikilink'} ${item.target}: ${item.message}`],
       });
     }
@@ -110,7 +110,7 @@ export async function buildSite(
       const hit = resolvePageAsset(config, ref);
       if (!hit) {
         warnings.push({
-          file: `${page.lang}/${page.slug}`,
+          file: page.slug,
           messages: [`${field}: file not found: ${ref} (resolved against ${config.assetsDir}/)`],
         });
         return null;
@@ -200,7 +200,7 @@ export async function buildSite(
     // 页面元数据（`frontmatterInjection`）：同样最后插，JSON 里没有待内联的地址。
     // 分类页 / 404 没有 frontmatter，它们的调用不带 `page`，自然跳过。
     if (options.page && config.frontmatterInjection) {
-      content = injectPageData(content, pageDataOf(options.page));
+      content = injectPageData(content, pageDataOf(options.page, config.lang));
     }
 
     const target = join(outputDir, relative);
@@ -228,23 +228,20 @@ export async function buildSite(
   // 首页（`/docs/` 或 docsDir 指定的位置）就是内容里的 `index.md`，走上面的普通页面循环。
   // 以前这里会额外生成一张目录页，现在那一页由作者提供 —— 想列全站就用 {{catalog}} / {{pages}}。
 
-  // 分类页：每种语言、每个实际被用到的分类各一页
-  for (const lang of Object.keys(config.content)) {
-    const used = new Set<string>();
-    for (const page of published) {
-      if (page.lang !== lang) continue;
-      for (const category of page.categories) used.add(category);
-    }
+  // 分类页：每个实际被用到的分类各一页
+  const usedCategories = new Set<string>();
+  for (const page of published) {
+    for (const category of page.categories) usedCategories.add(category);
+  }
 
-    for (const slug of [...used].sort()) {
-      const relative = categoryOutputPath(config, lang, slug);
-      const view = createCategoryView(config, pages, lang, slug, siteInfo) as unknown as Record<
-        string,
-        unknown
-      >;
-      const html = await renderer.renderLayout('category', view);
-      await emit(relative, html);
-    }
+  for (const slug of [...usedCategories].sort()) {
+    const relative = categoryOutputPath(config, slug);
+    const view = createCategoryView(config, pages, slug, siteInfo) as unknown as Record<
+      string,
+      unknown
+    >;
+    const html = await renderer.renderLayout('category', view);
+    await emit(relative, html);
   }
 
   // 静态托管的 404 约定：根目录的 404.html。file:// 下没有这个概念，但其他托管都会用它。
@@ -295,8 +292,8 @@ export async function buildSite(
 
   // 根目录跳转到默认语言首页，方便 file:// 双击直接看。
   // 若首页本身就在根上（`docsDir: ''`），产物已经是 index.html，不再多写一张跳转页。
-  const homeHref = pageUrl(config, config.defaultLanguage, INDEX_SLUG);
-  if (indexOutputPath(config, config.defaultLanguage) !== 'index.html') {
+  const homeHref = pageUrl(config, INDEX_SLUG);
+  if (indexOutputPath(config) !== 'index.html') {
     const href =
       config.urlStyle === 'file' ? relativeUrl(homeHref, 'index.html', config, pageKeys) : homeHref;
     const rootIndex = `<!doctype html><meta charset="utf-8"><title>${config.title}</title>` +

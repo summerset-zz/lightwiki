@@ -51,7 +51,7 @@ const env =
 const basePath = env.LIGHTWIKI_BASE_PATH ?? '/';
 ```
 
-所以本地预览是 `/`，线上自动变成 `/<仓库名>/`。仓库改名也不用动配置。字段本身见 [站点配置](/docs/advanced/config)。
+所以本地预览是 `/`，线上自动变成 `/<仓库名>/`。仓库改名也不用动配置。字段本身见 [站点配置](/advanced/config)。
 
 ## 工具版本写在哪 {#cli-version}
 
@@ -67,7 +67,7 @@ run: npx --yes @lightwiki/cli@0.3.0 build .
 
 ### 仓库里有 package.json 时 {#cli-version-local}
 
-把 CLI 装成本地依赖（见 [快速上手（会用命令行）](/docs/start/quickstart-dev#init-local)）之后，版本号出现在两处：`pages.yml` 里的 `@0.3.0`，和 `package.json` 的 `devDependencies`。workflow 里的 `npx` **不会**去读 `package.json`，所以两处都要改，否则就是「本地跑新版本、CI 还在用旧版本构建」。
+把 CLI 装成本地依赖（见 [快速上手（会用命令行）](/start/quickstart-dev#init-local)）之后，版本号出现在两处：`pages.yml` 里的 `@0.3.0`，和 `package.json` 的 `devDependencies`。workflow 里的 `npx` **不会**去读 `package.json`，所以两处都要改，否则就是「本地跑新版本、CI 还在用旧版本构建」。
 
 也可以让 CI 直接读 `package.json`，把版本收敛到一处：装完依赖再跑 script。
 
@@ -116,7 +116,7 @@ npx @lightwiki/cli build .
 
 `check` 有问题会用退出码告诉你，`build` 成功说明产物能出来。CI 里跑的是同一条构建命令，只是版本号写死。
 
-两个命令的用法见 [命令行](/docs/advanced/cli)。
+两个命令的用法见 [命令行](/advanced/cli)。
 
 ## 要改的地方 {#tweaks}
 
@@ -128,5 +128,5 @@ npx @lightwiki/cli build .
 
 ## 再往下 {#next}
 
-- [部署到自有服务器](/docs/advanced/deploy-server)
-- [打包成 CHM](/docs/advanced/deploy-chm)
+- [部署到自有服务器](/advanced/deploy-server)
+- [打包成 CHM](/advanced/deploy-chm)

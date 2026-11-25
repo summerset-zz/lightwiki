@@ -96,7 +96,7 @@ npx degit summerset-zz/lightwiki-starter my-wiki
 }
 ```
 
-> 使用`package.json`需要在升级版本时额外调整CI配置。参考[发布到 GitHub Pages](/docs/advanced/deploy-pages#cli-version)。
+> 使用`package.json`需要在升级版本时额外调整CI配置。参考[发布到 GitHub Pages](/advanced/deploy-pages#cli-version)。
 
 ## 两种方式对比 {#init-compare}
 
@@ -115,11 +115,11 @@ npx degit summerset-zz/lightwiki-starter my-wiki
 | ----------------------------- | ---------------------------------------------------------------------------------- |
 | `wiki.config.ts`              | 站点配置：站点名、地址、语言、分组                                                 |
 | `assets/agents.md`            | 给AI的、用于初始化项目的使用说明。安装完成后不必再使用。                           |
-| `content/zh/index.md`         | 首页，默认对应链接`/docs/`                                                         |
+| `content/zh/index.md`         | 首页，对应链接`/`                                                                 |
 | `AGENTS.md`                   | 给AI的使用说明（用于日常维护、开发等）                                             |
 | `README.md`                   | 给你的使用说明                                                                     |
 | `.gitignore`                  | git版本控制忽略列表                                                                |
-| `.github/workflows/pages.yml` | 自动构建脚本。请参考[发布到 GitHub Pages](/docs/advanced/deploy-pages#cli-version) |
+| `.github/workflows/pages.yml` | 自动构建脚本。请参考[发布到 GitHub Pages](/advanced/deploy-pages#cli-version) |
 | `package.json`                | 如果使用方式2，则会新增此文件                                                      |
 
 ### 三条命令 {#commands}
@@ -135,10 +135,10 @@ npx degit summerset-zz/lightwiki-starter my-wiki
 | 目录       | 放什么                                                          |
 | ---------- | --------------------------------------------------------------- |
 | `assets/`  | 静态资源：额外的图片、字体、样式表                              |
-| `layouts/` | [自定义皮肤](/docs/basics/skins)。默认使用的皮肤是主题自带的。  |
-| `macros/`  | [自定义模板](/docs/basics/templates)。`eta`文件名对应模板名称。 |
+| `layouts/` | [自定义皮肤](/basics/skins)。默认使用的皮肤是主题自带的。  |
+| `macros/`  | [自定义模板](/basics/templates)。`eta`文件名对应模板名称。 |
 
 
 ## 继续阅读 {#next}
 
-文件放在哪、子目录怎么变成地址、`404.md` 怎么写，都在[目录结构](/docs/start/structure)。
+文件放在哪、子目录怎么变成地址、`404.md` 怎么写，都在[目录结构](/start/structure)。

@@ -78,7 +78,7 @@ highlight: {
 },
 ```
 
-一个语言只要在 highlight.js 里有定义，写上就能用，不用额外装包。字段的默认值和位置见 [站点配置](/docs/advanced/config)。
+一个语言只要在 highlight.js 里有定义，写上就能用，不用额外装包。字段的默认值和位置见 [站点配置](/advanced/config)。
 
 > 写名字时先按真名找。配 `vue` 会用 highlight.js 官方的 Vue 定义，不是别名表里的 `xml`。真名没注册时才退回别名。
 
@@ -159,7 +159,7 @@ highlight: { enabled: false },
 }
 ```
 
-自己的样式表怎么挂到页面、跟主题谁盖谁，见 [样式与 Less](/docs/basics/styles)。
+自己的样式表怎么挂到页面、跟主题谁盖谁，见 [样式与 Less](/basics/styles)。
 
 ## 行内代码不上色 {#inline}
 
@@ -171,4 +171,4 @@ highlight: { enabled: false },
 
 `pre` 的背景、内边距、横向滚动都在主题样式表里，背景用 `--code-bg` 变量。想换底色覆盖这个变量即可。
 
-代码块也能挂 class 之类的东西，写法见 [Markdown 与扩展语法](/docs/basics/markdown)。
+代码块也能挂 class 之类的东西，写法见 [Markdown 与扩展语法](/basics/markdown)。

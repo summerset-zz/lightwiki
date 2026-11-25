@@ -52,12 +52,11 @@ npx @lightwiki/cli build  <目录> [-o 输出目录]    # 产出静态站点
 |---|---|
 | frontmatter | 字段类型与格式 |
 | section | 是否在配置允许的列表里 |
-| 标题重复 | 同一语言内重名会让双链不明确，算失败 |
+| 标题重复 | 重名会让双链不明确，算失败 |
 | 红链 | 站内链接指向不存在的页面 |
-| 孤页 | 没有任何正文链接指向它（每语言的入口页除外） |
+| 孤页 | 没有任何正文链接指向它（首页除外） |
 | 未定义宏 | 产物里会露出原文，算失败 |
 | 未解析内链 | 双链的 slug 与标题都没命中 |
-| 缺译 | 只提示，不算失败 |
 | 分类 | 未声明显示名、`sidebarCategory` 没有成员 |
 
 `--strict` 让红链与孤页也算失败，适合放进 CI。
@@ -95,7 +94,7 @@ GitHub Pages、Netlify、Cloudflare Pages、S3、OSS 都会在未命中时返回
 1. 产物里存在 `404.html`（构建会自动生成）；
 2. 页里的资源用**绝对路径**——因为这一页可能在任意深度被打开，相对路径会失效。
 
-它只有一份，不能按语言拆。唯一的例外是 `file://` 直接打开时没有 404 这个概念。
+它只有一份。唯一的例外是 `file://` 直接打开时没有 404 这个概念。
 
 ### 由内容驱动 {#not-found-content}
 
@@ -103,10 +102,10 @@ GitHub Pages、Netlify、Cloudflare Pages、S3、OSS 都会在未命中时返回
 
 它不会：
 
-- 在 `/docs/404/` 生成副本；
-- 出现在导航、孤页、缺译统计里。
+- 在 `/404/` 生成副本；
+- 出现在导航、孤页统计里。
 
-只有**默认语言**的那份参与产物，因为 `404.html` 只能有一个。没有这个文件时，主题的 `not-found` 布局兜底。
+内容目录里只能有一个 `404.md`，因为 `404.html` 只能有一个。没有这个文件时，主题的 `not-found` 布局兜底。
 
 ## 发布不归 CLI 管 {#publish}
 
@@ -121,12 +120,12 @@ GitHub Pages、Netlify、Cloudflare Pages、S3、OSS 都会在未命中时返回
 ```ts
 // wiki.config.ts
 redirects: [
-  { from: '/docs/old-macros', to: '/docs/macros' },
+  { from: '/old-macros', to: '/macros' },
 ],
 redirectMode: 'js',
 ```
 
-`from` 与 `to` 都写**最终 URL**（含语言前缀），工具不做推断。
+`from` 与 `to` 都写**最终 URL**，工具不做推断。
 
 两种输出：
 

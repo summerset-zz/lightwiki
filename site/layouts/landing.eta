@@ -27,8 +27,8 @@
             <p><strong>轻维基</strong>是一组使用传统技术生成静态站点的工具链。</p>
             <p>不需要前端框架知识、不需要构建工具知识，仅需了解markdown语法即可生成整个静态站点。</p>
             <div class="actions">
-              <a class="btn btn-primary" href="<%= it.site.base %>/docs/start/quickstart-ai">纯新人从这里开始</a>
-              <a class="btn" href="<%= it.site.base %>/docs/start/quickstart-dev">开发者从这里开始</a>
+              <a class="btn btn-primary" href="<%= it.site.base %>/start/quickstart-ai">纯新人从这里开始</a>
+              <a class="btn" href="<%= it.site.base %>/start/quickstart-dev">开发者从这里开始</a>
             </div>
 
           </div>
@@ -49,22 +49,22 @@ title: 你好，世界
 
 - 可以写列表
 - 也可以只是写字
-- 或者[加个指向文档的链接](/docs/basics/markdown)
+- 或者[加个指向文档的链接](/basics/markdown)
 - 想用[[basics/markdown|mediawiki语法]]也可以
 
 或者：![我是caption](/assets/md-favicon.png) 加张图片
 </code></pre>
               </div>
               <div>
-                <p class="pair-label">mysite.com/docs/hello/</p>
+                <p class="pair-label">mysite.com/hello/</p>
                 <div class="result">
                   <strong>你好，世界</strong>
                   <p style="margin: 0.6rem 0 0">这是我的第一页。</p>
                   <ul style="margin: 0.6rem 0 0; padding-left: 1.2rem">
                     <li>可以写列表</li>
                     <li>也可以只是写字</li>
-                    <li>或者<a href="<%= it.site.base %>/docs/basics/markdown">加个指向文档的链接</a></li>
-                    <li>想用<a href="<%= it.site.base %>/docs/basics/markdown">mediawiki语法</a>也可以</li>
+                    <li>或者<a href="<%= it.site.base %>/basics/markdown">加个指向文档的链接</a></li>
+                    <li>想用<a href="<%= it.site.base %>/basics/markdown">mediawiki语法</a>也可以</li>
                   </ul>
                   <p>或者：
                     <img src="<%= it.site.base %>/assets/md-favicon.png" alt="我是caption" width="32" height="32"
@@ -105,7 +105,7 @@ title: 你好，世界
 - {{chat(客服, 恭喜您抽中了百元大奖。, kind: whisper)}}</code></pre>
               </div>
               <div>
-                <p class="pair-label">输出结果: mysite.com/docs/hello/</p>
+                <p class="pair-label">输出结果: mysite.com/hello/</p>
                 <div class="result">
                   <ul style="margin: 0; padding-left: 1.2rem">
                     <li><span class="text-say" style="color: #cecece"><b>安度因·乌瑞恩</b>说： 打得不错。</span></li>
@@ -155,7 +155,7 @@ scripts: # 加载额外的脚本
 &lt;/html&gt;</code></pre>
               </div>
               <div>
-                <p class="pair-label">输出 HTML: /docs/about/</p>
+                <p class="pair-label">输出 HTML: /about/</p>
                 <pre lang="html"><code>&lt;!doctype html&gt;
 &lt;html lang="zh"&gt;
 &lt;head&gt;

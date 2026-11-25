@@ -13,7 +13,7 @@ npx @lightwiki/cli build .  # 产出到 ./dist
 
 ```bash
 mkdir my-wiki && cd my-wiki
-echo "export default { title: '我的知识库', siteUrl: 'https://example.com', content: { zh: 'content/zh' } }" > wiki.config.ts
+echo "export default { title: '我的知识库', siteUrl: 'https://example.com', content: 'content/zh' }" > wiki.config.ts
 npx @lightwiki/cli dev .
 ```
 

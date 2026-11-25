@@ -56,7 +56,7 @@ styles: [site.css]
 styles: site.css
 ```
 
-写 `.css` 或 `.less` 都认，构建会自己找到对应的源文件。字段本身的位置与规则见 [frontmatter](/docs/basics/frontmatter)。
+写 `.css` 或 `.less` 都认，构建会自己找到对应的源文件。字段本身的位置与规则见 [frontmatter](/basics/frontmatter)。
 
 ## 注入顺序 {#order}
 
@@ -70,7 +70,7 @@ styles: site.css
 
 想微调主题观感，直接写同名选择器覆盖就够了，不需要 `!important`。`!important` 一旦加上，后面想再改就得继续加。
 
-皮肤要正常写出 `</head>`。缺这个标签时样式表会被塞到文件最前面，跑到 `<!doctype html>` 之前，浏览器会因此进入怪异模式。皮肤的写法见 [皮肤](/docs/basics/skins)。
+皮肤要正常写出 `</head>`。缺这个标签时样式表会被塞到文件最前面，跑到 `<!doctype html>` 之前，浏览器会因此进入怪异模式。皮肤的写法见 [皮肤](/basics/skins)。
 
 ## 主题自带的样式 {#theme-extra}
 
@@ -85,7 +85,7 @@ styles: site.css
 
 要改它们，在自己的样式表里写同名选择器，注入顺序保证你排在后面。
 
-模板本身怎么写见 [模板](/docs/basics/templates)。
+模板本身怎么写见 [模板](/basics/templates)。
 
 ## 出错的表现 {#failures}
 
@@ -111,4 +111,4 @@ x zh/index -> styles: nope.css
 
 > 体积会明显变大：每页都带一份完整样式，站内搜索的索引也跟着内联，总量按页数成倍放大。单文件产物适合把一页单独发出去，不适合做站时默认开着。
 
-脚本的挂法见 [JavaScript](/docs/basics/javascript)，图片等资源的路径规则见 [静态资源](/docs/basics/assets)。
+脚本的挂法见 [JavaScript](/basics/javascript)，图片等资源的路径规则见 [静态资源](/basics/assets)。

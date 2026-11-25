@@ -24,10 +24,10 @@ export interface SectionIssue {
   section: string;
 }
 
-export interface MissingTranslation {
-  slug: string;
-  present: string[];
-  missing: string[];
+/** 页面 slug 与产物里的保留段同名（`assets/`、`categories/`） */
+export interface ReservedIssue {
+  file: string;
+  segment: string;
 }
 
 export interface UnresolvedIssue {
@@ -35,17 +35,6 @@ export interface UnresolvedIssue {
   kind: 'wikilink' | 'macro';
   target: string;
   message: string;
-}
-
-/** 语言 → 页数。口径与 `pageCount` 一致：含草稿。 */
-function countByLanguage(
-  config: LoadedConfig,
-  pages: Array<{ lang: string }>,
-): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const lang of Object.keys(config.content)) counts[lang] = 0;
-  for (const page of pages) counts[page.lang] = (counts[page.lang] ?? 0) + 1;
-  return counts;
 }
 
 export interface CategoryIssue {
@@ -56,18 +45,13 @@ export interface CategoryIssue {
 export interface CheckResult {
   ok: boolean;
   pageCount: number;
-  /** 语言 → 页数（含草稿，与 pageCount 同口径） */
-  pageCounts: Record<string, number>;
   problems: ContentProblem[];
   warnings: ContentProblem[];
   report: LinkReport;
   sectionIssues: SectionIssue[];
-  /**
-   * 只写一种语言是允许的（页面会显示「暂无此语言」），
-   * 所以这里只是提示，不算失败。
-   */
-  missingTranslations: MissingTranslation[];
-  /** 同一语言内标题撞车：内链 `[[标题]]` 会变得不明确，算错误 */
+  /** slug 撞上了 `assets/` / `categories/` 这类保留段 */
+  reservedIssues: ReservedIssue[];
+  /** 标题撞车：内链 `[[标题]]` 会变得不明确，算错误 */
   titleConflicts: TitleConflict[];
   /** 未解析的内链与未定义的宏 */
   unresolved: UnresolvedIssue[];
@@ -77,39 +61,30 @@ export interface CheckResult {
   layoutIssues: LayoutIssue[];
   /** frontmatter 的 styles / scripts 找不到文件（构建时只警告，但仍然是写错了） */
   assetIssues: AssetIssue[];
-  /** 缺首页的语言：`/docs/`（或 docsDir 指定的位置）会直接 404 */
-  missingHomes: string[];
+  /** 缺首页：`index.md` 不在内容目录里，站点的入口页会直接 404 */
+  missingHome: boolean;
 }
 
 export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
   const { pages, problems, warnings, conflicts } = await loadContent(config);
   const report = buildLinkReport(config, pages);
 
+  // `docsDir` 为空时内容页直接挂在根下，`assets.md` / `categories.md` 会和产物里的
+  // 保留段抢同一个地址（`/assets/` 是资源目录，`/categories/` 是分类页）。
+  const reserved = new Set(['assets', 'categories']);
+  const reservedIssues: ReservedIssue[] = [];
+  for (const page of pages) {
+    const segment = page.slug.split('/')[0] ?? '';
+    if (reserved.has(segment)) reservedIssues.push({ file: page.slug, segment });
+  }
+
   const sectionIssues: SectionIssue[] = [];
   if (config.sections.length > 0) {
     for (const page of pages) {
       const section = page.data.section;
       if (section && !config.sections.includes(section)) {
-        sectionIssues.push({ file: `${page.lang}/${page.slug}`, section });
+        sectionIssues.push({ file: page.slug, section });
       }
-    }
-  }
-
-  const langsBySlug = new Map<string, Set<string>>();
-  for (const page of pages) {
-    const set = langsBySlug.get(page.slug) ?? new Set<string>();
-    set.add(page.lang);
-    langsBySlug.set(page.slug, set);
-  }
-
-  const allLangs = Object.keys(config.content);
-  const missingTranslations: MissingTranslation[] = [];
-  for (const [slug, present] of [...langsBySlug].sort(([a], [b]) => a.localeCompare(b))) {
-    // 404 页只有默认语言一份（产物也只能有一个 404.html），不参与缺译提示
-    if (slug === '404') continue;
-    const missing = allLangs.filter((lang) => !present.has(lang));
-    if (missing.length > 0) {
-      missingTranslations.push({ slug, present: [...present].sort(), missing });
     }
   }
 
@@ -119,7 +94,7 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     for (const item of page.unresolved) {
       if (item.undefinedMacro) undefinedMacros += 1;
       unresolved.push({
-        file: `${page.lang}/${page.slug}`,
+        file: page.slug,
         kind: item.kind,
         target: item.target,
         message: item.message,
@@ -132,7 +107,7 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     for (const category of page.categories) {
       if (!(category in config.categories)) {
         categoryIssues.push({
-          file: `${page.lang}/${page.slug}`,
+          file: page.slug,
           message: `category ${category} is not declared in config.categories; the slug will be used as the label`,
         });
       }
@@ -140,12 +115,10 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
 
     const sidebar = page.data.sidebarCategory;
     if (sidebar) {
-      const hasMember = pages.some(
-        (other) => other.lang === page.lang && other.categories.includes(sidebar),
-      );
+      const hasMember = pages.some((other) => other.categories.includes(sidebar));
       if (!hasMember) {
         categoryIssues.push({
-          file: `${page.lang}/${page.slug}`,
+          file: page.slug,
           message: `sidebarCategory "${sidebar}" has no pages; the sidebar falls back to site navigation`,
         });
       }
@@ -170,14 +143,14 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     const layout = page.data.layout;
     if (!layout) continue;
     if (!layoutCandidates(config, layout).some(existsSync)) {
-      layoutIssues.push({ file: `${page.lang}/${page.slug}`, layout });
+      layoutIssues.push({ file: page.slug, layout });
     }
   }
 
   // styles / scripts：产物里会少一个引用，页面还能看，但那就是写错了
   const assetIssues: AssetIssue[] = [];
   for (const page of pages) {
-    const file = `${page.lang}/${page.slug}`;
+    const file = page.slug;
     for (const reference of assetList(page.data.styles)) {
       // 站外地址不查本地文件（CDN 上的东西我们看不见）
       if (isExternalUrl(reference)) continue;
@@ -191,32 +164,30 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     }
   }
 
-  // 每种语言都得有 index.md：它是 `/docs/`（或 docsDir 指定的位置）唯一的来源
-  const missingHomes = Object.keys(config.content).filter(
-    (lang) => !pages.some((page) => page.lang === lang && page.slug === INDEX_SLUG),
-  );
+  // 内容目录里必须有 index.md：它是首页唯一的来源
+  const missingHome = !pages.some((page) => page.slug === INDEX_SLUG);
 
   return {
     ok:
       problems.length === 0 &&
       sectionIssues.length === 0 &&
+      reservedIssues.length === 0 &&
       conflicts.length === 0 &&
       macroErrors === 0 &&
       layoutIssues.length === 0 &&
       assetIssues.length === 0 &&
-      missingHomes.length === 0,
+      !missingHome,
     pageCount: pages.length,
-    pageCounts: countByLanguage(config, pages),
     problems,
     warnings,
     report,
     sectionIssues,
-    missingTranslations,
+    reservedIssues,
     titleConflicts: conflicts,
     unresolved,
     categoryIssues,
     layoutIssues,
     assetIssues,
-    missingHomes,
+    missingHome,
   };
 }

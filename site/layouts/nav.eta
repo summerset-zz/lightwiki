@@ -14,25 +14,25 @@ const menus = [
   {
     label: '快速上手',
     items: [
-      { label: '纯新人', href: '/docs/start/quickstart-ai' },
-      { label: '开发者', href: '/docs/start/quickstart-dev' },
+      { label: '纯新人', href: '/start/quickstart-ai' },
+      { label: '开发者', href: '/start/quickstart-dev' },
     ],
   },
   {
     label: '语法',
     items: [
-      { label: 'Markdown 与扩展语法', href: '/docs/basics/markdown' },
-      { label: 'frontmatter', href: '/docs/basics/frontmatter' },
-      { label: '模板', href: '/docs/basics/templates' },
-      { label: '皮肤', href: '/docs/basics/skins' },
+      { label: 'Markdown 与扩展语法', href: '/basics/markdown' },
+      { label: 'frontmatter', href: '/basics/frontmatter' },
+      { label: '模板', href: '/basics/templates' },
+      { label: '皮肤', href: '/basics/skins' },
     ],
   },
   {
     label: '配置与部署',
     items: [
-      { label: '站点配置', href: '/docs/advanced/config' },
-      { label: '命令行', href: '/docs/advanced/cli' },
-      { label: '发布到 GitHub Pages', href: '/docs/advanced/deploy-pages' },
+      { label: '站点配置', href: '/advanced/config' },
+      { label: '命令行', href: '/advanced/cli' },
+      { label: '发布到 GitHub Pages', href: '/advanced/deploy-pages' },
     ],
   },
 ];

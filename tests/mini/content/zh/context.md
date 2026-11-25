@@ -39,11 +39,11 @@ categories: [syntax]
 
 | 字段 | 说明 |
 |---|---|
-| `title` `siteUrl` `base` `languages` `defaultLanguage` | 站点信息 |
+| `title` `siteUrl` `base` `lang` | 站点信息 |
 | `urlStyle` | `'directory'` 或 `'file'`，决定地址与产物路径的形态；`file` 下站内链接还会被写成相对路径 |
 | `sections` `categories` `categoryList` | 分组与分类 |
 | `sectionLabels` | section slug → 显示名，如 `{ syntax: '语法' }`；没声明的 section 直接用 slug 当显示名。侧栏与目录页的分组标题按它渲染 |
-| `pageCount` `pageCounts` | 页数：总数与分语言 |
+| `pageCount` | 页数 |
 | `pages` | 全部页面摘要，可以在模板里 filter 出想要的部分 |
 | `search` | 站内搜索：`{ url }` 或 `null`。`url` 为 `null` 表示索引已内联进页面；整个对象为 `null` 表示搜索被关掉了 |
 | `generatedAt` | 构建时间 |

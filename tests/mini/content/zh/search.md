@@ -70,4 +70,4 @@ search: { enabled: false },
 
 `<%= %>` 会转义，所以原文里就算出现脚本标签也不会破坏页面。
 
-它和 `it.page.source` 不是一回事——那个是「改编来源」，见 [行内指令](/docs/directives)。
+它和 `it.page.source` 不是一回事——那个是「改编来源」，见 [行内指令](/directives)。

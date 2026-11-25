@@ -7,9 +7,9 @@ export function normalizeBasePath(basePath: string): string {
   return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
 }
 
-/** 默认语言不带前缀，其余语言是 `/<lang>` */
-export function langPrefix(config: LoadedConfig, lang: string): string {
-  return lang === config.defaultLanguage ? '' : `/${lang}`;
+/** URL 前缀段（已含前导斜杠）：`/zh`，没配就是空串 */
+export function prefixPath(config: LoadedConfig): string {
+  return config.urlPrefix ? `/${config.urlPrefix}` : '';
 }
 
 /**
@@ -30,9 +30,9 @@ export function pageBase(config: LoadedConfig): string {
 export const INDEX_SLUG = 'index';
 
 /** 页面在站点里的 URL（不含站点域名） */
-export function pageUrl(config: LoadedConfig, lang: string, slug: string): string {
+export function pageUrl(config: LoadedConfig, slug: string): string {
   const base = normalizeBasePath(config.basePath);
-  const dir = `${langPrefix(config, lang)}${pageBase(config)}`;
+  const dir = `${prefixPath(config)}${pageBase(config)}`;
 
   if (slug === INDEX_SLUG) {
     // 根上的首页：directory 模式是 `/`，file 模式只能是 `/index.html`
@@ -44,10 +44,10 @@ export function pageUrl(config: LoadedConfig, lang: string, slug: string): strin
 }
 
 /** 输出文件相对 outputDir 的路径 */
-export function outputPathFor(config: LoadedConfig, lang: string, slug: string): string {
-  // `docsDir: ''` 时这里会是空串，拼路径不能直接 `${dir}/...`，否则得到前导斜杠，
+export function outputPathFor(config: LoadedConfig, slug: string): string {
+  // `docsDir: ''` 与无 `urlPrefix` 时这里会是空串，拼路径不能直接 `${dir}/...`，否则得到前导斜杠，
   // 后续按相对路径算链接就会算飞（file 模式下会变成 `git repo/xxx/assets/...` 这种）
-  const dir = `${langPrefix(config, lang)}${pageBase(config)}`.replace(/^\//, '');
+  const dir = `${prefixPath(config)}${pageBase(config)}`.replace(/^\//, '');
   const at = dir ? `${dir}/` : '';
 
   if (slug === INDEX_SLUG) {
@@ -59,15 +59,15 @@ export function outputPathFor(config: LoadedConfig, lang: string, slug: string):
 }
 
 /** 分类页 URL */
-export function categoryUrl(config: LoadedConfig, lang: string, slug: string): string {
+export function categoryUrl(config: LoadedConfig, slug: string): string {
   const base = normalizeBasePath(config.basePath);
   const suffix = config.urlStyle === 'file' ? '.html' : '/';
-  return `${base}${langPrefix(config, lang)}/categories/${slug}${suffix}`;
+  return `${base}${prefixPath(config)}/categories/${slug}${suffix}`;
 }
 
 /** 分类页输出路径（相对 outputDir） */
-export function categoryOutputPath(config: LoadedConfig, lang: string, slug: string): string {
-  const dir = `${langPrefix(config, lang)}/categories`.replace(/^\//, '');
+export function categoryOutputPath(config: LoadedConfig, slug: string): string {
+  const dir = `${prefixPath(config)}/categories`.replace(/^\//, '');
   return config.urlStyle === 'file' ? `${dir}/${slug}.html` : `${dir}/${slug}/index.html`;
 }
 
@@ -77,8 +77,8 @@ export function categoryOutputPath(config: LoadedConfig, lang: string, slug: str
  * 单独留一个函数是因为重定向与 file 模式的链接都拿它当中枢：
  * 以前这里是「构建器自动生成的目录页」，现在就是作者写的 `index.md`。
  */
-export function indexOutputPath(config: LoadedConfig, lang: string): string {
-  return outputPathFor(config, lang, INDEX_SLUG);
+export function indexOutputPath(config: LoadedConfig): string {
+  return outputPathFor(config, INDEX_SLUG);
 }
 
 /** 把站内 URL 映射成产物里的相对文件路径（相对 outputDir） */
@@ -113,7 +113,6 @@ function splitHash(href: string): { path: string; hash: string } {
  */
 export function localizeHref(
   href: string,
-  lang: string,
   config: LoadedConfig,
   isPageSlug?: (slug: string) => boolean,
 ): string {
@@ -129,9 +128,14 @@ export function localizeHref(
   }
   if (!next.startsWith('/')) next = `/${next}`;
 
-  // 只有这两棵路径是按语言分叉的；其他站内路径（资源、工具页）与语言无关。
-  // 前缀可配（`docsDir`），所以不能再写死 `/docs`；前缀为空时页面就挂在语言根下，
-  // 那时只能问「这一页存不存在」—— 由调用方传入的 isPageSlug 回答。
+  // 再剥掉可能已经写了的 urlPrefix：作者多写一次也不会变成 `/zh/zh/a`
+  const prefix = prefixPath(config);
+  if (prefix && (next === prefix || next.startsWith(`${prefix}/`))) {
+    next = next.slice(prefix.length) || '/';
+  }
+
+  // 页面挂在 `[urlPrefix][docsDir]` 下；`docsDir` 为空时只能问「这一页存不存在」——
+  // 由调用方传入的 isPageSlug 回答。
   const pagesBase = pageBase(config);
   const firstSeg = next.split('/').filter(Boolean)[0] ?? '';
 
@@ -143,7 +147,7 @@ export function localizeHref(
   const localized = isPage || isCategory;
 
   if (localized) {
-    next = `${langPrefix(config, lang)}${next}`;
+    next = `${prefix}${next}`;
   }
 
   if (config.urlStyle === 'file') {

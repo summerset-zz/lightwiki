@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { buildSite, checkSite, loadConfig, type BuildResult } from '@lightwiki/core';
+import { buildSite, checkSite, loadConfig, pageUrl, type BuildResult } from '@lightwiki/core';
 
 const USAGE = `lightwiki CLI
 
@@ -16,6 +16,7 @@ Options:
   -p, --port   dev server port (default: 5173)
   --host       dev server host (default: 127.0.0.1)
   -o, --out    output directory (default: outputDir from config)
+  -c, --config site config file name inside [dir] (default: wiki.config.*)
     --inline     inline CSS/JS/images/search index so the output is only .html
   --strict     treat red links and orphan pages as failures
   --name       site name for init (default: directory name)
@@ -120,6 +121,7 @@ async function run(args: string[]): Promise<number> {
     allowPositionals: true,
     options: {
       out: { type: 'string', short: 'o' },
+      config: { type: 'string', short: 'c' },
       port: { type: 'string', short: 'p' },
       host: { type: 'string' },
       inline: { type: 'boolean', default: false },
@@ -152,7 +154,7 @@ async function run(args: string[]): Promise<number> {
     return 0;
   }
 
-  const config = await loadConfig(root);
+  const config = await loadConfig(root, { file: values.config });
 
   if (command === 'dev') {
     const { CHILD_ENV, sourceRoots, supervise } = await import('./supervise.js');
@@ -203,11 +205,7 @@ async function run(args: string[]): Promise<number> {
     const result = await checkSite(config);
 
     line(`checking ${root}`);
-    line(
-      `  pages: ${result.pageCount} (${Object.keys(config.content)
-        .map((lang) => `${lang} ${result.pageCounts[lang] ?? 0}`)
-        .join(' / ')})`,
-    );
+    line(`  pages: ${result.pageCount}`);
 
     if (result.problems.length > 0) {
       section(`${result.problems.length} frontmatter error(s)`);
@@ -234,6 +232,14 @@ async function run(args: string[]): Promise<number> {
       }
     }
 
+    if (result.reservedIssues.length > 0) {
+      section(`${result.reservedIssues.length} page(s) shadow a reserved output path`);
+      line('  assets/ 与 categories/ 是产物里的保留段，同名的页面会排到它们下面');
+      for (const issue of result.reservedIssues) {
+        line(`  x ${issue.file} -> /${issue.segment}/`);
+      }
+    }
+
     if (result.layoutIssues.length > 0) {
       section(`${result.layoutIssues.length} layout file(s) missing`);
       line('  frontmatter says layout, but layouts/<name>.eta is in neither the content repo nor the theme');
@@ -250,12 +256,9 @@ async function run(args: string[]): Promise<number> {
       }
     }
 
-    if (result.missingHomes.length > 0) {
-      section(`${result.missingHomes.length} language(s) without a home page`);
-      line('  every language needs content/<lang>/index.md -- that page IS /docs/');
-      for (const lang of result.missingHomes) {
-        line(`  x ${lang}: no index.md, so this language has no home page (404)`);
-      }
+    if (result.missingHome) {
+      section('no home page');
+      line(`  ${config.content}/index.md is missing -- that page IS the site entry (${pageUrl(config, 'index')})`);
     }
 
     if (result.categoryIssues.length > 0) {
@@ -271,7 +274,7 @@ async function run(args: string[]): Promise<number> {
     if (result.titleConflicts.length > 0) {
       section(`${result.titleConflicts.length} duplicate title(s) ([[]] links become ambiguous)`);
       for (const conflict of result.titleConflicts) {
-        line(`  x [${conflict.lang}] "${conflict.title}" -> ${conflict.pages.join(', ')}`);
+        line(`  x "${conflict.title}" -> ${conflict.pages.join(', ')}`);
       }
     }
 
@@ -309,16 +312,6 @@ async function run(args: string[]): Promise<number> {
       for (const orphan of result.report.orphans.slice(0, 30)) line(`  ${orphan}`);
       if (result.report.orphans.length > 30) {
         line(`  ... ${result.report.orphans.length - 30} more`);
-      }
-    }
-
-    if (result.missingTranslations.length > 0) {
-      section(`${result.missingTranslations.length} missing translation(s) (informational, not a failure)`);
-      for (const item of result.missingTranslations.slice(0, 20)) {
-        line(`  ${item.slug} -> missing ${item.missing.join(', ')}`);
-      }
-      if (result.missingTranslations.length > 20) {
-        line(`  ... ${result.missingTranslations.length - 20} more`);
       }
     }
 

@@ -76,12 +76,13 @@ export function pageLinkKey(href: string, config: LoadedConfig, from?: string): 
 
   if (path === '/assets' || path.startsWith('/assets/')) return null;
 
-  // 分类页：`/categories/x/` 或 `/<语言>/categories/x/`。
-  // **只有已配置的语言代码才算那一段** —— 用「任意一段」会误伤 `/docs/categories/`
-  // 这种内容页（`docs` 是内容前缀，不是语言）。
+  // 分类页：`/categories/x/` 或 `/<urlPrefix>/categories/x/`。
+  // **只有已配置的 urlPrefix 才算那一段** —— 用「任意一段」会误伤 `/docs/categories/`
+  // 这种内容页（`docs` 是内容前缀，不是前缀段）。
   const segs = path.split('/').filter(Boolean);
-  const langAt = segs[0] !== undefined && config.content[segs[0]] !== undefined ? 1 : 0;
-  if (segs[langAt] === 'categories') return null;
+  const prefix = config.urlPrefix;
+  const at = prefix !== '' && segs[0] === prefix ? 1 : 0;
+  if (segs[at] === 'categories') return null;
 
   // 带扩展名的当资源（`/style.css`、`/search-index.json`）。
   // 例外是 file 模式的 `.html`：产物在那里就是 `docs/a.html`，它是页面不是资源。
@@ -110,7 +111,7 @@ export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport
   // 分类页是构建时生成的，也要算作已知目标，否则指向它们的链接会被误判为红链
   for (const page of published) {
     for (const category of page.categories) {
-      known.add(normUrl(categoryUrl(config, page.lang, category), config));
+      known.add(normUrl(categoryUrl(config, category), config));
     }
   }
 
@@ -130,7 +131,7 @@ export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport
     }
   }
 
-  // 入口页：每种语言的首页（slug 为 index），它天然会链向全站，不计入孤页判定。
+  // 入口页：首页（slug 为 index），它天然会链向全站，不计入孤页判定。
   // 没写首页时退回「排序第一的那页」—— 它靠导航到达，没人用正文链接指向它也正常。
   const entryKeys = new Set(entryPageKeys(config, published));
 
@@ -140,7 +141,7 @@ export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport
       if (entryKeys.has(key)) return false;
       return (inbound.get(key) ?? 0) === 0;
     })
-    .map((p) => `${p.lang}/${p.slug}`)
+    .map((p) => p.slug)
     .sort();
 
   const inboundCount: Record<string, number> = {};
@@ -149,30 +150,22 @@ export function buildLinkReport(config: LoadedConfig, pages: Page[]): LinkReport
   return { redLinks, orphans, inboundCount };
 }
 
-/** 每种语言的入口页：优先首页（slug 为 index），否则按 section → order → slug 排序取第一页 */
+/** 入口页：优先首页（slug 为 index），否则按 section → order → slug 排序取第一页 */
 function entryPageKeys(config: LoadedConfig, pages: Page[]): string[] {
-  const keys: string[] = [];
-  for (const lang of Object.keys(config.content)) {
-    const list = pages.filter((p) => p.lang === lang);
-    const home = list.find((p) => p.slug === INDEX_SLUG);
-    if (home) {
-      keys.push(normUrl(home.url, config));
-      continue;
-    }
+  const home = pages.find((p) => p.slug === INDEX_SLUG);
+  if (home) return [normUrl(home.url, config)];
 
-    const sorted = [...list].sort((a, b) => {
-        const sa = config.sections.indexOf(a.data.section ?? '');
-        const sb = config.sections.indexOf(b.data.section ?? '');
-        const na = sa === -1 ? Number.MAX_SAFE_INTEGER : sa;
-        const nb = sb === -1 ? Number.MAX_SAFE_INTEGER : sb;
-        if (na !== nb) return na - nb;
-        const oa = a.data.order ?? Number.MAX_SAFE_INTEGER;
-        const ob = b.data.order ?? Number.MAX_SAFE_INTEGER;
-        if (oa !== ob) return oa - ob;
-        return a.slug.localeCompare(b.slug, 'zh');
-      });
-    const first = sorted[0];
-    if (first) keys.push(normUrl(first.url, config));
-  }
-  return keys;
+  const sorted = [...pages].sort((a, b) => {
+    const sa = config.sections.indexOf(a.data.section ?? '');
+    const sb = config.sections.indexOf(b.data.section ?? '');
+    const na = sa === -1 ? Number.MAX_SAFE_INTEGER : sa;
+    const nb = sb === -1 ? Number.MAX_SAFE_INTEGER : sb;
+    if (na !== nb) return na - nb;
+    const oa = a.data.order ?? Number.MAX_SAFE_INTEGER;
+    const ob = b.data.order ?? Number.MAX_SAFE_INTEGER;
+    if (oa !== ob) return oa - ob;
+    return a.slug.localeCompare(b.slug, 'zh');
+  });
+  const first = sorted[0];
+  return first ? [normUrl(first.url, config)] : [];
 }

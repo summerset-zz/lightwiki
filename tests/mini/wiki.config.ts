@@ -21,17 +21,13 @@ const config: SiteConfigInput = {
   title: '轻维基 · 语法手册',
   siteUrl,
   basePath,
-  defaultLanguage: 'zh',
-  content: {
-    zh: 'content/zh',
-    en: 'content/en',
-  },
+  content: 'content/zh',
   sections: ['syntax', 'reference'],
   sectionLabels: {
     syntax: '语法',
     reference: '参考',
   },
-  redirects: [{ from: '/docs/old-macros', to: '/docs/macros' }],
+  redirects: [{ from: '/old-macros', to: '/macros' }],
   categories: {
     syntax: '语法',
     demo: '演示',

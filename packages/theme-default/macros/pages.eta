@@ -1,17 +1,16 @@
 <%
-// 页面清单：按分类或分组列出同语言的页面。
+// 页面清单：按分类或分组列出页面。
 //
 //   {{pages(category: syntax)}}    某分类下的页面
 //   {{pages(section: guide)}}      某分组下的页面
-//   {{pages()}}                    当前语言的全部页面
+//   {{pages()}}                    全部页面
 //
 // 参数语法与其它宏一致：命名参数用 `key: value`，不要写成 `key="value"`。
-// 排序沿用 it.site.pages 的顺序（语言 → section → order），所以不用额外排。
-const lang = it.lang;
+// 排序沿用 it.site.pages 的顺序（section → order），所以不用额外排。
 const category = it.named.category ?? '';
 const section = it.named.section ?? '';
 
-let list = it.site.pages.filter((p) => p.lang === lang);
+let list = it.site.pages;
 if (category) list = list.filter((p) => p.categories.includes(category));
 if (section) list = list.filter((p) => p.section === section);
 

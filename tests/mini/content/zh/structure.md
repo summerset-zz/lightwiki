@@ -14,8 +14,7 @@ categories: [syntax]
 ```
 my-wiki/
 ├── wiki.config.ts     站点配置
-├── content/zh/*.md    中文内容
-├── content/en/*.md    英文内容
+├── content/zh/*.md    内容，一个文件一页
 ├── layouts/*.eta      可选：覆盖主题的布局
 ├── macros/*.eta       可选：内容里调用的宏
 └── assets/            图片等静态资源
@@ -27,35 +26,32 @@ my-wiki/
 
 **slug 就是文件相对路径去掉 `.md`**：
 
-| 文件 | slug | 默认语言的 URL |
+| 文件 | slug | URL |
 |---|---|---|
-| `content/zh/second.md` | `second` | `/docs/second/` |
-| `content/zh/api/v1.md` | `api/v1` | `/docs/api/v1/` |
-| `content/zh/index.md` | `index` | `/docs/`（首页） |
+| `content/zh/second.md` | `second` | `/second/` |
+| `content/zh/api/v1.md` | `api/v1` | `/api/v1/` |
+| `content/zh/index.md` | `index` | `/`（首页） |
 
 - 文件名就是身份，**改文件名等于删一篇加一篇**，站内所有链接都会断；
-- 非默认语言加前缀：`/en/docs/second/`；
 - 不能单独指定 URL，它完全由 slug 推导。
 
-前缀 `docs` 是可以改的，见下一节。
+前缀是可以改的，见下一节。
 
 ## 内容页放在哪个前缀下 {#docs-dir}
 
-`wiki.config.ts` 的 `docsDir` 决定内容页挂在哪里：
+`wiki.config.ts` 的 `docsDir` 与 `urlPrefix` 决定内容页挂在哪里。默认都为空串，页面直接挂在 `/` 下：
 
-| `docsDir` | 页面地址 |
-|---|---|
-| `'docs'`（默认） | `/docs/second/` |
-| `'wiki'` | `/wiki/second/` |
-| `''` | `/second/`（直接挂在语言根下） |
+| `urlPrefix` | `docsDir` | 页面地址 |
+|---|---|---|
+| `''`（默认） | `''`（默认） | `/second/` |
+| `''` | `'docs'` | `/docs/second/` |
+| `'/wiki'` | `''` | `/wiki/second/` |
 
-改成空串时，`assets/`、`categories/`、语言代码这些段位就和页面抢位置了，`wiki check` 会点出来。
+页面的 slug 第一段叫 `assets` 或 `categories` 时，`wiki check` 直接判失败：`docsDir` 为空时它会和资源目录、分类页抢地址。
 
-## 两种语言 {#i18n}
+## 多语言 {#i18n}
 
-一个 slug 在两种语言各有一份最理想，但**只写一种也能构建**——缺译只会让 `wiki check` 提示一句。
-
-中英两份建议用同一个锚点，这样 `#counts` 在两边都跳得到。
+一次构建只读 `content` 指向的那一个目录。多语言站每门语言一份配置，各跑一次 `build`，两份产物怎么合并由自己决定。
 
 ## 草稿 {#draft}
 
@@ -63,7 +59,7 @@ my-wiki/
 
 ## 首页就是 index.md {#index}
 
-`content/zh/index.md` 就是该语言的首页 `/docs/`（`docsDir` 改成别的名字时同理）。**没有自动生成的目录页** —— 想列全站就自己排：
+`content/zh/index.md` 就是首页 `/`（`docsDir` 非空时是那段前缀的根）。**没有自动生成的目录页**，想列全站就自己排：
 
 ```text
 {{catalog}}
@@ -75,6 +71,6 @@ my-wiki/
 
 两个宏的用法见 [[macros#catalog]]。
 
-每种语言都得有 `index.md`，没有的话那个语言的首页会 404，`wiki check` 会报错。
+内容目录里必须有 `index.md`，没有的话首页会 404，`wiki check` 会报错。
 
 `404.md` 是另一个例外：它会变成根目录的 `404.html`，见 [[commands#not-found]]。

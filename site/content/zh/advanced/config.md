@@ -1,16 +1,16 @@
 ---
 title: 站点配置
-keywords: 配置, wiki.config.ts, siteUrl, basePath, urlStyle, redirects
+keywords: 配置, wiki.config.ts, siteUrl, basePath, content, urlPrefix, docsDir, lang, urlStyle, redirects
 description: wiki.config.ts 里每个字段的作用、默认值和容易配错的地方。
 section: advanced
 order: 1
-updated: 2026-11-17
+updated: 2026-11-25
 draft: false
 ---
 
 站点配置写在内容仓库根的 `wiki.config.ts`，默认导出一个对象。`title`、`siteUrl`、`content` 三项必填，其余都有默认值。
 
-它所在的目录就是内容根，配置里的路径都相对它算。目录怎么摆见 [目录结构](/docs/start/structure)。
+它所在的目录就是内容根，配置里的路径都相对它算。目录怎么摆见 [目录结构](/start/structure)。
 
 ## 配置对象的形状 {#shape}
 
@@ -18,7 +18,7 @@ draft: false
 export default {
   title: '我的知识库',
   siteUrl: 'https://example.com',
-  content: { zh: 'content/zh' },
+  content: 'content/zh',
 };
 ```
 
@@ -32,57 +32,50 @@ export default {
 |---|---|
 | `title` | 站点名，非空字符串。进页面标题、侧栏标题 |
 | `siteUrl` | 站点完整地址，必须带协议。重定向页的绝对地址与 canonical 用它拼 |
-| `content` | 语言代码到内容目录的映射，如 `{ zh: 'content/zh', en: 'content/en' }` |
+| `content` | 单个内容目录，如 `'content/zh'`，相对内容根 |
 
 `siteUrl` 写成 `example.com` 不算完整地址，校验会拦下来。页面模板里也能拿到它。
 
-## 只用一个语言 {#one-language}
+## 语言只是一个标签 {#lang}
 
-大多数站只用一种语言。这时 `content` 只写一项，`defaultLanguage` 写**同一个键**：
+`lang` 默认 `'zh'`，只影响产物的 `<html lang>` 与模板里的 `it.page.lang`、`it.site.lang`。它不改变地址，也不决定读哪个目录。
 
-```ts
-content: { zh: 'content/zh' },
-defaultLanguage: 'zh',
-```
-
-页面地址就是 `/docs/xxx/`，不带语言前缀。`content/zh/index.md` 就是首页。
-
-改成纯英文站只改这两处，目录名跟着改：
+读哪个目录由 `content` 决定。写纯英文站就两处一起改：
 
 ```ts
-content: { en: 'content/en' },
-defaultLanguage: 'en',
+content: 'content/en',
+lang: 'en',
 ```
 
-语言代码不受 zh / en 限制，`ja`、`fr`、`zh-CN` 都行，它直接变成 URL 里的一段。目录名与语言代码不用一致，`{ fr: 'content/french' }` 也是合法的。
+## 地址怎么拼 {#url}
 
-`defaultLanguage` 必须是 `content` 里的某个键。写错了配置直接加载失败：
+页面地址的公式：
 
-```
-defaultLanguage -> "zh" is not a key of content (available: en)
-```
-
-> 为什么要拦：默认语言的页面不带前缀，根目录那张跳转页也是按它算的。两者对不上时构建照样成功，但入口会指向一个不存在的 `/docs/`，打开就是 404。
-
-## 加第二门语言 {#languages}
-
-`content` 加一行就行，其余字段不用动：
-
-```ts
-content: { zh: 'content/zh', en: 'content/en' },
-defaultLanguage: 'zh',
+```text
+[basePath][urlPrefix][docsDir]/<slug>/
 ```
 
-默认语言的地址不带前缀，其余语言带 `/<语言>/`：
+三个前缀默认都为空，默认地址就是 `/<slug>/`。`content/zh/index.md` 的 slug 是 `index`，产物是前缀根上的 `index.html`，也就是首页。
 
-| 语言 | 页面地址 | 产物 |
-|---|---|---|
-| `zh`（默认） | `/docs/a/` | `docs/a/index.html` |
-| `en` | `/en/docs/a/` | `en/docs/a/index.html` |
+`404.md` 例外：产物固定在根目录的 `404.html`，不生成 `/404/` 这一页。
 
-每种语言都必须有 `index.md`，缺了 `wiki check` 判失败。某页只在一门语言里有只是提示（`missing translation(s)`），不算错误。
+## 多语言 {#i18n}
 
-`assets/` 不分语言，同一份图片在任何语言的页面里都是同一个地址。分类页按语言各生成一份。
+一门语言一份配置，各跑一次构建：
+
+```bash
+npx @lightwiki/cli build . -c wiki.config.zh.ts -o dist-zh
+npx @lightwiki/cli build . -c wiki.config.en.ts -o dist-en
+```
+
+| 参数 | 作用 |
+|---|---|
+| `-c` / `--config` | 配置文件名，相对内容根。不写就用 `wiki.config.ts` |
+| `-o` | 输出目录，相对内容根，不是当前工作目录。不写就用配置里的 `outputDir` |
+
+两份产物各是一个完整的站，合并由你自己做。`search-index.json`、`404.html`、`meta.json` 每份各一，放到同一目录时后放的会盖掉先放的。
+
+每次构建只认自己配置里的页面。zh 构建里写 `/en/a` 会被 `wiki check` 报成红链。跨语言链接要么写完整 URL，要么忽略这条提示。
 
 ## 全部字段与默认值 {#fields}
 
@@ -90,12 +83,13 @@ defaultLanguage: 'zh',
 |---|---|---|
 | `title` | 必填 | 站点名 |
 | `siteUrl` | 必填 | 完整站点地址 |
-| `content` | 必填 | 语言到内容目录 |
+| `content` | 必填 | 内容目录，如 `'content/zh'` |
 | `basePath` | `'/'` | 部署在子路径时的前缀，如 `'/wiki'` |
-| `defaultLanguage` | `'zh'` | 默认语言，链接里不带语言前缀。**必须是 `content` 的键** |
+| `urlPrefix` | `''` | 内容页地址的 URL 前缀，拼在 `docsDir` 前面 |
+| `docsDir` | `''` | 内容页地址的额外路径段，如 `'docs'` |
+| `lang` | `'zh'` | 只用于 `<html lang>` 与 `it.page.lang`，不影响地址 |
 | `assetsDir` | `'assets'` | 静态资源目录名，只改来源，产物里固定落 `assets/` |
 | `outputDir` | `'dist'` | 构建输出目录 |
-| `docsDir` | `'docs'` | 内容页的路径前缀 |
 | `sections` | `[]` | 允许出现的 `section` 取值与顺序，空数组表示不校验 |
 | `sectionLabels` | `{}` | `section` slug 到显示名 |
 | `categories` | `{}` | 分类 slug 到显示名 |
@@ -105,10 +99,10 @@ defaultLanguage: 'zh',
 | `redirects` | `[]` | 旧地址到新地址的映射，元素是 `{ from, to, status }`，`status` 默认 `301` |
 | `redirectMode` | `'js'` | `'js'` 生成跳转页，`'server'` 只输出 `_redirects`，`'both'` 两者都做 |
 | `highlight.enabled` | `true` | 代码块高亮开关 |
-| `highlight.languages` | `[]` | 额外加载的 highlight.js 语言名，如 `'ruby'`、`'go'`（用法见 [代码高亮](/docs/basics/code-highlight)） |
+| `highlight.languages` | `[]` | 额外加载的 highlight.js 语言名，如 `'ruby'`、`'go'`（用法见 [代码高亮](/basics/code-highlight)） |
 | `search.enabled` | `true` | 站内搜索开关 |
 | `search.excerpt` | `300` | 索引里保留的正文摘要长度（字符），`0` 表示只要标题 |
-| `frontmatterInjection` | `false` | 把每页的元数据（模板里的 `it.page`，只去掉整篇原文）注入 `<script type="application/json" id="lightwiki-page-data">`，供页面里的 JS 读取。见 [frontmatter](/docs/basics/frontmatter#browser) |
+| `frontmatterInjection` | `false` | 把每页的元数据（模板里的 `it.page`，只去掉整篇原文）注入 `<script type="application/json" id="lightwiki-page-data">`，供页面里的 JS 读取。见 [frontmatter](/basics/frontmatter#browser) |
 | `macros.undefined` | `'show'` | 未定义模板的处理方式 |
 | `markdown` | 无 | 站点级 markdown-it 插件入口，签名 `(md) => void` |
 
@@ -118,31 +112,37 @@ defaultLanguage: 'zh',
 
 项目站部署在 `https://用户名.github.io/仓库名/`，`basePath` 要写 `'/仓库名'`，末尾斜杠会被去掉。
 
-它和实际部署位置不一致时，链接与资源全部 404。默认语言的页面挂在根上，前缀少一段就对不上。
+它和实际部署位置不一致时，链接与资源全部 404。页面挂在根上，前缀少一段就对不上。
 
-## docsDir 只能是单段名字 {#docs-dir}
+## docsDir 与 urlPrefix {#docs-dir}
 
-`docsDir` 决定内容页挂在哪一段路径下：`'docs'` 得到 `/docs/a/`，`'wiki'` 得到 `/wiki/a/`。
+两段前缀拼在 slug 前面，顺序是 `urlPrefix` 再 `docsDir`。默认都是空串，页面地址就是 `/a/`：
 
-只接受一段名字，字符限于字母、数字、`_`、`-`，也允许空串。写 `'docs/v2'` 会被拒绝，那等于把内容塞进子目录，是另一件事。
+| `urlPrefix` | `docsDir` | 页面地址 |
+|---|---|---|
+| `''`（默认） | `''`（默认） | `/a/` |
+| `''` | `'docs'` | `/docs/a/` |
+| `'/wiki'` | `'docs'` | `/wiki/docs/a/` |
 
-空串时页面直接挂在 `/` 与 `/<语言>/` 下，会和 `assets/`、`categories/` 这些保留段抢位置，`wiki check` 会把这个情况点出来。
+`docsDir` 只接受一段名字，字符限于字母、数字、`_`、`-`，也允许空串。写 `'docs/v2'` 会被拒绝，那等于把内容塞进子目录，是另一件事。
+
+`docsDir` 为空时，slug 的第一段直接落在 `/` 下。这时第一段叫 `assets` 或 `categories`，会和资源目录、分类页抢地址，`wiki check` 直接判失败。
 
 ## urlStyle 的两种形态 {#url-style}
 
 | 形态 | 页面地址 | 产物 | 适合 |
 |---|---|---|---|
-| `'directory'`（默认） | `/docs/a/` | `docs/a/index.html` | 静态托管 |
-| `'file'` | `/docs/a.html` | `docs/a.html` | `file://` 双击、CHM |
+| `'directory'`（默认） | `/a/` | `a/index.html` | 静态托管 |
+| `'file'` | `/a.html` | `a.html` | `file://` 双击、CHM |
 
 `'file'` 模式下，构建会把产物里所有站内绝对链接改写成相对路径，这样双击打开时导航不会指到盘符根。
 
 ## redirects 的两个值都写最终地址 {#redirects}
 
-`redirects` 的每一项是 `{ from, to, status }`。`from` 与 `to` 都写含语言前缀的完整路径（默认语言不带前缀），工具不做推断。
+`redirects` 的每一项是 `{ from, to, status }`。`from` 与 `to` 都写完整路径，工具不做推断。
 
 ```ts
-redirects: [{ from: '/docs/old/', to: '/docs/new/' }],
+redirects: [{ from: '/old/', to: '/new/' }],
 ```
 
 `status` 默认 `301`。`redirectMode` 决定这些规则变成什么产物：
@@ -171,7 +171,7 @@ redirects: [{ from: '/docs/old/', to: '/docs/new/' }],
 | `'hide'` | 整段不显示 | 只提示 |
 | 函数 `(name, raw) => string` | 返回值当纯文本 | 只提示 |
 
-模板本身怎么写，见 [模板](/docs/basics/templates)。
+模板本身怎么写，见 [模板](/basics/templates)。
 
 ## markdown 拿到 markdown-it 实例 {#markdown-hook}
 
@@ -183,8 +183,8 @@ markdown(md) {
 },
 ```
 
-它只在 `wiki.config.ts` 是真正的 TS 文件时可用。正文里的语法扩展见 [Markdown 与扩展语法](/docs/basics/markdown)。
+它只在 `wiki.config.ts` 是真正的 TS 文件时可用。正文里的语法扩展见 [Markdown 与扩展语法](/basics/markdown)。
 
 ## 再往下 {#next}
 
-四个命令、参数与退出码见 [命令行](/docs/advanced/cli)。页面自己的字段见 [frontmatter](/docs/basics/frontmatter)。
+四个命令、参数与退出码见 [命令行](/advanced/cli)。页面自己的字段见 [frontmatter](/basics/frontmatter)。

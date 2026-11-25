@@ -6,7 +6,7 @@ import type { Highlighter } from './highlight.js';
 import type { MacroRegistry } from './macros.js';
 import type { LinkResolver } from './resolve.js';
 import { pageLinkKey } from './links.js';
-import { assetHref, langPrefix, localizeHref, pageBase } from './routes.js';
+import { assetHref, localizeHref, pageBase } from './routes.js';
 
 /**
  * 只声明我们真正用到的 token 字段。
@@ -206,8 +206,8 @@ export function createMarkdown(options: MarkdownOptions = {}): MarkdownIt {
               'href',
               isExternal
                 ? href
-                : localizeHref(href, env.lang, env.config, (slug) =>
-                    env.resolver ? env.resolver.hasSlug(slug, env.lang) : false,
+                : localizeHref(href, env.config, (slug) =>
+                    env.resolver ? env.resolver.hasSlug(slug) : false,
                   ),
             );
             if (isExternal) {
@@ -282,7 +282,7 @@ function wikilinkRule(state: any, silent: boolean): boolean {
   const hash = hashAt === -1 ? '' : rawTarget.slice(hashAt);
 
   const env = state.env as RenderEnv;
-  const resolved = env.resolver?.resolve(pagePart, env.lang) ?? null;
+  const resolved = env.resolver?.resolve(pagePart) ?? null;
 
   if (resolved) {
     const open = state.push('link_open', 'a', 1);

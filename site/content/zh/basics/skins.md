@@ -24,7 +24,7 @@ frontmatter 不写 `layout` 时用 `doc`。所有普通内容页都是 `doc`，�
 |---|---|
 | `doc.eta` | 普通内容页，默认 |
 | `category.eta` | 分类页 `/categories/<slug>/`，构建时自动生成 |
-| `not-found.eta` | 没有已发布的 `content/<默认语言>/404.md` 时，根目录 `404.html` 用它 |
+| `not-found.eta` | 内容目录里没有 `404.md` 时，根目录 `404.html` 用它 |
 | `redirect.eta` | 旧地址跳转页，构建时自动生成 |
 
 后三个不是给内容页选的，是构建过程自己挑的。覆盖它们等于改这三类页面的样子。
@@ -53,7 +53,7 @@ layout: landing
 
 先找到的赢，都找不到报错。所以只覆盖你要改的那几个文件，其余继续用主题的，升级工具时不会被冲掉。
 
-这两个目录各是干什么的，见 [目录结构](/docs/start/structure)。
+这两个目录各是干什么的，见 [目录结构](/start/structure)。
 
 ## 皮肤里的数据 {#context}
 
@@ -83,11 +83,11 @@ layout: landing
 | `source` | frontmatter 里 `source*` 一组的整理版：`site` `title` `url` `revid` `license` `licenseUrl` `changes` |
 | `license` `licenseUrl` `authors` | frontmatter 对应字段 |
 
-`it.site` 里有 `title`、`siteUrl`、`base`、`defaultLanguage`、`languages`、`urlStyle`、`sections`、`sectionLabels`、`categories`、`categoryList`、`generatedAt`、`pageCount`、`pageCounts`、`pages`、`search`、`config`。其中四项值得单独说：
+`it.site` 里有 `title`、`siteUrl`、`base`、`lang`、`urlStyle`、`sections`、`sectionLabels`、`categories`、`categoryList`、`generatedAt`、`pageCount`、`pages`、`search`、`config`。其中四项值得单独说：
 
 | 字段 | 是什么 |
 |---|---|
-| `pages` | 全站页面摘要数组，元素有 `lang` `slug` `url` `title` `section` `order` `updated` `categories` |
+| `pages` | 全站页面摘要数组，元素有 `slug` `url` `title` `section` `order` `updated` `categories` |
 | `categoryList` | 只含真正被页面用到的分类，元素有 `slug` `label` `count` |
 | `search` | 配置里关掉搜索时是 `null`，主题据这个决定要不要渲染搜索框 |
 | `config` | 配置原文，里面有本机绝对路径，不要打印出来 |
@@ -183,7 +183,7 @@ frontmatter 写 `layout: landing`，这一页就用它。
 </div>
 ```
 
-用 `<%= it.page.html %>` 会把整篇正文转义成源码，页面上直接显示一堆尖括号。`<%~` 与 `<%=` 的区别在 [模板](/docs/basics/templates) 一页讲过。
+用 `<%= it.page.html %>` 会把整篇正文转义成源码，页面上直接显示一堆尖括号。`<%~` 与 `<%=` 的区别在 [模板](/basics/templates) 一页讲过。
 
 ## 皮肤里的代码块要自己标语言 {#code-blocks}
 
@@ -193,7 +193,7 @@ frontmatter 写 `layout: landing`，这一页就用它。
 <pre lang="ts"><code>const x: number = 1;</code></pre>
 ```
 
-代码内容里有 `<` 时要写成 `&lt;`。语言名能写什么、写错会怎样，见 [代码高亮](/docs/basics/code-highlight)。
+代码内容里有 `<` 时要写成 `&lt;`。语言名能写什么、写错会怎样，见 [代码高亮](/basics/code-highlight)。
 
 ## 资源路径要自己拼 {#assets}
 
@@ -217,7 +217,7 @@ frontmatter 写 `layout: landing`，这一页就用它。
 
 ## 皮肤里的链接不算内容链接 {#content-links}
 
-皮肤里写的 `<a href="/docs/a">` 在页面上能点、能跳转，但它不参与正文那套链接检查。`wiki check` 的红链与孤页判定只看**正文**里被 markdown 渲染出来的链接，导航、侧栏、皮肤里直接写的 `<a>` 一律不计 —— 既不算入链，也不会被标红链。
+皮肤里写的 `<a href="/a">` 在页面上能点、能跳转，但它不参与正文那套链接检查。`wiki check` 的红链与孤页判定只看**正文**里被 markdown 渲染出来的链接，导航、侧栏、皮肤里直接写的 `<a>` 一律不计 —— 既不算入链，也不会被标红链。
 
 最直接的后果：把首页内容整块写在皮肤里，皮肤链过去的页面仍会被报成孤页。几种做法，按省事程度排：
 
@@ -227,7 +227,7 @@ frontmatter 写 `layout: landing`，这一页就用它。
 | 把首页那几条链接改成正文里的 `{{pages}}` 或 `[](...)` | 链接由 markdown 产出，照常计入 |
 | 忽略这条提示 | 孤页不是失败项，`--strict` 时才算 |
 
-另外，皮肤里的 `href` 不会被改写语言前缀，也不会被补 `directory` 模式的尾斜杠 —— 那两道改写只作用于正文。多语言站的皮肤要自己拼 `it.site.base` 与语言段。
+另外，皮肤里的 `href` 不会被加上 `basePath`，也不会被补 `directory` 模式的尾斜杠，这两道改写只作用于正文。部署在子路径时，皮肤里的链接要自己拼 `it.site.base`。
 
 ## 页面级样式与脚本 {#page-assets}
 
@@ -235,7 +235,7 @@ frontmatter 的 `styles` / `scripts` 由构建在渲染之后统一注入：样�
 
 皮肤不需要为此留任何占位，只要正常写出 `</head>` 和 `</body>`。皮肤里缺这两个标签时，样式会被塞到文件最前面，脚本附在末尾。
 
-这条同样说明：覆盖皮肤不会丢掉页面级资源。字段本身的写法见 [frontmatter](/docs/basics/frontmatter)。
+这条同样说明：覆盖皮肤不会丢掉页面级资源。字段本身的写法见 [frontmatter](/basics/frontmatter)。
 
 ## 从 doc 改起 {#copy}
 
@@ -254,4 +254,4 @@ frontmatter 的 `styles` / `scripts` 由构建在渲染之后统一注入：样�
 
 第一、二种会在 `wiki check` 里提前点名。最后一条最容易浪费时间：单层属性读空了只是页面上少一块内容，没有任何提示。改完记得看页面对不对。
 
-正文写法见 [Markdown 与扩展语法](/docs/basics/markdown)，页面开头的字段见 [frontmatter](/docs/basics/frontmatter)。
+正文写法见 [Markdown 与扩展语法](/basics/markdown)，页面开头的字段见 [frontmatter](/basics/frontmatter)。

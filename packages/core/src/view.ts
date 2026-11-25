@@ -40,10 +40,9 @@ function isVisible(page: Page): boolean {
 export function buildNav(
   config: LoadedConfig,
   pages: Page[],
-  lang: string,
   currentUrl: string,
 ): NavGroup[] {
-  return toGroups(config, pages.filter((p) => p.lang === lang && isVisible(p)), currentUrl);
+  return toGroups(config, pages.filter(isVisible), currentUrl);
 }
 
 /** 把一批页面按 section 分组；section 顺序听配置的 */
@@ -74,8 +73,8 @@ function toGroups(config: LoadedConfig, list: Page[], currentUrl: string): NavGr
   }));
 }
 
-function pagesInCategory(pages: Page[], lang: string, slug: string): Page[] {
-  return pages.filter((p) => p.lang === lang && isVisible(p) && p.categories.includes(slug));
+function pagesInCategory(pages: Page[], slug: string): Page[] {
+  return pages.filter((p) => isVisible(p) && p.categories.includes(slug));
 }
 
 /** 侧栏：默认是全站导航；页面声明了 `sidebarCategory` 就换成该分类的页面 */
@@ -92,13 +91,13 @@ export function buildSidebar(
   page: Page,
 ): Sidebar {
   const wanted = page.data.sidebarCategory;
-  const nav = buildNav(config, pages, page.lang, page.url);
+  const nav = buildNav(config, pages, page.url);
 
   if (!wanted) {
     return { kind: 'site', title: '', groups: nav };
   }
 
-  const members = pagesInCategory(pages, page.lang, wanted);
+  const members = pagesInCategory(pages, wanted);
   if (members.length === 0) {
     // 分类不存在或没成员：退回全站导航，至少侧栏不会空掉
     return { kind: 'site', title: '', groups: nav };
@@ -147,7 +146,7 @@ export function createPageView(
     site,
     page: {
       // 与宏共用的那套字段（含 slug / section / order / categories / frontmatter）
-      ...pageInfoOf(page),
+      ...pageInfoOf(page, config.lang),
       // 布局额外拥有的：渲染产物
       html: page.html,
       headings: page.headings,
@@ -166,9 +165,9 @@ export function createPageView(
       licenseUrl: page.data.licenseUrl ?? '',
       authors: page.data.authors ?? '',
     },
-    nav: buildNav(config, pages, page.lang, page.url),
+    nav: buildNav(config, pages, page.url),
     sidebar: buildSidebar(config, pages, page),
-    index: { url: pageUrl(config, page.lang, INDEX_SLUG) },
+    index: { url: pageUrl(config, INDEX_SLUG) },
     partials: detectPartials(config),
   };
 }
@@ -193,13 +192,13 @@ export function createNotFoundView(
   pages: Page[],
   site: SiteInfo,
 ): NotFoundView {
-  const lang = config.defaultLanguage;
+  const lang = config.lang;
   const base = normalizeBasePath(config.basePath);
   return {
     site,
     lang,
-    nav: buildNav(config, pages, lang, ''),
-    index: { url: pageUrl(config, lang, INDEX_SLUG) },
+    nav: buildNav(config, pages, ''),
+    index: { url: pageUrl(config, INDEX_SLUG) },
     partials: detectPartials(config),
   };
 }
@@ -221,9 +220,7 @@ export function createNotFoundRender(
   site: SiteInfo,
 ): NotFoundRender {
   const url = `${normalizeBasePath(config.basePath)}/404.html`;
-  const page = pages.find(
-    (p) => p.slug === NOT_FOUND_SLUG && p.lang === config.defaultLanguage && !p.draft,
-  );
+  const page = pages.find((p) => p.slug === NOT_FOUND_SLUG && !p.draft);
 
   if (page) {
     return {
@@ -255,25 +252,24 @@ export interface CategoryView {
 export function createCategoryView(
   config: LoadedConfig,
   pages: Page[],
-  lang: string,
   slug: string,
   site: SiteInfo,
 ): CategoryView {
-  const url = categoryUrl(config, lang, slug);
+  const url = categoryUrl(config, slug);
   const base = normalizeBasePath(config.basePath);
-  const members = pagesInCategory(pages, lang, slug).sort(sortPages);
+  const members = pagesInCategory(pages, slug).sort(sortPages);
 
   return {
     site,
-    lang,
+    lang: config.lang,
     category: {
       slug,
       label: config.categories[slug] ?? slug,
       url,
       pages: members.map((p) => ({ title: p.data.title, url: p.url, current: false })),
     },
-    nav: buildNav(config, pages, lang, url),
-    index: { url: pageUrl(config, lang, INDEX_SLUG) },
+    nav: buildNav(config, pages, url),
+    index: { url: pageUrl(config, INDEX_SLUG) },
     partials: detectPartials(config),
   };
 }

@@ -30,7 +30,7 @@ draft: false
 
 主题自己的资源落在另一个子目录 `assets/theme/`，所以 `assets/style.css` 不会和主题的 `assets/theme/style.css` 撞名。
 
-> `.less` 是唯一会被改动的资源文件，构建时编译成同名 `.css`，产物里不会出现 `.less`。规则见 [样式与 Less](/docs/basics/styles)。
+> `.less` 是唯一会被改动的资源文件，构建时编译成同名 `.css`，产物里不会出现 `.less`。规则见 [样式与 Less](/basics/styles)。
 
 ## 正文里怎么引用 {#markdown}
 
@@ -46,7 +46,7 @@ draft: false
 
 **永远写 `/assets/...`，不要自己拼前缀。**手写仓库名会让本地预览 404，改了站名还得全站替换。
 
-`assets/` 不区分语言：`/assets/x.png` 在中英文页面里指向同一份文件。要按语言区分的图片，自己建 `assets/zh/`、`assets/en/` 之类的子目录。
+`assets/` 是站点级的：每一页的 `/assets/x.png` 都指向同一份文件。多语言站要各用一套图，自己建 `assets/zh/`、`assets/en/` 之类的子目录，地址里带上那一段。
 
 相对路径不会被改写。写 `img/cover.jpg` 时构建原样保留，浏览器按当前页面地址去解析，深层页面上基本指不到文件，一律用 `/` 开头。
 
@@ -82,7 +82,7 @@ assetsDir: 'static',
 
 样式表里的 `url(...)` 同样不会加前缀，路径相对样式表文件本身解析，所以 `url(../img/x.png)` 是从 css 所在目录往回找。
 
-皮肤里还能拿到哪些字段，见 [皮肤](/docs/basics/skins)。
+皮肤里还能拿到哪些字段，见 [皮肤](/basics/skins)。
 
 ## 目录与命名建议 {#naming}
 
@@ -107,4 +107,4 @@ assets/
 
 > 产物里的 `assets/` 与提交的目录一一对应，源目录多大，产物里就多大。
 
-页面级样式与脚本的挂法见 [样式与 Less](/docs/basics/styles) 和 [JavaScript](/docs/basics/javascript)。
+页面级样式与脚本的挂法见 [样式与 Less](/basics/styles) 和 [JavaScript](/basics/javascript)。

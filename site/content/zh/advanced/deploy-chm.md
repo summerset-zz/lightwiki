@@ -29,24 +29,24 @@ CHM 是 Windows 的离线帮助文件格式（HTML Help），由一组 HTML 页�
 
 | 配置 | 值 | 为什么 |
 |---|---|---|
-| `urlStyle` | `'file'` | 默认的 `directory` 会产出 `/docs/a/` 这类路径，CHM 里会被解释成盘符根，全站导航直接失效。`'file'` 产出 `docs/a.html`，并把产物里的站内链接改写成相对路径 |
+| `urlStyle` | `'file'` | 默认的 `directory` 会产出 `/a/` 这类路径，CHM 里会被解释成盘符根，全站导航直接失效。`'file'` 产出 `a.html`，并把产物里的站内链接改写成相对路径 |
 | `basePath` | `'/'` | CHM 里没有域名，任何前缀都会让链接断掉 |
 | `redirectMode` | `'js'` | `_redirects` 对 CHM 没有意义，跳转页才有用 |
 | 文件名 | 全 ASCII | slug 来自文件名。CHM 编译器按系统代码页处理路径，中文或空格容易导致打包失败，或运行时找不到文件 |
 
-这四项在 [站点配置](/docs/advanced/config) 里都有说明。文件的路径规则见 [目录结构](/docs/start/structure)。
+这四项在 [站点配置](/advanced/config) 里都有说明。文件的路径规则见 [目录结构](/start/structure)。
 
 四条之外还有一条：页面里不要用 `type="module"` 的脚本，原因见下一节。
 
 ## 产物形态 {#artifacts}
 
-`urlStyle: 'file'` 下每页的产物是 `docs/a.html`，站内链接在构建时被改写成相对路径。
+`urlStyle: 'file'` 下每页的产物是 `a.html`，站内链接在构建时被改写成相对路径。
 
 这一点是 CHM 能用的前提。CHM 里的页面同样是本地文件，没有域名可以拼绝对地址。
 
 ## 先用本地文件验证路径 {#file-check}
 
-按 `'file'` 构建后，直接双击 `dist/docs/` 里的页面就能走一遍导航。
+按 `'file'` 构建后，直接双击 `dist/` 里的页面就能走一遍导航。
 
 这一步只能确认链接与资源路径是通的。浏览器和 CHM 查看器不是同一个引擎，样式问题不会在这里暴露。
 
@@ -90,9 +90,9 @@ CHM 查看器用的是 Windows 自带的 Internet Explorer 排版组件（mshtml
 - 不用 `sticky`、`grid`、`gap`
 - 不要依赖脚本，搜索这类功能直接不提供
 
-具体怎么写皮肤见 [皮肤](/docs/basics/skins)。
+具体怎么写皮肤见 [皮肤](/basics/skins)。
 
 ## 再往下 {#next}
 
-- [发布到 GitHub Pages](/docs/advanced/deploy-pages)
-- [部署到自有服务器](/docs/advanced/deploy-server)
+- [发布到 GitHub Pages](/advanced/deploy-pages)
+- [部署到自有服务器](/advanced/deploy-server)

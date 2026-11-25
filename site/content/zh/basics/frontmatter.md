@@ -42,20 +42,20 @@ title: 我的第一页
 
 | 字段 | 类型 | 改了会怎样 |
 |---|---|---|
-| `title` | 字符串，必填 | 页面标题，进 `<title>`、侧栏、搜索和双链解析。同一语言内不能重复。 |
+| `title` | 字符串，必填 | 页面标题，进 `<title>`、侧栏、搜索和双链解析。不能重复。 |
 | `description` | 字符串 | 一句话摘要，进 `<meta name="description">`，搜索结果的摘要一般取自这里。 |
 | `keywords` | 逗号分隔的字符串或数组 | 进 `<meta name="keywords">`，也进站内搜索索引。中英都写能扩大命中面。 |
 | `section` | 字符串 | 决定侧栏归到哪一组。取值必须在站点配置的 `sections` 里，否则 `wiki check` 报错。 |
 | `order` | 数字 | 组内排序，小的在前。 |
 | `updated` | `YYYY-MM-DD` | 页面上显示的最后更新日期。只认这个格式。 |
 | `draft` | 布尔，默认 `false` | 改成 `true` 时构建不收录，导航和搜索里也没有；本地预览仍能按地址打开。 |
-| `layout` | 字符串 | 换这一页的皮肤，写皮肤名（`layouts/` 下的文件名，不带 `.eta`）。不写就是 `doc`，文件不存在时构建报错。见 [皮肤](/docs/basics/skins)。 |
+| `layout` | 字符串 | 换这一页的皮肤，写皮肤名（`layouts/` 下的文件名，不带 `.eta`）。不写就是 `doc`，文件不存在时构建报错。见 [皮肤](/basics/skins)。 |
 | `styles` | 字符串或数组 | 只给这一页挂 css，路径相对 `assets/`。写 `.css` 就行，`.less` 会自动编译成同名 `.css`。 |
 | `scripts` | 字符串、数组或 `{ src, module }` | 只给这一页挂 js，路径相对 `assets/`。要 ES module 就写成 `- src: x.js` 加 `module: true`。 |
 | `categories` | 字符串或数组 | 归到哪些分类，写 ASCII slug。构建时为每个用到的分类生成 `/categories/<slug>/`。 |
 | `sidebarCategory` | 字符串 | 用哪个分类的页面列表当这一页的侧栏。不写就是全站导航。 |
 
-`categories` 与 `sidebarCategory` 的完整用法见 [分类](/docs/basics/categories)。
+`categories` 与 `sidebarCategory` 的完整用法见 [分类](/basics/categories)。
 
 另有一组 `source*` / `license*` 字段，用于整篇改编外部内容时标注出处与许可，一般用不上。整篇只有一个术语提示时，用 `hintTitle` / `hint`。
 
@@ -85,13 +85,13 @@ keywords: ['@font-face', src, local]    # 好
 
 ## 标题与地址 {#identity}
 
-`title` 在同一语言内不能重复。双链 `[[标题]]` 靠它解析，重复就会让 `wiki check` 报 duplicate title 并失败。
+`title` 不能重复。双链 `[[标题]]` 靠它解析，重复就会让 `wiki check` 报 duplicate title 并失败。
 
-反过来，改 `title` 只会让按标题写的双链断掉，页面地址不变：地址来自文件名。两种写法的取舍见 [Markdown 与扩展语法](/docs/basics/markdown)。
+反过来，改 `title` 只会让按标题写的双链断掉，页面地址不变：地址来自文件名。两种写法的取舍见 [Markdown 与扩展语法](/basics/markdown)。
 
 ## 在浏览器里读 {#browser}
 
-页面里的 JS 可以通过一个 JSON 标签读到这一页的 frontmatter，不必自己解析源码。这个开关属于[站点配置](/docs/advanced/config)，在 `wiki.config.ts` 里打开：
+页面里的 JS 可以通过一个 JSON 标签读到这一页的 frontmatter，不必自己解析源码。这个开关属于[站点配置](/advanced/config)，在 `wiki.config.ts` 里打开：
 
 ```ts
 frontmatterInjection: true,
@@ -112,7 +112,7 @@ data.categories;           // ['syntax']
 data.frontmatter.myOwnKey; // frontmatter 里自己写的键
 ```
 
-脚本怎么挂到页面上，见 [JavaScript](/docs/basics/javascript)。
+脚本怎么挂到页面上，见 [JavaScript](/basics/javascript)。
 
 标签里有哪些字段：
 

@@ -134,10 +134,25 @@ export const siteConfigSchema = z.object({
   siteUrl: z.string().url('siteUrl must be a full URL'),
   /** 部署前缀。`/` 与空串视为无前缀，其余规范成 `/sub`（补前导斜杠、去末尾斜杠） */
   basePath: z.string().default('/'),
-  /** 默认语言：地址不带语言前缀。必须是 `content` 的键，见文件末尾的 superRefine */
-  defaultLanguage: z.string().default('zh'),
-  /** 语言代码 → 该语言的内容目录（相对内容根目录） */
-  content: z.record(z.string(), z.string()),
+  /**
+   * 语言代码，只用于 `<html lang>` 与模板里的 `it.page.lang`。
+   * 不参与路由：想让 URL 带语言段，用 `urlPrefix`。
+   */
+  lang: z.string().min(1).default('zh'),
+  /** 内容目录（相对内容根目录）。整个站只有这一处内容 */
+  content: z.string().min(1),
+  /**
+   * URL 前缀，可空。
+   *
+   * - `''`（默认）→ `/关于/`
+   * - `'zh'` → `/zh/关于/`
+   *
+   * 多语言站就是每门语言一份配置、各自跑一次构建（`--config`）。
+   */
+  urlPrefix: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]*$/, 'urlPrefix must be a single name (letters, digits, _ or -); leave empty for no prefix')
+    .default(''),
   /** 资源来源目录。只影响「从哪读」，产物里固定落在 `assets/` */
   assetsDir: z.string().default('assets'),
   /** 内容里允许出现的 section 取值与顺序；留空则不校验 */
@@ -163,19 +178,19 @@ export const siteConfigSchema = z.object({
     .default({}),
 
   /**
-   * 内容页的路径前缀。
+   * 内容页的额外路径前缀。
    *
-   * - `'docs'`（默认）→ `/docs/关于/`
+   * - `''`（默认）→ `/关于/`，页面直接挂在站点根（或 `urlPrefix`）下
+   * - `'docs'` → `/docs/关于/`
    * - `'wiki'` → `/wiki/关于/`
-   * - `''` → `/关于/`，页面直接挂在语言根下
    *
    * 只接受一段名字（允许空串）：带了斜杠等于把内容塞进子目录，那是另一件事。
-   * 空串时会和 `assets/`、`categories/` 这些保留段抢位置，由 `check` 点出来。
+   * 空串时会和 `assets/`、`categories/` 这些保留段抢位置（`check` 会点名同名页面）。
    */
   docsDir: z
     .string()
     .regex(/^[A-Za-z0-9_-]*$/, 'docsDir must be a single name (letters, digits, _ or -); leave empty for pages at the site root')
-    .default('docs'),
+    .default(''),
   /**
    * 链接形态。directory 适合托管站（a/b/），file 适合 file:// 与 CHM（a/b.html）。
    */
@@ -262,22 +277,6 @@ export const siteConfigSchema = z.object({
       'markdown must be a function',
     )
     .optional(),
-}).superRefine((value, ctx) => {
-  // `defaultLanguage` 必须真的是一门配了内容的语言。
-  //
-  // 不校验的后果不是报错而是**静默生成坏链接**：默认语言的页面不带前缀，
-  // 根目录那张跳转页也是按它算的（`/docs/`）。写成 `content` 里没有的语言时，
-  // 构建照样成功，但整站从登录页开始就 404 —— 只有部署上去才发现。
-  if (value.content[value.defaultLanguage] === undefined) {
-    const available = Object.keys(value.content);
-    ctx.addIssue({
-      code: 'custom',
-      path: ['defaultLanguage'],
-      message: `"${value.defaultLanguage}" is not a key of content (available: ${
-        available.length > 0 ? available.join(', ') : '(none)'
-      })`,
-    });
-  }
 });
 
 export type SiteConfig = z.infer<typeof siteConfigSchema>;
@@ -310,16 +309,22 @@ export interface SiteConfigInput {
   basePath?: string;
 
   /**
-   * 默认语言。它的页面地址不带语言前缀，根目录的入口页也按它算。
-   * **必须是 `content` 的某个键**，否则配置直接加载失败。
+   * 语言代码，只用于 `<html lang>` 与模板里的 `it.page.lang`。
+   * 不参与路由 —— 想让 URL 带语言段就设 `urlPrefix`。
    */
-  defaultLanguage?: string;
+  lang?: string;
 
   /**
-   * 语言代码 → 内容目录（相对内容根）。至少一项，目录名不必等于语言代码。
-   * 每种语言都必须有 `index.md`，缺了 `wiki check` 判失败。
+   * 内容目录（相对内容根），整个站只有这一处。
+   * 目录里必须有 `index.md`（它就是首页），缺了 `wiki check` 判失败。
    */
-  content: Record<string, string>;
+  content: string;
+
+  /**
+   * URL 前缀，可空。`''`（默认）→ `/关于/`；`'zh'` → `/zh/关于/`。
+   * 多语言站就是每门语言一份配置、各自跑一次构建。
+   */
+  urlPrefix?: string;
 
   /** 静态资源目录名（相对内容根）。只改「从哪读」，产物里固定落在 `assets/` */
   assetsDir?: string;

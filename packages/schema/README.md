@@ -10,7 +10,7 @@ import type { SiteConfigInput } from '@lightwiki/schema';
 const config: SiteConfigInput = {
   title: '我的知识库',
   siteUrl: 'https://example.com',
-  content: { zh: 'content/zh' },
+  content: 'content/zh',
 };
 
 export default config;

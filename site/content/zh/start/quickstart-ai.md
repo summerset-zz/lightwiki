@@ -66,7 +66,7 @@ npx --yes @lightwiki/cli dev .
 
 ## 编辑 {#editing}
 
-初始仓库的目录结构参考[这里](/docs/start/structure)。你可以编辑一下`/content/zh`下的`md`文件看看效果。
+初始仓库的目录结构参考[这里](/start/structure)。你可以编辑一下`/content/zh`下的`md`文件看看效果。
 
 
 ## 生成产物 {#generating}
@@ -85,8 +85,8 @@ npx @lightwiki/cli check .
 
 ## 接下来 {#next}
 
-- 学习markdown语法和轻维基的扩展语法 → [markdown语法文档](/docs/basics/markdown)
-- 学习模板语法 → [模板语法文档](/docs/basics/templates)
-- 学习皮肤语法 → [皮肤语法文档](/docs/basics/skins)
-- 继续熟悉工作区 → [目录结构](/docs/start/structure)
-- 熟悉产物结构 → [产物结构](/docs/start/dist)
+- 学习markdown语法和轻维基的扩展语法 → [markdown语法文档](/basics/markdown)
+- 学习模板语法 → [模板语法文档](/basics/templates)
+- 学习皮肤语法 → [皮肤语法文档](/basics/skins)
+- 继续熟悉工作区 → [目录结构](/start/structure)
+- 熟悉产物结构 → [产物结构](/start/dist)

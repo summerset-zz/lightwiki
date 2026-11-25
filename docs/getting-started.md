@@ -70,11 +70,11 @@ mkdir my-wiki && cd my-wiki
 export default {
   title: '我的知识库',
   siteUrl: 'https://example.com',
-  content: { zh: 'content/zh' },
+  content: 'content/zh',
 };
 ```
 
-再建 `content/zh/start.md`：
+再建 `content/zh/index.md`：
 
 ```md
 ---
@@ -94,8 +94,7 @@ title: 首页
 export default {
   title: '我的知识库',
   siteUrl: 'https://example.com',
-  defaultLanguage: 'zh',
-  content: { zh: 'content/zh' },
+  content: 'content/zh',
 };
 ```
 
@@ -105,16 +104,17 @@ export default {
 |---|---|---|
 | `title` | **必填** | 站点名，进页面 `<title>` 与侧栏顶部 |
 | `siteUrl` | **必填** | 站点完整地址，用于拼接绝对链接 |
-| `defaultLanguage` | `zh` | 默认语言。**默认语言的地址不带语言前缀**；值必须是 `content` 的某个键，否则配置加载失败 |
-| `content` | **必填** | 语言 → 内容目录，`{ zh: 'content/zh', en: 'content/en' }`。只用一个语言就只写一项 |
+| `content` | **必填** | 内容目录（相对内容根），整个站只有这一处，如 `'content/zh'` |
+| `lang` | `zh` | 语言代码，只用于 `<html lang>` 与 `it.page.lang`，不参与路由 |
+| `urlPrefix` | `''` | URL 前缀。`''` → `/a/`；`'zh'` → `/zh/a/`。多语言站为每门语言写一份配置 |
 | `sections` | `[]` | 分组顺序，就是侧栏的顺序；页面 `section` 不在列表里会报错 |
 | `sectionLabels` | `{}` | 分组显示名，`{ syntax: '语法' }`；不写就显示 slug |
 | `categories` | `{}` | 分类显示名，`{ syntax: '语法' }` |
 | `assetsDir` | `assets` | 图片与样式所在目录 |
 | `outputDir` | `dist` | 构建输出目录（相对内容根） |
 | `basePath` | `/` | 部署基路径。放到 `example.com/wiki/` 就写 `/wiki/` |
-| `urlStyle` | `directory` | `directory` → `/docs/a/`；`file` → `/docs/a.html`，且站内链接写成相对路径（给 `file://` 与 CHM 用） |
-| `docsDir` | `docs` | 内容页的路径前缀。`'wiki'` → `/wiki/a/`；`''` → `/a/`（直接挂在语言根下） |
+| `urlStyle` | `directory` | `directory` → `/a/`；`file` → `/a.html`，且站内链接写成相对路径（给 `file://` 与 CHM 用） |
+| `docsDir` | `''` | 内容页的额外路径段。`''` → `/a/`；`'docs'` → `/docs/a/`；`'wiki'` → `/wiki/a/` |
 | `inline` | `false` | 单文件产物：CSS/JS/图片/搜索索引全部塞进页面，产物里只剩 `.html`（体积代价见下文） |
 | `search` | `{ enabled: true, excerpt: 300 }` | 站内搜索。`excerpt` 是每页索引里的正文摘要长度（字符），`enabled: false` 连索引都不产出 |
 | `frontmatterInjection` | `false` | 把每页的元数据（模板里的 `it.page`，只去掉整篇原文）注入 `<script type="application/json" id="lightwiki-page-data">`，供页面里的 JS 读取 |
@@ -130,7 +130,7 @@ export default {
 | 位置 | 放什么 | 必须吗 |
 |---|---|---|
 | `wiki.config.ts` | 站点配置 | **必须**，它所在目录就是内容根 |
-| `content/<语言>/*.md` | 内容页面 | **必须** |
+| `content/` | 内容页面（必须有 `index.md`） | **必须** |
 | `assets/` | 图片、字体、样式表 | 可选 |
 | `layouts/*.eta` | 覆盖主题的布局 | 可选 |
 | `macros/*.eta` | 内容里 `{{…}}` 调用的宏 | 可选 |

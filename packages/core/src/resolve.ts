@@ -7,14 +7,12 @@
  */
 
 export interface PageRef {
-  lang: string;
   slug: string;
   url: string;
   title: string;
 }
 
 export interface TitleConflict {
-  lang: string;
   /** 归一化之后的标题 */
   title: string;
   /** 撞在一起的 slug */
@@ -36,44 +34,38 @@ export function normalizeTitle(input: string): string {
 }
 
 export class LinkResolver {
-  private readonly bySlug = new Map<string, Map<string, PageRef>>();
-  private readonly byTitle = new Map<string, Map<string, PageRef[]>>();
+  private readonly bySlug = new Map<string, PageRef>();
+  private readonly byTitle = new Map<string, PageRef[]>();
   readonly conflicts: TitleConflict[] = [];
 
   add(ref: PageRef): void {
-    const slugs = this.bySlug.get(ref.lang) ?? new Map<string, PageRef>();
-    slugs.set(ref.slug.toLowerCase(), ref);
-    this.bySlug.set(ref.lang, slugs);
+    this.bySlug.set(ref.slug.toLowerCase(), ref);
 
-    const titles = this.byTitle.get(ref.lang) ?? new Map<string, PageRef[]>();
     const key = normalizeTitle(ref.title);
-    const list = titles.get(key) ?? [];
+    const list = this.byTitle.get(key) ?? [];
     list.push(ref);
-    titles.set(key, list);
-    this.byTitle.set(ref.lang, titles);
+    this.byTitle.set(key, list);
   }
 
   /** 在全部页面登记完之后调用一次，收集撞标题的情况 */
   finalize(): void {
-    for (const [lang, titles] of this.byTitle) {
-      for (const [title, refs] of titles) {
-        if (refs.length > 1) {
-          refs.sort((a, b) => a.slug.localeCompare(b.slug));
-          this.conflicts.push({ lang, title, pages: refs.map((r) => r.slug) });
-        }
+    for (const [title, refs] of this.byTitle) {
+      if (refs.length > 1) {
+        refs.sort((a, b) => a.slug.localeCompare(b.slug));
+        this.conflicts.push({ title, pages: refs.map((r) => r.slug) });
       }
     }
   }
 
   /** 解析一个内链目标；找不到返回 null（由调用方决定怎么表现成红链） */
-  resolve(target: string, lang: string): ResolvedLink | null {
+  resolve(target: string): ResolvedLink | null {
     const trimmed = target.normalize('NFC').trim();
     if (!trimmed) return null;
 
-    const bySlug = this.bySlug.get(lang)?.get(trimmed.toLowerCase());
+    const bySlug = this.bySlug.get(trimmed.toLowerCase());
     if (bySlug) return { url: bySlug.url, via: 'slug' };
 
-    const byTitle = this.byTitle.get(lang)?.get(normalizeTitle(trimmed));
+    const byTitle = this.byTitle.get(normalizeTitle(trimmed));
     const first = byTitle?.[0];
     if (first) return { url: first.url, via: 'title' };
 
@@ -81,7 +73,7 @@ export class LinkResolver {
   }
 
   /** 仅按 slug 判断存在性，用于「站内链接是 slug 还是标题」的歧义检查 */
-  hasSlug(slug: string, lang: string): boolean {
-    return this.bySlug.get(lang)?.has(slug.toLowerCase()) ?? false;
+  hasSlug(slug: string): boolean {
+    return this.bySlug.has(slug.toLowerCase());
   }
 }

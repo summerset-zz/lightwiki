@@ -30,17 +30,17 @@ draft: false
 
 ## 页面列表 {#pages}
 
-`{{pages(...)}}` 按当前语言过滤页面，每行一个列表项 `- [标题](地址)`。三种用法：
+`{{pages(...)}}` 列出全站页面，每行一个列表项 `- [标题](地址)`。三种用法：
 
 | 写法 | 列出什么 |
 |---|---|
-| `pages()` | 当前语言的全部页面 |
+| `pages()` | 全站全部页面 |
 | `pages(section: guide)` | 某个分组下的页面 |
 | `pages(category: syntax)` | 某个分类下的页面 |
 
 `section` 和 `category` 可以同时写，两个条件一起筛。没有匹配时输出一句 `（没有匹配的页面）`。
 
-排序沿用站内既有顺序（语言 → section → order），不用自己排。按当前语言过滤，所以英文页里写它，出来的不会是中文页。
+排序沿用站内既有顺序（section → order → slug），不用自己排。一次构建只有一份内容目录，所以不需要按语言过滤。
 
 ## 参数的写法 {#args}
 
@@ -109,7 +109,7 @@ const credit = link ? `[${by}](${link})` : by;
 正文里这样调用，整行只放这一处：
 
 ```md
-{{quote(`页面身份是文件名，不是标题。`, by: 结构说明, link: /docs/start/structure)}}
+{{quote(`页面身份是文件名，不是标题。`, by: 结构说明, link: /start/structure)}}
 ```
 
 产物是一段引用块，第一行是引文，第二行是署名。
@@ -158,4 +158,4 @@ const credit = link ? `[${by}](${link})` : by;
 
 循环引用会报 `macro cycle: a -> b -> a`。嵌套超过 20 层报错，正常用不到这么深。模板里有语法错误时会把原因打到终端：行内调用按上面那张表回退，整行独占的块级调用出错时，原文会以纯文本段落留在页面上。
 
-正文的其它写法见 [Markdown 与扩展语法](/docs/basics/markdown)，页面开头的字段见 [frontmatter](/docs/basics/frontmatter)。
+正文的其它写法见 [Markdown 与扩展语法](/basics/markdown)，页面开头的字段见 [frontmatter](/basics/frontmatter)。

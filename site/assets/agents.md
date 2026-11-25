@@ -96,9 +96,9 @@ section: guide
 
 正文是标准 markdown，另外支持双链 `[[页面标题]]`、显式锚点 `## 小节 {#id}`、行内 HTML。
 
-**文件名就是地址**：`content/zh/about.md` 就是 `/docs/about/`。改文件名等于改地址，外部链接会断。
+**文件名就是地址**：`content/zh/about.md` 就是 `/about/`。改文件名等于改地址，外部链接会断。
 
-**每种语言都必须有 `content/<语言>/index.md`**，它就是该语言的首页。缺了 `check` 直接失败。
+**内容目录里必须有 `index.md`**，它就是首页。缺了 `check` 直接失败。
 
 ## 发布到 GitHub Pages
 
@@ -119,7 +119,7 @@ env:
 ## 常见坑
 
 - `--inline` 只适合单页分享，做站别开：每页都会带一份完整样式与搜索索引
-- 配 `content` 时，`defaultLanguage` 必须是 `content` 里的某个键，写错配置加载失败
+- 配 `content` 时只能写一个目录。多语言站每门语言一份配置，用 `-c` 指定配置文件，各跑一次 `build`
 - `urlStyle` 默认 `directory`（`a/b/`），要 `file://` 双击能看才改 `'file'`
 - 工具版本要钉死时写成 `@lightwiki/cli@0.3.0`，别写 `^0.3.0`：0.x 的 caret 只覆盖 `0.3.x`
 
@@ -131,15 +131,15 @@ env:
 
 | 内容 | 地址 |
 |---|---|
-| 全部 frontmatter 字段 | <https://summerset-zz.github.io/lightwiki/docs/basics/frontmatter/> |
-| 正文语法（双链、锚点、HTML、class） | <https://summerset-zz.github.io/lightwiki/docs/basics/markdown/> |
-| 模板 | <https://summerset-zz.github.io/lightwiki/docs/basics/templates/> |
-| 皮肤 | <https://summerset-zz.github.io/lightwiki/docs/basics/skins/> |
-| 样式与脚本 | <https://summerset-zz.github.io/lightwiki/docs/basics/styles/> |
-| 分类 | <https://summerset-zz.github.io/lightwiki/docs/basics/categories/> |
-| 站点配置全字段 | <https://summerset-zz.github.io/lightwiki/docs/advanced/config/> |
-| 命令行 | <https://summerset-zz.github.io/lightwiki/docs/advanced/cli/> |
-| 发布到 GitHub Pages | <https://summerset-zz.github.io/lightwiki/docs/advanced/deploy-pages/> |
-| 目录结构 | <https://summerset-zz.github.io/lightwiki/docs/start/structure/> |
+| 全部 frontmatter 字段 | <https://summerset-zz.github.io/lightwiki/basics/frontmatter/> |
+| 正文语法（双链、锚点、HTML、class） | <https://summerset-zz.github.io/lightwiki/basics/markdown/> |
+| 模板 | <https://summerset-zz.github.io/lightwiki/basics/templates/> |
+| 皮肤 | <https://summerset-zz.github.io/lightwiki/basics/skins/> |
+| 样式与脚本 | <https://summerset-zz.github.io/lightwiki/basics/styles/> |
+| 分类 | <https://summerset-zz.github.io/lightwiki/basics/categories/> |
+| 站点配置全字段 | <https://summerset-zz.github.io/lightwiki/advanced/config/> |
+| 命令行 | <https://summerset-zz.github.io/lightwiki/advanced/cli/> |
+| 发布到 GitHub Pages | <https://summerset-zz.github.io/lightwiki/advanced/deploy-pages/> |
+| 目录结构 | <https://summerset-zz.github.io/lightwiki/start/structure/> |
 
 源码：<https://github.com/summerset-zz/lightwiki>

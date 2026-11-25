@@ -26,7 +26,6 @@ import { LinkResolver, type TitleConflict } from './resolve.js';
 import { outputPathFor, pageUrl } from './routes.js';
 
 export interface Page {
-  lang: string;
   slug: string;
   /** 源文件绝对路径 */
   file: string;
@@ -163,7 +162,6 @@ function toPosix(p: string): string {
 }
 
 export interface PageSeed {
-  lang: string;
   slug: string;
   file: string;
   relativePath: string;
@@ -185,61 +183,58 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
   const problems: ContentProblem[] = [];
   const warnings: ContentProblem[] = [];
 
-  for (const [lang, dir] of Object.entries(config.content)) {
-    const absDir = resolve(config.root, dir);
-    let files: string[];
-    try {
-      files = await fg('**/*.md', { cwd: absDir, absolute: true });
-    } catch {
-      problems.push({ file: absDir, messages: [`content directory not found: ${dir}`] });
+  const dir = config.content;
+  const absDir = resolve(config.root, dir);
+  let files: string[] = [];
+  try {
+    files = await fg('**/*.md', { cwd: absDir, absolute: true });
+  } catch {
+    problems.push({ file: absDir, messages: [`content directory not found: ${dir}`] });
+  }
+
+  for (const file of files.sort()) {
+    const raw = await readFile(file, 'utf8');
+    const relativePath = toPosix(relative(absDir, file));
+    const parsed = parseFrontmatter(raw);
+    if (parsed.lenient) {
+      warnings.push({
+        file: `${dir}/${relativePath}`,
+        messages: [
+          `frontmatter is not valid YAML, read line by line in lenient mode${parsed.reason ? `: ${parsed.reason}` : ''}`,
+        ],
+      });
+    }
+
+    const result = frontmatterSchema.safeParse(normalizeDates(parsed.data));
+    if (!result.success) {
+      problems.push({
+        file: `${dir}/${relativePath}`,
+        messages: describeIssues(result.error.issues),
+      });
       continue;
     }
 
-    for (const file of files.sort()) {
-      const raw = await readFile(file, 'utf8');
-      const relativePath = toPosix(relative(absDir, file));
-      const parsed = parseFrontmatter(raw);
-      if (parsed.lenient) {
-        warnings.push({
-          file: `${dir}/${relativePath}`,
-          messages: [
-            `frontmatter is not valid YAML, read line by line in lenient mode${parsed.reason ? `: ${parsed.reason}` : ''}`,
-          ],
-        });
-      }
+    const data = result.data;
+    const slug = toPosix(relative(absDir, file)).replace(/\.md$/, '');
 
-      const result = frontmatterSchema.safeParse(normalizeDates(parsed.data));
-      if (!result.success) {
-        problems.push({
-          file: `${dir}/${relativePath}`,
-          messages: describeIssues(result.error.issues),
-        });
-        continue;
-      }
-
-      const data = result.data;
-      const slug = toPosix(relative(absDir, file)).replace(/\.md$/, '');
-
-      seeds.push({
-        lang,
-        slug,
-        file,
-        relativePath,
-        data,
-        body: parsed.content,
-        raw,
-        url: pageUrl(config, lang, slug),
-        outputPath: outputPathFor(config, lang, slug),
-        draft: data.draft,
-      });
-    }
+    seeds.push({
+      slug,
+      file,
+      relativePath,
+      data,
+      body: parsed.content,
+      raw,
+      url: pageUrl(config, slug),
+      outputPath: outputPathFor(config, slug),
+      draft: data.draft,
+    });
   }
 
   // 阶段 2：先把全站的 slug / 标题登记进索引，再渲染。
   // 内链 `[[标题]]` 必须能看到「扫描顺序在后面」的页面，所以不能边扫边渲染。
   const resolver = new LinkResolver();
   for (const seed of seeds) {
-    resolver.add({ lang: seed.lang, slug: seed.slug, url: seed.url, title: seed.data.title });
+    resolver.add({ slug: seed.slug, url: seed.url, title: seed.data.title });
   }
   resolver.finalize();
 
@@ -252,9 +247,9 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
 
   // 阶段 3：渲染
   const pages: Page[] = seeds.map((seed) => {
-    const pageInfo = buildPageInfo(seed);
+    const pageInfo = buildPageInfo(seed, config);
     const env: RenderEnv = {
-      lang: seed.lang,
+      lang: config.lang,
       config,
       resolver,
       macros,
@@ -267,7 +262,6 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
     const rendered = renderMarkdown(md, seed.body, env);
 
     return {
-      lang: seed.lang,
       slug: seed.slug,
       file: seed.file,
       relativePath: seed.relativePath,
@@ -294,8 +288,8 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
  *
  * 统一走 `context.ts` 的 `pageInfoOf`，避免布局与宏拿到不同的字段集。
  */
-function buildPageInfo(seed: PageSeed): PageInfo {
-  return pageInfoOf(seed);
+function buildPageInfo(seed: PageSeed, config: LoadedConfig): PageInfo {
+  return pageInfoOf(seed, config.lang);
 }
 
 /** 文件名（不含扩展名），用于提示「你可能想要的是 xxx」 */

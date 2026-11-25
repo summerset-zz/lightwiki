@@ -21,17 +21,17 @@ draft: false
 | 用 Nginx、Apache、Caddy | 确认目录请求会落到 `index.html` |
 | 想用服务端 301 | 见下面的重定向一节 |
 
-`basePath` 末尾斜杠写不写都能跑，构建会去掉。字段说明见 [站点配置](/docs/advanced/config)。
+`basePath` 末尾斜杠写不写都能跑，构建会去掉。字段说明见 [站点配置](/advanced/config)。
 
 ## 目录请求 {#index-files}
 
-`urlStyle: 'directory'`（默认）下，页面产物是 `docs/a/index.html`，访问地址是 `/docs/a/`。
+`urlStyle: 'directory'`（默认）下，页面产物是 `a/index.html`，访问地址是 `/a/`。
 
 这要求服务器把以 `/` 结尾的请求映射到该目录的 `index.html`。主流静态服务器默认如此。
 
 个别配置会 404，比如关掉了 `autoindex` 又没有配 `index`。
 
-`urlStyle: 'file'` 下产物是 `docs/a.html`，不依赖这个行为。
+`urlStyle: 'file'` 下产物是 `a.html`，不依赖这个行为。
 
 服务器托管同样能用 `'file'` 模式，只是地址里带 `.html`。
 
@@ -82,5 +82,5 @@ Netlify 与 Cloudflare Pages 认这个格式。Nginx 与 Apache 不认，要用�
 
 ## 再往下 {#next}
 
-- [发布到 GitHub Pages](/docs/advanced/deploy-pages)
-- [打包成 CHM](/docs/advanced/deploy-chm)
+- [发布到 GitHub Pages](/advanced/deploy-pages)
+- [打包成 CHM](/advanced/deploy-chm)

@@ -15,7 +15,6 @@ import { normalizeBasePath, searchIndexUrl, shouldInlineSearch } from './routes.
 
 /** 页面摘要：用于 `it.site.pages`，只有定位信息，不含正文 */
 export interface PageSummary {
-  lang: string;
   slug: string;
   url: string;
   title: string;
@@ -64,15 +63,8 @@ export const NOT_FOUND_SLUG = '404';
 export interface CategoryInfo {
   slug: string;
   label: string;
-  /** 全语言合计的篇数 */
+  /** 篇数 */
   count: number;
-  /**
-   * 每种语言各有多少篇。
-   *
-   * 分类页本身是按语言生成的，所以目录宏（`{{catalog}}`）要看的是这个，
-   * 不是 `count` —— 多语言站上那会把别的语言的篇数也算进来。
-   */
-  counts: Record<string, number>;
 }
 
 /** 搜索索引对模板暴露的部分：只要位置，不要数据（数据在页面里或 json 里） */
@@ -85,8 +77,8 @@ export interface SiteInfo {
   title: string;
   siteUrl: string;
   base: string;
-  defaultLanguage: string;
-  languages: string[];
+  /** 语言代码，只用于 `<html lang>` 与模板展示，不参与路由 */
+  lang: string;
   urlStyle: string;
   sections: string[];
   /** section slug → 显示名 */
@@ -99,8 +91,7 @@ export interface SiteInfo {
   generatedAt: string;
   /** 已发布页面数（不含草稿） */
   pageCount: number;
-  pageCounts: Record<string, number>;
-  /** 所有已发布页面的摘要，按语言 + section + order 排好 */
+  /** 所有已发布页面的摘要，按 section + order 排好 */
   pages: PageSummary[];
   /** 站内搜索；配置里关掉就是 null，模板据此决定要不要渲染搜索框 */
   search: SearchInfo | null;
@@ -113,7 +104,6 @@ export interface SiteInfo {
 
 /** pageInfoOf 需要的输入：Page 与 PageSeed 都满足 */
 export interface PageInfoInput {
-  lang: string;
   slug: string;
   url: string;
   outputPath: string;
@@ -138,10 +128,10 @@ export interface PageInfoInput {
  * 导致 `it.page.slug` 在宏里能拿到、在布局里是 undefined。
  * 布局额外拥有的只有渲染产物（`html` / `headings` / `hints` / `sources`）。
  */
-export function pageInfoOf(input: PageInfoInput): PageInfo {
+export function pageInfoOf(input: PageInfoInput, lang: string): PageInfo {
   return {
     ...(input.data as unknown as Record<string, unknown>),
-    lang: input.lang,
+    lang,
     slug: input.slug,
     url: input.url,
     outputPath: input.outputPath,
@@ -161,7 +151,6 @@ export function pageInfoOf(input: PageInfoInput): PageInfo {
 
 /** createSiteInfo 需要的最小页面形状：Page 与 PageSeed 都满足 */
 export interface Summarizable {
-  lang: string;
   slug: string;
   url: string;
   draft: boolean;
@@ -205,7 +194,6 @@ export function categoriesOf(value: unknown): string[] {
 
 export function summarize(page: Summarizable): PageSummary {
   return {
-    lang: page.lang,
     slug: page.slug,
     url: page.url,
     title: page.data.title,
@@ -224,11 +212,6 @@ export function createSiteInfo(
   // 404 页不是「站点里的一页」：它只负责生成根目录的 404.html，不该出现在导航、
   // 分类计数和 `{{pages}}` 这类目录宏里。过滤放在这里，正文渲染与布局看到的才是同一份。
   const published = pages.filter((page) => !page.draft && page.slug !== NOT_FOUND_SLUG);
-  const pageCounts: Record<string, number> = {};
-  for (const lang of Object.keys(config.content)) pageCounts[lang] = 0;
-  for (const page of published) {
-    pageCounts[page.lang] = (pageCounts[page.lang] ?? 0) + 1;
-  }
 
   const order = (a: PageSummary, b: PageSummary): number => {
     if (a.section !== b.section) return a.section.localeCompare(b.section, 'zh');
@@ -240,12 +223,10 @@ export function createSiteInfo(
 
   const summaries = published.map(summarize).sort(order);
 
-  const categoryCounts = new Map<string, Record<string, number>>();
+  const categoryCounts = new Map<string, number>();
   for (const summary of summaries) {
     for (const slug of summary.categories) {
-      const per = categoryCounts.get(slug) ?? {};
-      per[summary.lang] = (per[summary.lang] ?? 0) + 1;
-      categoryCounts.set(slug, per);
+      categoryCounts.set(slug, (categoryCounts.get(slug) ?? 0) + 1);
     }
   }
 
@@ -253,12 +234,10 @@ export function createSiteInfo(
   const undeclared = [...categoryCounts.keys()].filter((slug) => !declared.includes(slug)).sort();
   const categoryList: CategoryInfo[] = [...declared.filter((slug) => categoryCounts.has(slug)), ...undeclared].map(
     (slug) => {
-      const counts = categoryCounts.get(slug) ?? {};
       return {
         slug,
         label: config.categories[slug] ?? slug,
-        count: Object.values(counts).reduce((sum, n) => sum + n, 0),
-        counts,
+        count: categoryCounts.get(slug) ?? 0,
       };
     },
   );
@@ -267,8 +246,7 @@ export function createSiteInfo(
     title: config.title,
     siteUrl: config.siteUrl,
     base: normalizeBasePath(config.basePath),
-    defaultLanguage: config.defaultLanguage,
-    languages: Object.keys(config.content),
+    lang: config.lang,
     urlStyle: config.urlStyle,
     sections: config.sections,
     sectionLabels: config.sectionLabels,
@@ -276,7 +254,6 @@ export function createSiteInfo(
     categoryList,
     generatedAt: generatedAt.toISOString(),
     pageCount: published.length,
-    pageCounts,
     pages: summaries,
     search: config.search.enabled
       ? { url: shouldInlineSearch(config) ? null : searchIndexUrl(config) }

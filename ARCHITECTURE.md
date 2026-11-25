@@ -45,7 +45,7 @@
 | `Page` | `content.ts` | 渲染结果，含 `html` / `headings` / `links` / `hints` / `sources` / `categories` |
 | `PageInfo` | `context.ts` | 宏与布局看到的 `it.page` |
 | `SiteInfo` | `context.ts` | `it.site`，含 `pages[]` / `categoryList` / `generatedAt` |
-| `LinkResolver` | `resolve.ts` | slug 与标题索引，`resolve(target, lang)` |
+| `LinkResolver` | `resolve.ts` | slug 与标题索引，`resolve(target)`（单语言，无语言维度） |
 | `MacroRegistry` | `macros.ts` | 宏的加载与同步渲染，内部维护展开栈 |
 
 `it.page` 由 `context.ts` 的 `pageInfoOf()` **唯一构造**：布局与宏拿到的是同一套字段。差别只有一处——布局 `doc` 额外有渲染产物（`html` / `headings` / `hints` / `sources`），因为宏执行时这些还在生成。`it.site` 两边是同一个对象。
@@ -58,17 +58,19 @@
 
 | 用途 | 形态 |
 |---|---|
-| 内容页 | `/{lang}/docs/{slug}/`（默认语言无 `{lang}`） |
-| 目录页 | `/{lang}/docs/` |
-| 分类页 | `/{lang}/categories/{slug}/` |
+| 内容页 | `[basePath][urlPrefix][docsDir]/{slug}/`，默认全空时就是 `/{slug}/` |
+| 首页 | 同上，slug 为 `index`。`docsDir` 与 `urlPrefix` 都为空时它是站点根的 `index.html`，不再生成跳转页 |
+| 分类页 | `[basePath][urlPrefix]/categories/{slug}/` |
 | 404 | `/404.html`（根目录，只有一份） |
 | 重定向 | 在 `from` 的位置生成跳转页，或输出 `_redirects` |
 
 规则：
 
+- **单语言**：`content` 是一段目录，没有语言字典；要双语就写两份配置、各构建一次（`-c`）。`lang` 只用于 `<html lang>` 与 `it.page.lang`。
+- `docsDir` 默认 `''`：内容页直接挂在根下（或 `urlPrefix` 下）。slug 第一段撞上 `assets` / `categories` 时 `check` 判失败。
 - `urlStyle: 'directory'` → `a/b/`；`'file'` → `a/b.html`（给 `file://` 与 CHM）。
-- **file 模式下目录页是 `{lang}/docs.html`**，不是 `docs/index.html` —— 必须与 `urlToOutputPath()` / `localizeHref()` 算出来的一致，否则链接指向不存在的文件（踩过）。产物路径统一由 `indexOutputPath()` / `categoryOutputPath()` / `outputPathFor()` 给出。
-- `localizeHref()` 只改写 `/docs` 与 `/categories` 两棵路径（补语言前缀 + 尾斜杠），其余站内路径原样。
+- **file 模式下首页是 `docs.html`**（`docsDir: 'docs'` 时），不是 `docs/index.html` —— 必须与 `urlToOutputPath()` / `localizeHref()` 算出来的一致，否则链接指向不存在的文件（踩过）。产物路径统一由 `indexOutputPath()` / `categoryOutputPath()` / `outputPathFor()` 给出。
+- `localizeHref()` 只改写内容页与 `/categories` 两棵路径（补 `urlPrefix` + 尾斜杠），其余站内路径原样。
 - **file 模式下链接是相对的**：`relative.ts` 在 HTML 生成后把站内绝对路径改写成相对当前页面的路径。理由：`file://` 下 `/docs/a.html` 指到盘符根，双击产物等于全站导航全废。相对路径在托管下同样成立，所以两种环境共用一套产物。
 - **slug 为 `404` 的页面**不按普通页面输出，只生成 `/404.html`。
 - dev 额外接受产物里的真实文件路径（`/docs/x/index.html`），但 `/docs/index` 这种**不带 `.html`** 的不能剥。

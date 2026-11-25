@@ -13,4 +13,4 @@ draft: false
 
 我们在markdown中指定了`layout: landing`和`styles: landing.css`，表示使用`site/layouts/landing.eta`作为皮肤、额外加载`site/assets/landing.css`作为样式表。
 
-一个合规页面至少要在frontmatter里包含`title`。关于frontmatter各字段的含义，请参考[此文档](/docs/basics/frontmatter)
+一个合规页面至少要在frontmatter里包含`title`。关于frontmatter各字段的含义，请参考[此文档](/basics/frontmatter)

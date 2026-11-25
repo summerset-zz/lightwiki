@@ -12,11 +12,11 @@ draft: false
 
 ## 四个命令 {#commands}
 
-```
+```text
 wiki init [dir]                       scaffold a new site
 wiki dev [dir] [-p port]              preview server with live reload
 wiki check [dir]                      validate
-wiki build [dir] [-o out] [--inline]  build a static site
+wiki build [dir] [-c file] [-o out] [--inline]  build a static site
 ```
 
 `[dir]` 是内容仓库根，也就是含 `wiki.config.ts` 的那个目录。省略时用当前目录。
@@ -30,6 +30,7 @@ wiki build [dir] [-o out] [--inline]  build a static site
 | `--no-watch` | `dev` | 关 | 关掉源码监护层 |
 | `--watch` | `dev` | 关 | 把默认值写明白，等价于不写 |
 | `-o, --out` | `build` | 配置的 `outputDir` | 输出目录 |
+| `-c, --config` | `build` | `wiki.config.ts` | 配置文件名，相对内容根 |
 | `--inline` | `build` | `false` | 单文件产物 |
 | `--strict` | `check` | `false` | 红链与孤页也算失败 |
 | `--name` | `init` | 目录名 | 站点名 |
@@ -41,6 +42,7 @@ wiki build [dir] [-o out] [--inline]  build a static site
 npx @lightwiki/cli dev . -p 3000        # 换端口
 npx @lightwiki/cli check . --strict     # 红链与孤页也算失败
 npx @lightwiki/cli build . -o public    # 产物写到 public/
+npx @lightwiki/cli build . -c wiki.config.en.ts -o dist-en   # 换一份配置、换一个输出目录
 ```
 
 `-p` 收到非整数、`0` 或超过 `65535` 的值时直接退出，退出码是 `2`。
@@ -84,9 +86,9 @@ npx @lightwiki/cli build . -o public    # 产物写到 public/
 
 `wiki build <目录>` 构建到配置里的 `outputDir`，默认是 `dist/`。构建会先清空输出目录。
 
-产物里有哪些文件，见 [目录结构](/docs/start/structure)。
+产物里有哪些文件，见 [目录结构](/start/structure)。
 
-加 `--inline`（或配置里写 `inline: true`）时产物只剩 `.html`，样式、脚本、图片与搜索索引都内联进页面。体积代价见 [站点配置](/docs/advanced/config)。
+加 `--inline`（或配置里写 `inline: true`）时产物只剩 `.html`，样式、脚本、图片与搜索索引都内联进页面。体积代价见 [站点配置](/advanced/config)。
 
 ## check 检查什么 {#check}
 
@@ -99,16 +101,15 @@ npx @lightwiki/cli build . -o public    # 产物写到 public/
 | `section value(s) not in the allowed list` | `section` 不在配置里 | 是 |
 | `layout file(s) missing` | `layout` 指的皮肤文件不存在 | 是 |
 | `missing style/script file(s)` | `styles` / `scripts` 指向的文件不存在 | 是 |
-| `language(s) without a home page` | 某个语言缺 `index.md` | 是 |
-| `duplicate title(s)` | 同一语言里标题撞车，`[[标题]]` 会歧义 | 是 |
+| `no home page` | 内容目录缺 `index.md` | 是 |
+| `duplicate title(s)` | 标题撞车，`[[标题]]` 会歧义 | 是 |
 | `undefined macro(s)` | 模板没定义 | 取决于 `macros.undefined`，默认算失败 |
 | `unresolved wikilink(s)` | 双链的目标既不是 slug 也不是标题 | 否，`--strict` 也不升级 |
 | `red link(s)` | 站内链接指向不存在的页 | 否，`--strict` 时算 |
 | `orphan page(s)` | 没有任何页面链到它 | 否，`--strict` 时算 |
 | `category note(s)` | 分类没在配置里声明，或 `sidebarCategory` 没有成员 | 否 |
-| `missing translation(s)` | 某页在别的语言里没有对应页 | 否，纯提示 |
 
-「链到它」只算**正文链接**：markdown 渲染出来的 `[]()`、双链、以及模板展开后落进正文的链接。导航、侧栏、皮肤里直接写的 `<a>` 都不算入链，也不算红链。所以把首页内容整块写在皮肤里时，它链过去的那几页仍会被报成孤页。原因与取舍见 [皮肤](/docs/basics/skins#content-links)。
+「链到它」只算**正文链接**：markdown 渲染出来的 `[]()`、双链、以及模板展开后落进正文的链接。导航、侧栏、皮肤里直接写的 `<a>` 都不算入链，也不算红链。所以把首页内容整块写在皮肤里时，它链过去的那几页仍会被报成孤页。原因与取舍见 [皮肤](/basics/skins#content-links)。
 
 `--strict` 只把红链与孤页这两项升级为失败，其它提示项不受影响。
 
@@ -116,4 +117,4 @@ npx @lightwiki/cli build . -o public    # 产物写到 public/
 
 ## 再往下 {#next}
 
-每个字段的作用与默认值见 [站点配置](/docs/advanced/config)。内容怎么写见 [frontmatter](/docs/basics/frontmatter)。
+每个字段的作用与默认值见 [站点配置](/advanced/config)。内容怎么写见 [frontmatter](/basics/frontmatter)。

@@ -16,13 +16,13 @@ import {
   injectPageAssets,
   injectPageData,
   injectSearchIndex,
-  langPrefix,
   loadContent,
   normalizeBasePath,
   normUrl,
   pageAssetUrl,
   pageDataOf,
   pageUrl,
+  prefixPath,
   resolvePageAsset,
   scriptList,
   SEARCH_INDEX_FILE,
@@ -67,7 +67,7 @@ export interface DevState {
 
 export type DevRoute =
   | { kind: 'page'; page: Page }
-  | { kind: 'category'; lang: string; slug: string }
+  | { kind: 'category'; slug: string }
   | { kind: 'asset'; file: string }
   | { kind: 'search-index' }
   | { kind: 'redirect'; location: string }
@@ -118,8 +118,8 @@ async function loadState(config: LoadedConfig): Promise<DevState> {
   return { pages, byUrl, siteInfo: createSiteInfo(config, pages), highlight };
 }
 
-function indexUrlOf(config: LoadedConfig, lang: string): string {
-  return pageUrl(config, lang, INDEX_SLUG);
+function indexUrlOf(config: LoadedConfig): string {
+  return pageUrl(config, INDEX_SLUG);
 }
 
 /** 页面级样式/脚本（frontmatter 的 styles / scripts）：解析成站内地址，缺的就跳过 */
@@ -156,7 +156,6 @@ export function resolveDevRoute(
 ): DevRoute {
   const key = normUrl(pathname, config);
   const base = normalizeBasePath(config.basePath);
-  const langs = Object.keys(config.content);
 
   // 从产物里复制来的真实文件路径也要能访问（`/docs/macros/index.html`）。
   // 托管上 `xx/index.html` 就是 `xx/`，所以剥掉 `/index` 的版本优先试。
@@ -168,15 +167,13 @@ export function resolveDevRoute(
 
   for (const candidate of candidates) {
     if (candidate === '/') {
-      return { kind: 'redirect', location: indexUrlOf(config, config.defaultLanguage) };
+      return { kind: 'redirect', location: indexUrlOf(config) };
     }
 
-    for (const lang of langs) {
-      // 首页就是 slug 为 index 的那一页，已经在 byUrl 里了，不需要单独判定
-      if (candidate === normUrl(indexUrlOf(config, lang), config)) {
-        const home = state.byUrl.get(candidate);
-        if (home) return { kind: 'page', page: home };
-      }
+    // 首页就是 slug 为 index 的那一页，已经在 byUrl 里了，不需要单独判定
+    if (candidate === normUrl(indexUrlOf(config), config)) {
+      const home = state.byUrl.get(candidate);
+      if (home) return { kind: 'page', page: home };
     }
 
     const page = state.byUrl.get(candidate);
@@ -190,19 +187,12 @@ export function resolveDevRoute(
       }
     }
 
-    // 分类页：`/categories/<slug>`（默认语言）或 `/<lang>/categories/<slug>`
-    for (const lang of langs) {
-      const prefix = normUrl(
-        `${base}${langPrefix(config, lang)}/categories/`,
-        config,
-      );
-      if (!candidate.startsWith(`${prefix}/`)) continue;
-
+    // 分类页：`/categories/<slug>`，有 `urlPrefix` 时是 `/<prefix>/categories/<slug>`
+    const prefix = normUrl(`${base}${prefixPath(config)}/categories/`, config);
+    if (candidate.startsWith(`${prefix}/`)) {
       const slug = candidate.slice(prefix.length + 1);
-      const exists = state.pages.some(
-        (p) => p.lang === lang && !p.draft && p.categories.includes(slug),
-      );
-      if (exists) return { kind: 'category', lang, slug };
+      const exists = state.pages.some((p) => !p.draft && p.categories.includes(slug));
+      if (exists) return { kind: 'category', slug };
     }
   }
 
@@ -319,7 +309,7 @@ export async function startDevServer(
 
       // 与产物保持同一套字段：`it.page` 去掉整篇原文
       if (page && config.frontmatterInjection) {
-        out = injectPageData(out, pageDataOf(page));
+        out = injectPageData(out, pageDataOf(page, config.lang));
       }
 
       return out.includes('</body>')
@@ -342,7 +332,6 @@ export async function startDevServer(
         createCategoryView(
           config,
           state.pages,
-          route.lang,
           route.slug,
           state.siteInfo,
         ) as unknown as Record<string, unknown>,

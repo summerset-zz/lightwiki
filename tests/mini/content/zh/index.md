@@ -19,7 +19,7 @@ categories: [demo]
 - [[links|链接]]：站内链接与双链
 - [[macros|宏]]：`{{…}}` 的三种形态
 - [[directives|行内指令]]：术语提示与小节来源
-- [[categories|分类]]：页面归类与分类侧栏
+- [[category-page|分类]]：页面归类与分类侧栏
 - [[context|模板上下文]]：`it.page` 与 `it.site`
 - [[html|在正文里写 HTML]]：内联 SVG 与颜色约定
 - [[layouts|布局]]：覆盖主题模板
@@ -40,25 +40,13 @@ categories: [demo]
 
 ## 这一页本身就是首页 {#as-home}
 
-`content/zh/index.md` 就是 `/docs/` —— 没有「自动生成的目录页」这回事，目录写什么、怎么排，全由这一页决定。想换成纯 HTML，就配一个 `layout: landing` 然后正文留空。
+`content/zh/index.md` 就是 `/`。没有自动生成的目录页，目录写什么、怎么排，全由这一页决定。想换成纯 HTML，就配一个 `layout: landing` 然后正文留空。
 
 下面两节用的是主题自带的目录宏；想按分组列全站，写成 `{{pages(section: reference)}}` 就是这个效果：
 
 {{pages(section: reference)}}
 
 ### 按分类列 {#by-category}
-
-{{catalog}}
-
-## 这一页本身就是首页 {#as-home}
-
-`content/zh/index.md` 就是 `/docs/`，没有「自动生成的目录页」这回事 —— 目录写什么、怎么排，全由这一页决定。
-
-下面两节用的都是主题自带的目录宏。想要「按分组列全站」就把它们换成 `{{pages(section: 分组名)}}`：
-
-{{pages(section: reference)}}
-
-## 按分类列 {#by-category}
 
 {{catalog}}
 

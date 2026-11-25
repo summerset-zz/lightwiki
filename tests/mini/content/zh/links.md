@@ -1,7 +1,7 @@
 ---
 title: 链接
 keywords: 链接, link, 双链, wikilink, 内链
-description: 站内链接会自动补语言前缀，双链可以按 slug 或标题解析，外链自动加 nofollow。
+description: 站内链接写站内绝对路径，双链可以按 slug 或标题解析，外链自动加 nofollow。
 section: syntax
 order: 4
 updated: 2026-11-17
@@ -11,17 +11,17 @@ categories: [syntax]
 
 ## 普通站内链接 {#markdown-link}
 
-写 `/docs/<slug>` 就够了，**不要手写语言前缀**：
+写 `/macros` 这样的站内绝对路径就够了：
 
 ```md
-见 [宏](/docs/macros)。
+见 [宏](/macros)。
 ```
 
-效果：见 [宏](/docs/macros)。
+效果：见 [宏](/macros)。
 
-在英文页里，同一个写法会自动变成 `/en/docs/macros`。跳转逻辑只处理 `/docs` 这一棵路径，其他站内路径（比如工具页）原样输出。
+构建时会补上 `basePath`、`urlPrefix`、`docsDir` 与 directory 模式的尾斜杠，这些都不用自己写。
 
-相对路径也能用，但基准是**当前页所在的目录**，与浏览器一致。这一页在 `/docs/links/`，所以 `./macros` 落到 `/docs/links/macros`（不存在），`../macros` 才回到 `/docs/macros`。
+相对路径也能用，但基准是**当前页所在的目录**，与浏览器一致。这一页在 `/links/`，所以 `./macros` 落到 `/links/macros`（不存在），`../macros` 才回到 `/macros`。
 
 效果：[用相对路径过去的宏](../macros)。
 
@@ -55,7 +55,7 @@ categories: [syntax]
 
 解析顺序是**先 slug、再标题**。slug 来自文件名，最稳；标题来自 frontmatter，改标题就会断链。
 
-同一语言里标题不能重复，重复会让 `wiki check` 直接失败——因为 `[[同名]]` 指向哪一页不明确。找不到目标时页面上会留下一个灰色占位，`check` 里列为「未解析的内链」。
+标题不能重复，重复会让 `wiki check` 直接失败——因为 `[[同名]]` 指向哪一页不明确。找不到目标时页面上会留下一个灰色占位，`check` 里列为「未解析的内链」。
 
 ## 外链 {#external}
 

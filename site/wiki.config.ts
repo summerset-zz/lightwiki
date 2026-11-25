@@ -16,10 +16,7 @@ const config: SiteConfigInput = {
   title: '轻维基',
   siteUrl: 'https://summerset-zz.github.io/lightwiki',
   basePath: env.LIGHTWIKI_BASE_PATH ?? '/',
-  defaultLanguage: 'zh',
-  content: {
-    zh: 'content/zh',
-  },
+  content: 'content/zh',
   sections: ['start', 'basics', 'advanced'],
   sectionLabels: {
     start: '开始',
