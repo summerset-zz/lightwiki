@@ -86,10 +86,14 @@ export async function buildSite(
 
   // 内联模式先把资源读进内存：页面渲染时要拿它们填 <style> 与 data URI，
   // 而且一个字节都不能写到 assets/（否则「产物只有 .html」就不成立）。
+  //
+  // 主题在前、用户在后：`createInlineBundle` 是同 key 后写覆盖，这样
+  // 用户在 `assets/theme/` 里放同名文件就能盖掉主题资源（与 layouts / macros 的
+  // 「用户优先」一致）。
   const bundle: InlineBundle | null = inlineMode
     ? createInlineBundle([
-        { prefix: 'assets', files: await collectAssets(resolve(config.root, config.assetsDir)) },
         { prefix: 'assets/theme', files: await collectAssets(join(config.themeDir, 'assets')) },
+        { prefix: 'assets', files: await collectAssets(resolve(config.root, config.assetsDir)) },
       ])
     : null;
 
@@ -310,8 +314,10 @@ export async function buildSite(
   let assetFiles = 0;
   let assetBytes = 0;
   if (!bundle) {
-    const own = await copyAssets(resolve(config.root, config.assetsDir), join(outputDir, 'assets'));
+    // 顺序要紧：主题先落盘，用户后落盘。用户把同名文件放在 `assets/theme/` 里就能
+    // 盖掉主题资源（`wiki theme eject` 就是靠这条生效的）。
     const theme = await copyAssets(join(config.themeDir, 'assets'), join(outputDir, 'assets', 'theme'));
+    const own = await copyAssets(resolve(config.root, config.assetsDir), join(outputDir, 'assets'));
     assetFiles = own.files + theme.files;
     assetBytes = own.bytes + theme.bytes;
   }

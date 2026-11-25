@@ -239,9 +239,29 @@ frontmatter 的 `styles` / `scripts` 由构建在渲染之后统一注入：样�
 
 ## 从 doc 改起 {#copy}
 
-照抄主题的 `doc.eta` 到内容仓库 `layouts/doc.eta`，再改。
+想改哪一份就让工具把它复制过来，再在原文件上改：
 
-理由是能保住那些细节：`<html lang>`、`<title>` 的拼法、搜索框的 `data-index`、当前项上的 `aria-current`。从头写很容易漏，漏了不会报错，只是某个功能悄悄不工作。
+```bash
+npx @lightwiki/cli theme list .                    # 主题提供哪些文件、哪些已经被你覆盖
+npx @lightwiki/cli theme eject .                   # 全部复制到本地
+npx @lightwiki/cli theme eject . --only layouts/doc.eta   # 只复制一份
+```
+
+复制到的位置：
+
+| 主题里 | 复制到 |
+|---|---|
+| `layouts/*.eta` | `layouts/*.eta` |
+| `macros/*.eta` | `macros/*.eta` |
+| `assets/*` | `assets/theme/*` |
+
+前两类靠查找顺序生效（内容仓库优先），第三类靠构建时的复制顺序（主题先落盘、你的后落盘），所以放在 `assets/theme/` 里的同名文件直接盖掉主题的那份。
+
+`eject` 默认**跳过已存在的文件**，不会覆盖你改过的东西；确实要覆盖就加 `--force`。
+
+> 复制出来的文件**不再跟随工具升级**。想保留升级能力，就别整份复制 —— 只 `--only` 拿你要改的那一个，剩下的继续用主题原件。升级后用 `theme list` 看哪几个还挂着，用主题原件对比差异。
+
+自己从头写也不是不行，但很容易漏细节：`<html lang>`、`<title>` 的拼法、搜索框的 `data-index`、当前项上的 `aria-current`。漏了不会报错，只是某个功能悄悄不工作。
 
 ## 写坏了会怎样 {#failures}
 

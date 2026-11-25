@@ -17,9 +17,13 @@ wiki init [dir]                       scaffold a new site
 wiki dev [dir] [-p port]              preview server with live reload
 wiki check [dir]                      validate
 wiki build [dir] [-c file] [-o out] [--inline]  build a static site
+wiki theme list [dir]                 what the theme provides, and what you already override
+wiki theme eject [dir] [--only file]  copy theme files into the repo so you can edit them
 ```
 
 `[dir]` 是内容仓库根，也就是含 `wiki.config.ts` 的那个目录。省略时用当前目录。
+
+theme 下面两个子命令见 [皮肤](/basics/skins#copy)。
 
 ## 参数全表 {#flags}
 
@@ -34,7 +38,8 @@ wiki build [dir] [-c file] [-o out] [--inline]  build a static site
 | `--inline` | `build` | `false` | 单文件产物 |
 | `--strict` | `check` | `false` | 红链与孤页也算失败 |
 | `--name` | `init` | 目录名 | 站点名 |
-| `--force` | `init` | `false` | 覆盖已存在的文件，默认跳过 |
+| `--only` | `theme eject` | 无 | 只复制这一个文件，如 `layouts/doc.eta` |
+| `--force` | `init` / `theme eject` | `false` | 覆盖已存在的文件，默认跳过 |
 
 常改的几个参数：
 
@@ -64,7 +69,7 @@ npx @lightwiki/cli build . -c wiki.config.en.ts -o dist-en   # 换一份配置�
 | 文件 | 是什么 |
 |---|---|
 | `wiki.config.ts` | 站点配置 |
-| `content/index.md` | 首页 |
+| `content/zh/index.md` | 首页 |
 | `AGENTS.md` | 给 AI 助手的写作说明 |
 | `README.md` | 使用说明 |
 | `.gitignore` | 忽略 `node_modules/`、`dist/`、`.DS_Store` |
@@ -89,6 +94,18 @@ npx @lightwiki/cli build . -c wiki.config.en.ts -o dist-en   # 换一份配置�
 产物里有哪些文件，见 [目录结构](/start/structure)。
 
 加 `--inline`（或配置里写 `inline: true`）时产物只剩 `.html`，样式、脚本、图片与搜索索引都内联进页面。体积代价见 [站点配置](/advanced/config)。
+
+## theme 查看并复制主题文件 {#theme}
+
+```bash
+npx @lightwiki/cli theme list .                     # 主题提供哪些文件、哪些已经被本地覆盖
+npx @lightwiki/cli theme eject .                    # 全部复制到本地
+npx @lightwiki/cli theme eject . --only layouts/doc.eta
+```
+
+`list` 输出里带 `*` 的那几行表示本地已经有同名文件，构建时用的是你的那份。`eject` 默认跳过已存在的文件，`--force` 才覆盖。
+
+复制出来的文件不再跟随工具升级，取舍与落点见 [皮肤](/basics/skins#copy)。
 
 ## check 检查什么 {#check}
 

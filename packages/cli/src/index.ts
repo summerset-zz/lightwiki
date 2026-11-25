@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { buildSite, checkSite, loadConfig, pageUrl, type BuildResult } from '@lightwiki/core';
+import { buildSite, checkSite, ejectTheme, listThemeFiles, loadConfig, pageUrl, type BuildResult } from '@lightwiki/core';
 
 const USAGE = `lightwiki CLI
 
 Usage:
   wiki init [dir]                       scaffold a new site (config + sample content + Pages workflow)
   wiki dev [dir] [-p port]              start the preview server (live reload)
-  wiki check [dir]                      validate frontmatter, sections, red links, orphans, translations
+  wiki check [dir]                      validate frontmatter, sections, red links, orphans
   wiki build [dir] [-o out] [--inline]  build a static site
+  wiki theme list [dir]                 show what the theme provides and what you already override
+  wiki theme eject [dir] [file]         copy theme files into the repo so you can edit them
 
 Options:
   [dir]        content repo root containing wiki.config.ts (default: current directory)
@@ -20,7 +22,8 @@ Options:
     --inline     inline CSS/JS/images/search index so the output is only .html
   --strict     treat red links and orphan pages as failures
   --name       site name for init (default: directory name)
-  --force      init: overwrite existing files (default: skip)
+  --only       theme eject: copy just this file (e.g. layouts/doc.eta)
+  --force      init / theme eject: overwrite existing files (default: skip)
   --no-watch   dev: disable the supervisor that restarts on packages/*/src changes
 
 Exit codes: 0 ok, 1 problems found, 2 usage error`;
@@ -122,6 +125,7 @@ async function run(args: string[]): Promise<number> {
     options: {
       out: { type: 'string', short: 'o' },
       config: { type: 'string', short: 'c' },
+      only: { type: 'string' },
       port: { type: 'string', short: 'p' },
       host: { type: 'string' },
       inline: { type: 'boolean', default: false },
@@ -152,6 +156,46 @@ async function run(args: string[]): Promise<number> {
       line('  To publish on GitHub Pages, see the "Publishing" section in README.');
     }
     return 0;
+  }
+
+  // theme 子命令：第一个位置参数是子命令，第二个才是目录
+  if (command === 'theme') {
+    const [sub, dirArg] = positionals;
+    const siteRoot = resolve(dirArg ?? '.');
+    const config = await loadConfig(siteRoot, { file: values.config });
+
+    if (sub === 'list') {
+      const files = await listThemeFiles(config);
+      line(`theme: ${config.themeDir}`);
+      for (const file of files) {
+        line(`  ${file.overridden ? '*' : ' '} ${file.path}  ->  ${file.target}`);
+      }
+      const overridden = files.filter((file) => file.overridden).length;
+      section(`${files.length} file(s), ${overridden} overridden locally`);
+      line('  * = 本地已有同名文件，构建时用你的那份');
+      return 0;
+    }
+
+    if (sub === 'eject') {
+      const result = await ejectTheme(config, { only: values.only, force: values.force });
+      if (result.missing) {
+        line(`theme has no file: ${result.missing}`);
+        line('  run `wiki theme list` to see what it provides');
+        return 2;
+      }
+
+      for (const file of result.written) line(`  + ${file}`);
+      for (const file of result.skipped) line(`  = ${file} (already exists, skipped)`);
+
+      if (result.written.length > 0) {
+        section(`${result.written.length} file(s) copied into the repo`);
+        line('  这些文件以后不再跟随工具升级；主题原件仍在上面那个 theme 路径里，可以对比。');
+      }
+      return 0;
+    }
+
+    line(`unknown theme subcommand: ${sub ?? '(none)'} -- use "theme list" or "theme eject"`);
+    return 2;
   }
 
   const config = await loadConfig(root, { file: values.config });

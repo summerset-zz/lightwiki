@@ -74,6 +74,13 @@ export {
   shouldInlineSearch,
 } from './routes.js';
 export { createRenderer, layoutCandidates, type Renderer } from './render.js';
+export {
+  ejectTheme,
+  listThemeFiles,
+  type EjectOptions,
+  type EjectResult,
+  type ThemeFile,
+} from './theme.js';
 export { rewriteRelativeLinks, relativeUrl } from './relative.js';
 export {
   buildSearchIndex,

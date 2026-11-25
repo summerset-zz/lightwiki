@@ -151,6 +151,10 @@ dist/
 
 资源走 `assets.ts` 的 `collectAssets()` / `copyAssets()`：`.less` 编译成同名 `.css`，**产物里不留 `.less`**。
 
+**覆盖顺序：主题先、用户后**。内容仓库的 `assets/` 复制到 `assets/`，主题的复制到 `assets/theme/`，后者先落盘，所以用户在 `assets/theme/` 里放同名文件就能盖掉主题资源。inline 模式同理（`createInlineBundle` 按数组顺序写入，同 key 后写赢）。
+
+`theme.ts` 的 `listThemeFiles()` / `ejectTheme()` 就靠这条：`wiki theme eject` 把主题的 `layouts/`、`macros/`、`assets/` 分别复制到内容仓库的 `layouts/`、`macros/`、`assets/theme/`，三类文件的生效方式因此完全一致（内容仓库优先）。
+
 `outputDir` 每次构建前被 `rm -rf`。
 
 **单文件产物（`inline: true`）**：产物里只有 `.html`（加上 `_redirects`，如果业务需要），没有 `assets/`、没有 `meta.json`、没有 `search-index.json`。`collectAssets()` 把资源留在内存里供 `inline.ts` 使用，一个字节都不落盘 —— 「只有 .html」是硬约束，不是副作用。
@@ -205,6 +209,7 @@ dist/
 | 加一个模板变量 | `context.ts`（`PageInfo` / `SiteInfo` + `pageInfoOf`）→ `view.ts` 与 `macros.ts` 自动继承 |
 | 加一种行内语法 | `markdown.ts` 的 ruler 注册 + 实现 → `tests/mini` 加一节 |
 | 改资源管线 | `assets.ts` → `build.ts` 的调用处 → `dev` 的 asset 分支 |
+| 改主题提供的文件列表或 eject 落点 | `theme.ts` 的 `AREAS` → `cli` 的 `theme list / eject` |
 | 改内联规则（哪些标签、哪种 data URI） | `inline.ts` 的 `inlineHtml` / `MIME` 表 |
 | 改皮肤代码块的触发方式（目前是 `lang` 属性） | `code-blocks.ts` 的 `highlightCodeBlocks` → `build.ts` 的 `emit` |
 | 改相对链接改写规则 | `relative.ts` 的 `relativeUrl` / `isPageUrl` |
