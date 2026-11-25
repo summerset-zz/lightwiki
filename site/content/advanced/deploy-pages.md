@@ -18,7 +18,7 @@ GitHub Pages 是 GitHub 自带的静态站点托管，把仓库里的产物当�
 |---|---|
 | 检出 | 拉取仓库内容 |
 | 装 Node | `actions/setup-node`，版本 22 |
-| 构建 | 跑 `npx --yes @lightwiki/cli@0.3.0 build .` |
+| 构建 | 跑 `npx --yes @lightwiki/cli@0.5.0 build .` |
 | 上传 | 把 `dist/` 上传成 Pages 站点产物 |
 | 发布 | 把这份产物发到 Pages |
 
@@ -58,16 +58,16 @@ const basePath = env.LIGHTWIKI_BASE_PATH ?? '/';
 起始模板的 workflow 用 `npx` 直接跑，版本写在命令里：
 
 ```yaml
-run: npx --yes @lightwiki/cli@0.3.0 build .
+run: npx --yes @lightwiki/cli@0.5.0 build .
 ```
 
 写死版本是为了构建可复现。升级工具时只改这一个数字。
 
-> 别写成 `^0.3.0`。0.x 的 caret 只覆盖 `0.3.x`，下个 minor 就取不到，站点会一直停在旧版本。
+> 别写成 `^0.5.0`。0.x 的 caret 只覆盖 `0.5.x`，下个 minor 就取不到，站点会一直停在旧版本。
 
 ### 仓库里有 package.json 时 {#cli-version-local}
 
-把 CLI 装成本地依赖（见 [快速上手（会用命令行）](/start/quickstart-dev#init-local)）之后，版本号出现在两处：`pages.yml` 里的 `@0.3.0`，和 `package.json` 的 `devDependencies`。workflow 里的 `npx` **不会**去读 `package.json`，所以两处都要改，否则就是「本地跑新版本、CI 还在用旧版本构建」。
+把 CLI 装成本地依赖（见 [快速上手（会用命令行）](/start/quickstart-dev#init-local)）之后，版本号出现在两处：`pages.yml` 里的 `@0.5.0`，和 `package.json` 的 `devDependencies`。workflow 里的 `npx` **不会**去读 `package.json`，所以两处都要改，否则就是「本地跑新版本、CI 还在用旧版本构建」。
 
 也可以让 CI 直接读 `package.json`，把版本收敛到一处：装完依赖再跑 script。
 

@@ -43,7 +43,7 @@ npx @lightwiki/cli dev .
 ```
 如果想要锁定`@lightwiki/cli`的版本，可以这么写：
 ```bash
-npx @lightwiki/cli@0.3.0 init my-wiki
+npx @lightwiki/cli@0.5.0 init my-wiki
 ```
 
 如果你使用的是`yarn`或`pnpm`，则可按如下方式执行，以下不再赘述。
@@ -91,7 +91,7 @@ npx degit summerset-zz/lightwiki-starter my-wiki
     "build": "wiki build ." // 根据wiki.config.ts的配置生成站点
   },
   "devDependencies": {
-    "@lightwiki/cli": "0.3.0" // 依赖版本。建议锁死，不要用`^0.3.0
+    "@lightwiki/cli": "0.5.0" // 依赖版本。建议锁死，不要用`^0.5.0
   }
 }
 ```

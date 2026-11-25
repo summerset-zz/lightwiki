@@ -36,8 +36,8 @@
 - 给用户新增配置项时，必须同时更新 `docs/getting-started.md` 的字段表。
 - **发版后要同步模板的版本号**：`packages/cli/templates/starter/__github/workflows/pages.yml`
   里的 `@lightwiki/cli@x.y.z` 是写死的（CI 要可复现），`templates/starter/README.md` 里也有几处。
-  忘了改，新用户建出来的站会一直跑旧版本 —— 0.x 的 caret（`^0.3.0`）只覆盖 `0.3.x`，别指望它自动升级。  `site/layouts/nav.eta` 顶部还有一个显示用的版本号常量，也要一起改；
-  `site/assets/agents.md`（发给 AI 的建站说明）里也有一个 `@lightwiki/cli@0.3.0` 的例子。- 渲染分三段：扫描 → 建索引（slug / 标题）→ 渲染。改其中一段要考虑另外两段。
+  忘了改，新用户建出来的站会一直跑旧版本 —— 0.x 的 caret（`^0.5.0`）只覆盖 `0.5.x`，别指望它自动升级。  `site/layouts/nav.eta` 顶部还有一个显示用的版本号常量，也要一起改；
+  `site/assets/agents.md`（发给 AI 的建站说明）里也有一个 `@lightwiki/cli@0.5.0` 的例子。- 渲染分三段：扫描 → 建索引（slug / 标题）→ 渲染。改其中一段要考虑另外两段。
 - 改路由、产物形态这类东西时，`routes.ts` / `build.ts` / `dev` 三处必须同步，否则预览与产物不一致。
 
 ## 命令
