@@ -17,7 +17,7 @@ scripts:
 
 ```mermaid
 flowchart LR
-  md["content/zh/*.md"] --> parse["扫描 + 建索引"]
+  md["content/*.md"] --> parse["扫描 + 建索引"]
   parse --> render["渲染 markdown"]
   render --> skin["套皮肤"]
   skin --> out["dist/ 静态文件"]

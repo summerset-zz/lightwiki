@@ -14,7 +14,7 @@ categories: [syntax]
 ```
 my-wiki/
 ├── wiki.config.ts     站点配置
-├── content/zh/*.md    内容，一个文件一页
+├── content/*.md    内容，一个文件一页
 ├── layouts/*.eta      可选：覆盖主题的布局
 ├── macros/*.eta       可选：内容里调用的宏
 └── assets/            图片等静态资源
@@ -28,9 +28,9 @@ my-wiki/
 
 | 文件 | slug | URL |
 |---|---|---|
-| `content/zh/second.md` | `second` | `/second/` |
-| `content/zh/api/v1.md` | `api/v1` | `/api/v1/` |
-| `content/zh/index.md` | `index` | `/`（首页） |
+| `content/second.md` | `second` | `/second/` |
+| `content/api/v1.md` | `api/v1` | `/api/v1/` |
+| `content/index.md` | `index` | `/`（首页） |
 
 - 文件名就是身份，**改文件名等于删一篇加一篇**，站内所有链接都会断；
 - 不能单独指定 URL，它完全由 slug 推导。
@@ -59,7 +59,7 @@ my-wiki/
 
 ## 首页就是 index.md {#index}
 
-`content/zh/index.md` 就是首页 `/`（`docsDir` 非空时是那段前缀的根）。**没有自动生成的目录页**，想列全站就自己排：
+`content/index.md` 就是首页 `/`（`docsDir` 非空时是那段前缀的根）。**没有自动生成的目录页**，想列全站就自己排：
 
 ```text
 {{catalog}}

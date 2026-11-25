@@ -21,7 +21,7 @@ const config: SiteConfigInput = {
   title: '轻维基 · 语法手册',
   siteUrl,
   basePath,
-  content: 'content/zh',
+  content: 'content',
   sections: ['syntax', 'reference'],
   sectionLabels: {
     syntax: '语法',

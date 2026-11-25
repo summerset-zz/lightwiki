@@ -64,7 +64,7 @@ npx @lightwiki/cli build . -c wiki.config.en.ts -o dist-en   # 换一份配置�
 | 文件 | 是什么 |
 |---|---|
 | `wiki.config.ts` | 站点配置 |
-| `content/zh/index.md` | 首页 |
+| `content/index.md` | 首页 |
 | `AGENTS.md` | 给 AI 助手的写作说明 |
 | `README.md` | 使用说明 |
 | `.gitignore` | 忽略 `node_modules/`、`dist/`、`.DS_Store` |

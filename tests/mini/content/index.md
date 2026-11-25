@@ -40,7 +40,7 @@ categories: [demo]
 
 ## 这一页本身就是首页 {#as-home}
 
-`content/zh/index.md` 就是 `/`。没有自动生成的目录页，目录写什么、怎么排，全由这一页决定。想换成纯 HTML，就配一个 `layout: landing` 然后正文留空。
+`content/index.md` 就是 `/`。没有自动生成的目录页，目录写什么、怎么排，全由这一页决定。想换成纯 HTML，就配一个 `layout: landing` 然后正文留空。
 
 下面两节用的是主题自带的目录宏；想按分组列全站，写成 `{{pages(section: reference)}}` 就是这个效果：
 

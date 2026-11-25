@@ -18,7 +18,7 @@ draft: false
 export default {
   title: '我的知识库',
   siteUrl: 'https://example.com',
-  content: 'content/zh',
+  content: 'content',
 };
 ```
 
@@ -32,7 +32,7 @@ export default {
 |---|---|
 | `title` | 站点名，非空字符串。进页面标题、侧栏标题 |
 | `siteUrl` | 站点完整地址，必须带协议。重定向页的绝对地址与 canonical 用它拼 |
-| `content` | 单个内容目录，如 `'content/zh'`，相对内容根 |
+| `content` | 单个内容目录，如 `'content'`，相对内容根 |
 
 `siteUrl` 写成 `example.com` 不算完整地址，校验会拦下来。页面模板里也能拿到它。
 
@@ -55,7 +55,7 @@ lang: 'en',
 [basePath][urlPrefix][docsDir]/<slug>/
 ```
 
-三个前缀默认都为空，默认地址就是 `/<slug>/`。`content/zh/index.md` 的 slug 是 `index`，产物是前缀根上的 `index.html`，也就是首页。
+三个前缀默认都为空，默认地址就是 `/<slug>/`。`content/index.md` 的 slug 是 `index`，产物是前缀根上的 `index.html`，也就是首页。
 
 `404.md` 例外：产物固定在根目录的 `404.html`，不生成 `/404/` 这一页。
 
@@ -83,7 +83,7 @@ npx @lightwiki/cli build . -c wiki.config.en.ts -o dist-en
 |---|---|---|
 | `title` | 必填 | 站点名 |
 | `siteUrl` | 必填 | 完整站点地址 |
-| `content` | 必填 | 内容目录，如 `'content/zh'` |
+| `content` | 必填 | 内容目录，如 `'content'` |
 | `basePath` | `'/'` | 部署在子路径时的前缀，如 `'/wiki'` |
 | `urlPrefix` | `''` | 内容页地址的 URL 前缀，拼在 `docsDir` 前面 |
 | `docsDir` | `''` | 内容页地址的额外路径段，如 `'docs'` |

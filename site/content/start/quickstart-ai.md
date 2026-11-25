@@ -66,7 +66,7 @@ npx --yes @lightwiki/cli dev .
 
 ## 编辑 {#editing}
 
-初始仓库的目录结构参考[这里](/start/structure)。你可以编辑一下`/content/zh`下的`md`文件看看效果。
+初始仓库的目录结构参考[这里](/start/structure)。你可以编辑一下`/content`下的`md`文件看看效果。
 
 
 ## 生成产物 {#generating}

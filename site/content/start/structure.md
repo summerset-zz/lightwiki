@@ -26,14 +26,14 @@ my-wiki/
 | 位置                             | 放什么             | 必须吗       |
 | -------------------------------- | ------------------ | ------------ |
 | `wiki.config.ts`             | 站点配置           | **必须**     |
-| `content/zh/index.md`        | 首页               | **必须**     |
-| `content/zh/` 下的其他 `.md` | 页面，一个文件一页 | 有其他页面时 |
+| `content/index.md`        | 首页               | **必须**     |
+| `content/` 下的其他 `.md` | 页面，一个文件一页 | 有其他页面时 |
 | `assets/`                    | 图片、字体、样式表 | 可选         |
 | `layouts/`                   | 皮肤               | 可选         |
 | `macros/`                    | 模板               | 可选         |
 
 
-- 在`content/zh/`目录下添加、编辑文档，文件后缀名为`.md`，即可生成对应页面。
+- 在`content/`目录下添加、编辑文档，文件后缀名为`.md`，即可生成对应页面。
   - `md`（markdown）是一种简单的、用于直接查看或生成html页面的语法。参考[markdown语法帮助](/basics/markdown)
   - `frontmatter`是附加在md文件头部的元数据。轻维基至少需要元数据中包含`title`才会生成页面。参考[frontmatter语法帮助](/basics/frontmatter)。
 - 在`macros/`目录下添加、编辑模板，文件后缀名为`.eta`。请参考[模板语法帮助](/basics/templates)。
@@ -50,7 +50,7 @@ my-wiki/
 
 ## index.md：站点首页 {#home}
 
-`content/zh/index.md` 就是 `/`。**没有自动生成的目录页**，但是我们提供了内置的目录模板：
+`content/index.md` 就是 `/`。**没有自动生成的目录页**，但是我们提供了内置的目录模板：
 
 ```md
 <!-- 列出所有分类 -->
@@ -63,7 +63,7 @@ my-wiki/
 
 ## 子目录只影响地址 {#subdir}
 
-`content/zh/start/intro.md` → `/start/intro/`。多出来的目录只是 URL 里的一段，**不参与分组**：侧栏分到哪一组看 frontmatter 的 `section`。所以 `content/zh/` 下面怎么摆由你决定，按主题分、按年份分都行。
+`content/start/intro.md` → `/start/intro/`。多出来的目录只是 URL 里的一段，**不参与分组**：侧栏分到哪一组看 frontmatter 的 `section`。所以 `content/` 下面怎么摆由你决定，按主题分、按年份分都行。
 
 反过来也成立：改文件名就是改地址。已经发出去的链接、别人存的书签都会断。
 
@@ -81,7 +81,7 @@ my-wiki/
 
 ## 404 页 {#notfound}
 
-根目录的 `404.html` 一直会自动生成。想自己写就建 `content/zh/404.md`：slug 为 `404` 的页面输出成根目录的 `404.html`，不会变成 `/404/`。
+根目录的 `404.html` 一直会自动生成。想自己写就建 `content/404.md`：slug 为 `404` 的页面输出成根目录的 `404.html`，不会变成 `/404/`。
 
 ## 再往下 {#next}
 

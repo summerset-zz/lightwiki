@@ -98,7 +98,7 @@ GitHub Pages、Netlify、Cloudflare Pages、S3、OSS 都会在未命中时返回
 
 ### 由内容驱动 {#not-found-content}
 
-在内容里放一个 slug 为 `404` 的页面（比如 `content/zh/404.md`），它会被渲染成根目录的 `404.html`，走的是普通的 `doc` 布局——侧栏、目录、样式都跟其他页一样。
+在内容里放一个 slug 为 `404` 的页面（比如 `content/404.md`），它会被渲染成根目录的 `404.html`，走的是普通的 `doc` 布局——侧栏、目录、样式都跟其他页一样。
 
 它不会：
 

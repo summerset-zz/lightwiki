@@ -39,7 +39,7 @@ pnpm dlx @lightwiki/cli init my-wiki
 ```
 my-wiki/
 ├── wiki.config.ts               站点配置（标题、语言、目录、分组）
-├── content/zh/index.md          首页（就是 /），也可以再添别的页
+├── content/index.md          首页（就是 /），也可以再添别的页
 ├── AGENTS.md                    给 AI 助手看的写作说明（见第 2 节）
 ├── README.md                    本文件
 └── .github/workflows/pages.yml  push 到 main 就构建并发布到 GitHub Pages
@@ -54,7 +54,7 @@ cd my-wiki
 npx @lightwiki/cli dev .
 ```
 
-打开 <http://127.0.0.1:5173> 。改 `content/zh/index.md`，浏览器会自动刷新。
+打开 <http://127.0.0.1:5173> 。改 `content/index.md`，浏览器会自动刷新。
 
 ---
 
@@ -62,14 +62,14 @@ npx @lightwiki/cli dev .
 
 ### 文档放在哪
 
-`content/zh/` 下面，一个 `.md` 一页。
+`content/` 下面，一个 `.md` 一页。
 
 **文件名就是地址**，和标题无关：
 
 | 文件 | 地址 |
 |---|---|
-| `content/zh/index.md` | `/`（**首页**） |
-| `content/zh/标准/术语.md` | `/标准/术语/` |
+| `content/index.md` | `/`（**首页**） |
+| `content/标准/术语.md` | `/标准/术语/` |
 
 `index.md` 就是首页。没有自动生成的目录页这回事，目录写什么由你决定（正文里放 `{{catalog}}` 或 `{{pages(section: ...)}}` 就会列出来）。内容目录里必须有 `index.md`，缺了首页 `wiki check` 会报错。
 
@@ -134,7 +134,7 @@ npx @lightwiki/cli build .      # 产物在 ./dist
 
 ```
 dist/
-├── index.html                  首页（来自 content/zh/index.md）
+├── index.html                  首页（来自 content/index.md）
 ├── 404.html                    静态托管约定的 404 页（没有 404.md 时用主题的兑底页）
 ├── start/index.html            其余每一页，一页一个目录
 ├── categories/…                页面写了 categories 才有这一层

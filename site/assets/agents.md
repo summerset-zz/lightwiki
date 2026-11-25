@@ -40,7 +40,7 @@ npx --yes @lightwiki/cli init . --name 站点名
 | 文件 | 是什么 |
 |---|---|
 | `wiki.config.ts` | 站点配置：标题、地址、语言、分组 |
-| `content/zh/index.md` | 首页 |
+| `content/index.md` | 首页 |
 | `AGENTS.md` | 建完之后写内容用的说明（另一份，不是这一份） |
 | `README.md` | 给人看的用法 |
 | `.gitignore` | 忽略 `dist/`、`node_modules/` |
@@ -48,7 +48,7 @@ npx --yes @lightwiki/cli init . --name 站点名
 
 第 2 步，改 `wiki.config.ts` 的 `title` 与 `siteUrl`。`siteUrl` 会被用来拼绝对地址。
 
-第 3 步，改 `content/zh/index.md`。这一页就是首页，内容由你写。
+第 3 步，改 `content/index.md`。这一页就是首页，内容由你写。
 
 第 4 步，跑一遍确认：
 
@@ -71,7 +71,7 @@ npx --yes @lightwiki/cli build .     # 产出静态文件到 dist/
 
 ```
 wiki.config.ts      站点配置，只有这一个配置文件
-content/zh/*.md     内容，一个文件一页
+content/*.md     内容，一个文件一页
 assets/             图片、字体、样式、脚本（可选）
 layouts/            皮肤，覆盖主题的整页 HTML（可选）
 macros/             模板，正文里的 {{名字}} 展开成什么（可选）
@@ -96,7 +96,7 @@ section: guide
 
 正文是标准 markdown，另外支持双链 `[[页面标题]]`、显式锚点 `## 小节 {#id}`、行内 HTML。
 
-**文件名就是地址**：`content/zh/about.md` 就是 `/about/`。改文件名等于改地址，外部链接会断。
+**文件名就是地址**：`content/about.md` 就是 `/about/`。改文件名等于改地址，外部链接会断。
 
 **内容目录里必须有 `index.md`**，它就是首页。缺了 `check` 直接失败。
 

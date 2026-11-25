@@ -52,7 +52,7 @@ yarn dlx @lightwiki/cli init my-wiki
 pnpm dlx @lightwiki/cli init my-wiki
 ```
 
-`dev` 会打印一个地址（默认 `http://127.0.0.1:5173`，端口被占就往上试），打开就是刚生成的首页。改 `content/zh/index.md` 保存，浏览器自动刷新；`Ctrl+C` 结束。
+`dev` 会打印一个地址（默认 `http://127.0.0.1:5173`，端口被占就往上试），打开就是刚生成的首页。改 `content/index.md` 保存，浏览器自动刷新；`Ctrl+C` 结束。
 
 适合：只写内容、不想在仓库里维护依赖。代价是每条命令都要打全名，版本只能用 `@x.y.z` 跟在命令后面。
 
@@ -115,7 +115,7 @@ npx degit summerset-zz/lightwiki-starter my-wiki
 | ----------------------------- | ---------------------------------------------------------------------------------- |
 | `wiki.config.ts`              | 站点配置：站点名、地址、语言、分组                                                 |
 | `assets/agents.md`            | 给AI的、用于初始化项目的使用说明。安装完成后不必再使用。                           |
-| `content/zh/index.md`         | 首页，对应链接`/`                                                                 |
+| `content/index.md`         | 首页，对应链接`/`                                                                 |
 | `AGENTS.md`                   | 给AI的使用说明（用于日常维护、开发等）                                             |
 | `README.md`                   | 给你的使用说明                                                                     |
 | `.gitignore`                  | git版本控制忽略列表                                                                |

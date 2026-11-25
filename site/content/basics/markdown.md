@@ -127,7 +127,7 @@ id 取英文短词最省事：改中文标题时不用跟着改 `{#...}`，别�
 
 ## 页面身份是文件名 {#next}
 
-一页的地址来自文件名，不是标题。`content/zh/basics/markdown.md` 就是 `/basics/markdown/`，标题只出现在导航、搜索和双链里。改文件名等于换地址，外部链接和双链都会断。
+一页的地址来自文件名，不是标题。`content/basics/markdown.md` 就是 `/basics/markdown/`，标题只出现在导航、搜索和双链里。改文件名等于换地址，外部链接和双链都会断。
 
 目录怎么摆、首页是哪一页，见 [目录结构](/start/structure)。开头那段 YAML 写什么，见 [frontmatter](/basics/frontmatter)。
 

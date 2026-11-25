@@ -17,7 +17,7 @@
 
 ```
 wiki.config.ts     站点配置
-content/zh/*.md    内容，一个文件一页
+content/*.md    内容，一个文件一页
 assets/            （可选）图片、自定义样式
 layouts/           （可选）覆盖主题的皮肤，只写要改的那几个 .eta
 macros/            （可选）自定义模板
@@ -25,7 +25,7 @@ macros/            （可选）自定义模板
 
 ## 硬规则
 
-1. **页面身份是文件名（slug），不是标题。** `content/zh/start.md` → `/start/`。
+1. **页面身份是文件名（slug），不是标题。** `content/start.md` → `/start/`。
    改文件名等于改地址，会让外部链接和内部 `[[...]]` 失效；改 `title` 只影响显示。
 2. **内容目录里必须有 `index.md`**。它就是首页 `/`，没有自动生成的目录页。
    缺了首页，`wiki check` 直接报错。

@@ -15,12 +15,12 @@ draft: false
 
 ```
 dist/
-├── index.html                 首页，来自 content/zh/index.md
+├── index.html                 首页，来自 content/index.md
 ├── 404.html                   静态托管约定的 404 页
 ├── meta.json                  这份产物是哪个版本、几页、什么时候构建的
 ├── search-index.json          站内搜索的索引
 ├── start/
-│   └── index.html             一页一个目录，来自 content/zh/start.md
+│   └── index.html             一页一个目录，来自 content/start.md
 ├── categories/
 │   └── guide/index.html       页面写了 categories 才有这一层
 └── assets/
@@ -30,6 +30,6 @@ dist/
 
 三件事值得记：
 
-- **首页就是 `index.html`**，它来自 `content/zh/index.md`，不是自动生成的目录页。
-- **一页一个目录**：`content/zh/start.md` → `/start/` → `start/index.html`。
+- **首页就是 `index.html`**，它来自 `content/index.md`，不是自动生成的目录页。
+- **一页一个目录**：`content/start.md` → `/start/` → `start/index.html`。
 - **`assets/` 放样式和图片**：你自己的在 `assets/` 下，主题的单独归到 `assets/theme/`。
