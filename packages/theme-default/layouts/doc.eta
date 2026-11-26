@@ -12,6 +12,9 @@
 <% } %>
 <link rel="stylesheet" href="<%= it.site.base %>/assets/theme/style.css">
 <link rel="stylesheet" href="<%= it.site.base %>/assets/theme/theme-extra.css">
+<% if (it.site.config.frontmatterInjection) { %>
+<script src="<%= it.site.base %>/assets/theme/page-data.js"></script>
+<% } %>
 </head>
 <body>
 <% if (it.partials.nav) { %><%~ include('nav', it) %><% } %>
@@ -60,22 +63,6 @@
 <%~ it.page.html %>
       </div>
 
-<% if (it.page.sources.length > 0) { %>
-      <section class="section-sources">
-        <h2>小节来源</h2>
-        <ul>
-<% for (const src of it.page.sources) { %>
-          <li>
-            <% if (src.anchor) { %><a href="#<%= src.anchor %>">#<%= src.anchor %></a> · <% } %>
-            <% if (src.licenseUrl) { %><a href="<%= src.licenseUrl %>"><%= src.license %></a><% } else { %><%= src.license %><% } %>
-            · 改编自 <a href="https://<%= src.site %>/w/index.php?oldid=<%= src.revid %>"><%= src.title %></a>
-            <% if (src.changes) { %>（<%= src.changes %>）<% } %>
-          </li>
-<% } %>
-        </ul>
-      </section>
-<% } %>
-
 <% if (it.page.markdown) { %>
       <details class="source-view">
         <summary>查看源码</summary>
@@ -98,9 +85,6 @@
 <% } %>
 </div>
 
-<% if (it.page.hints.length > 0) { %>
-<script type="application/json" id="lightwiki-hints"><%~ JSON.stringify(it.page.hints).replace(/</g, '\\u003c') %></script>
-<% } %>
 <% if (it.site.search) { %>
 <script src="<%= it.site.base %>/assets/theme/search.js" defer></script>
 <% } %>

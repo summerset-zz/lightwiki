@@ -88,10 +88,6 @@ export const frontmatterSchema = z
     /** 用哪个分类的页面列表充当侧栏；不填则用全站导航 */
     sidebarCategory: z.string().optional(),
 
-    // —— 术语提示（整篇只有一个时用） ——
-    hintTitle: z.string().optional(),
-    hint: z.string().optional(),
-
     // —— 整篇改编的来源 ——
     sourceSite: z.string().optional(),
     sourceTitle: z.string().optional(),

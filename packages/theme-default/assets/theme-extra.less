@@ -41,3 +41,30 @@
   border-bottom: 1px dotted var(--fg-dim);
   cursor: help;
 }
+
+// 标题锚点：平时藏起来，鼠标移到标题上才显出 `#`
+// 只挂在写了 `{#...}` 的标题上（没 id 的标题核心不会插这个链接）
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  &:hover .header-anchor,
+  .header-anchor:focus-visible {
+    opacity: 1;
+  }
+}
+
+.header-anchor {
+  margin-left: 0.35em;
+  color: var(--fg-dim);
+  font-weight: 400;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+
+  &:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+}

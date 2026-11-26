@@ -1,4 +1,4 @@
-import { watch, type FSWatcher } from 'node:fs';
+import { existsSync, watch, type FSWatcher } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -204,13 +204,31 @@ export function resolveDevRoute(
 
   if (key.startsWith('/assets/')) {
     const rest = key.slice('/assets/'.length);
+    const own = safeJoin(resolve(config.root, config.assetsDir), rest);
+
+    // **用户 assets 优先**：构建是「主题资产先复制、用户后复制」，所以
+    // `assets/theme/theme-extra.less` 会盖掉主题的同名产物。预览得跟同一条规则，
+    // 否则覆盖主题样式只在线上生效、预览里看不见。
+    if (existsAsset(own)) return { kind: 'asset', file: own };
+
     if (rest.startsWith('theme/')) {
       return { kind: 'asset', file: safeJoin(join(config.themeDir, 'assets'), rest.slice('theme/'.length)) };
     }
-    return { kind: 'asset', file: safeJoin(resolve(config.root, config.assetsDir), rest) };
+    return { kind: 'asset', file: own };
   }
 
   return { kind: 'notfound' };
+}
+
+/**
+ * 这个路径上有没有可用的文件。
+ *
+ * 请求 `.css` 时同名 `.less` 也算 —— 构建会把 `.less` 编译成 `.css`，
+ * 预览在下面那段里现编译。
+ */
+function existsAsset(file: string): boolean {
+  if (existsSync(file)) return true;
+  return file.endsWith('.css') && existsSync(`${file.slice(0, -'.css'.length)}.less`);
 }
 
 /** 阻止 `../` 逃出根目录 */
@@ -404,18 +422,9 @@ export async function startDevServer(
         if (route.kind === 'asset') {
           const info = await stat(route.file).catch(() => null);
 
-          if (info && info.isFile()) {
-            const body = await readFile(route.file);
-            res.writeHead(200, {
-              'Content-Type': MIME[extname(route.file).toLowerCase()] ?? 'application/octet-stream',
-              'Content-Length': body.byteLength,
-              'Cache-Control': 'no-store',
-            });
-            res.end(body);
-            return;
-          }
-
-          // 请求 `.css` 但只有同名 `.less`：现编译再返回，与构建产物保持一致
+          // 请求 `.css` 时**先看同名 `.less`**：构建里 `.less` 编译出来的那份会覆盖
+          // 手写的 `.css`（见 core 的 collectAssets），预览必须跟着同一条规则，
+          // 否则改了 `.less` 看不到效果，两份产物还对不上。
           if (route.file.endsWith('.css')) {
             const lessFile = `${route.file.slice(0, -'.css'.length)}.less`;
             const lessInfo = await stat(lessFile).catch(() => null);
@@ -428,6 +437,17 @@ export async function startDevServer(
               res.end(css);
               return;
             }
+          }
+
+          if (info && info.isFile()) {
+            const body = await readFile(route.file);
+            res.writeHead(200, {
+              'Content-Type': MIME[extname(route.file).toLowerCase()] ?? 'application/octet-stream',
+              'Content-Length': body.byteLength,
+              'Cache-Control': 'no-store',
+            });
+            res.end(body);
+            return;
           }
 
           res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });

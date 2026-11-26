@@ -28,7 +28,16 @@ export interface AssetFile {
 export async function collectAssets(srcDir: string): Promise<AssetFile[]> {
   if (!existsSync(srcDir)) return [];
 
-  const files: AssetFile[] = [];
+  // 以产物路径为键：`x.less` 与 `x.css` 都会落到 `x.css`，所以必须定好谁赢。
+  // **`.less` 优先** —— 它是源文件，同名的 `.css` 多半是手写或早先编译留下的旧货。
+  // 不能用「后写的覆盖先写的」：那取决于 readdir 的顺序，不同文件系统结果不同。
+  const byPath = new Map<string, { data: Buffer; fromLess: boolean }>();
+
+  const put = (path: string, data: Buffer, fromLess: boolean): void => {
+    const prev = byPath.get(path);
+    if (prev?.fromLess && !fromLess) return;
+    byPath.set(path, { data, fromLess });
+  };
 
   const walk = async (dir: string, prefix: string): Promise<void> => {
     for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -42,16 +51,16 @@ export async function collectAssets(srcDir: string): Promise<AssetFile[]> {
 
       if (entry.name.endsWith('.less')) {
         const css = await compileLess(src);
-        files.push({ path: `${rel.slice(0, -'.less'.length)}.css`, data: Buffer.from(css, 'utf8') });
+        put(`${rel.slice(0, -'.less'.length)}.css`, Buffer.from(css, 'utf8'), true);
         continue;
       }
 
-      files.push({ path: rel, data: await readFile(src) });
+      put(rel, await readFile(src), false);
     }
   };
 
   await walk(srcDir, '');
-  return files;
+  return [...byPath].map(([path, entry]) => ({ path, data: entry.data }));
 }
 
 /** 拷贝结果：产物里的资源文件数与总字节数（`.less` 已编译成 `.css`） */

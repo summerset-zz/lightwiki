@@ -2,7 +2,7 @@
 title: 站点配置
 keywords: 配置, wiki.config.ts, siteUrl, basePath, content, urlPrefix, docsDir, lang, urlStyle, redirects
 description: wiki.config.ts 里每个字段的作用、默认值和容易配错的地方。
-section: advanced
+section: reference
 order: 1
 updated: 2026-11-25
 draft: false
@@ -99,7 +99,7 @@ npx @lightwiki/cli build . -c wiki.config.en.ts -o dist-en
 | `redirects` | `[]` | 旧地址到新地址的映射，元素是 `{ from, to, status }`，`status` 默认 `301` |
 | `redirectMode` | `'js'` | `'js'` 生成跳转页，`'server'` 只输出 `_redirects`，`'both'` 两者都做 |
 | `highlight.enabled` | `true` | 代码块高亮开关 |
-| `highlight.languages` | `[]` | 额外加载的 highlight.js 语言名，如 `'ruby'`、`'go'`（用法见 [代码高亮](/basics/code-highlight)） |
+| `highlight.languages` | `[]` | 额外加载的 highlight.js 语言名，如 `'ruby'`、`'go'`（用法见 [代码高亮](/advanced/code-highlight)） |
 | `search.enabled` | `true` | 站内搜索开关 |
 | `search.excerpt` | `300` | 索引里保留的正文摘要长度（字符），`0` 表示只要标题 |
 | `frontmatterInjection` | `false` | 把每页的元数据（模板里的 `it.page`，只去掉整篇原文）注入 `<script type="application/json" id="lightwiki-page-data">`，供页面里的 JS 读取。见 [frontmatter](/basics/frontmatter#browser) |
@@ -187,4 +187,4 @@ markdown(md) {
 
 ## 再往下 {#next}
 
-四个命令、参数与退出码见 [命令行](/advanced/cli)。页面自己的字段见 [frontmatter](/basics/frontmatter)。
+四个命令、参数与退出码见 [命令行](/reference/cli)。页面自己的字段见 [frontmatter](/basics/frontmatter)。

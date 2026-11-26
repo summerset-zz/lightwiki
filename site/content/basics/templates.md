@@ -4,7 +4,7 @@ keywords: 模板, macro, macros, eta, catalog, pages, 自定义模板
 description: 主题自带两个模板，其余要自己写。这一页讲清模板是怎么被展开的、参数怎么写、it 里有什么，以及未定义模板时构建怎么办。
 section: basics
 order: 3
-updated: 2026-11-17
+updated: 2026-11-26
 draft: false
 ---
 
@@ -74,6 +74,8 @@ draft: false
 内容仓库的 `macros/` 优先于主题包自带的，同名会覆盖。想改 `catalog` 的输出，建一个 `macros/catalog.eta` 就行。
 
 模板名大小写不敏感，`{{Catalog}}` 和 `{{catalog}}` 是同一个。内容仓库里没有 `macros/` 目录也完全正常。
+
+模板只改正文里的一个片段。想改整页结构（侧栏、页脚、`<head>`）那是皮肤，见 [皮肤](/advanced/skins)；两者都写 Eta，语法速查见 [Eta 语法](/reference/eta)。
 
 ## 模板能拿到的字段 {#context}
 

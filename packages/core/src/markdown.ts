@@ -38,25 +38,6 @@ export interface LinkRef {
   external: boolean;
 }
 
-/** 术语提示：`<!-- hint: 标题 | 一句话 -->` */
-export interface Hint {
-  title: string;
-  body: string;
-  /** 归属到它上方最近的带锚点标题；文件开头则为 null */
-  anchor: string | null;
-}
-
-/** 小节来源：`<!-- source: 站点 | 标题 | 修订号 | 许可证 | 许可证地址 | 改动 -->` */
-export interface SectionSource {
-  site: string;
-  title: string;
-  revid: string;
-  license: string;
-  licenseUrl: string;
-  changes: string;
-  anchor: string | null;
-}
-
 export interface UnresolvedRef {
   kind: 'wikilink' | 'macro';
   target: string;
@@ -89,80 +70,31 @@ export interface RenderEnv {
    * 宏展开栈。跨「递归解析」传递，否则 A 展开出 `{{A}}` 时会无限循环。
    */
   macroStack?: string[];
+  /**
+   * 站点插件的出口：每页新开一个空对象，插件在 core rule 里往里写什么都可以。
+   * 渲染完会挂到 `it.page.meta`，也会进 `lightwiki-page-data`。
+   */
+  data?: Record<string, unknown>;
 }
 
 export interface RenderResult {
   html: string;
   headings: Heading[];
   links: LinkRef[];
-  hints: Hint[];
-  sources: SectionSource[];
-}
-
-const HEADING_RE = /^(#{2,6})\s+(.*?)(?:\s*\{#([^}]+)\})?\s*$/;
-const HINT_RE = /<!--\s*hint:\s*([\s\S]*?)-->/i;
-const SOURCE_RE = /<!--\s*source:\s*([\s\S]*?)-->/i;
-
-/** 按 | 切 n 刀，多的部分留在最后一段（改动说明里可以再出现 |） */
-function splitPipes(raw: string, cuts: number): string[] {
-  const parts: string[] = [];
-  let rest = raw;
-  for (let i = 0; i < cuts; i += 1) {
-    const idx = rest.indexOf('|');
-    if (idx === -1) break;
-    parts.push(rest.slice(0, idx).trim());
-    rest = rest.slice(idx + 1);
-  }
-  parts.push(rest.trim());
-  return parts;
-}
-
-/**
- * 剥掉正文里的两个指令注释，并把它们结构化。
- *
- * 它们不会出现在产物里：`hint` 变成术语弹窗的数据，`source` 变成小节末尾的署名块。
- * 归属规则是「它上方最近的那个带锚点标题」，所以位置不必严格，但放在标题下面最稳。
- */
-export function extractDirectives(src: string): {
-  markdown: string;
-  hints: Hint[];
-  sources: SectionSource[];
-} {
-  const lines = src.split(/\r?\n/);
-  const kept: string[] = [];
-  const hints: Hint[] = [];
-  const sources: SectionSource[] = [];
-  let anchor: string | null = null;
-
-  for (const line of lines) {
-    const heading = HEADING_RE.exec(line);
-    if (heading && heading[1]) anchor = heading[3]?.trim() ?? anchor;
-
-    const hint = HINT_RE.exec(line);
-    if (hint?.[1]) {
-      const [title = '', body = ''] = splitPipes(hint[1], 1);
-      hints.push({ title, body, anchor });
-      continue;
-    }
-
-    const source = SOURCE_RE.exec(line);
-    if (source?.[1]) {
-      const [site = '', title = '', revid = '', license = '', licenseUrl = '', changes = ''] =
-        splitPipes(source[1], 5);
-      sources.push({ site, title, revid, license, licenseUrl, changes, anchor });
-      continue;
-    }
-
-    kept.push(line);
-  }
-
-  return { markdown: kept.join('\n'), hints, sources };
+  /** 站点插件写进 `env.data` 的东西，原样交给布局 */
+  data: Record<string, unknown>;
 }
 
 export interface MarkdownOptions {
   /** 代码块高亮；不传则原样输出 */
   highlight?: Highlighter;
-  /** 站点级插件入口，拿到的是 markdown-it 实例 */
+  /**
+   * 站点级插件入口，拿到的是 markdown-it 实例。
+   *
+   * 想输出结构化数据的插件写 `state.env.data`（每页一个新对象），
+   * 渲染完会作为 `it.page.meta` 交给布局。写到 `env.data` 里的东西
+   * 不需要清理 —— 每页重新初始化。
+   */
   setup?: (md: unknown) => void;
 }
 
@@ -170,7 +102,10 @@ export function createMarkdown(options: MarkdownOptions = {}): MarkdownIt {
   const highlighter = options.highlight;
   const md = new MarkdownIt({
     html: true,
-    linkify: true,
+    // 不开 linkify：它会用模糊匹配把裸写的文件名当域名，`index.md` 的 `.md`
+    // 是摩尔多瓦的顶级域名，结果补成 `http://index.md/`。要链接就写
+    // `[文字](地址)` 或 `<https://…>`，两者都由 CommonMark 原生支持。
+    linkify: false,
     typographer: false,
     highlight:
       highlighter && highlighter.enabled
@@ -227,6 +162,26 @@ export function createMarkdown(options: MarkdownOptions = {}): MarkdownIt {
     };
 
     walk(asTokens(state.tokens));
+  });
+
+  // 显式锚点的标题末尾挂一个悬停可见的 `#`，点了把 `#id` 写进地址栏。
+  // 只处理写了 `{#...}` 的标题 —— 没写 id 的标题本来就没有稳定地址，挂上去也没意义。
+  // 用 html_inline 追加到 inline 的 children 里，所以 `collectHeadings` 的取文不受影响。
+  md.core.ruler.push('lightwiki:heading-anchor', (state: any) => {
+    const tokens = asTokens(state.tokens);
+    for (let i = 0; i < tokens.length; i += 1) {
+      const open = tokens[i];
+      if (!open || open.type !== 'heading_open') continue;
+      const id = open.attrGet('id');
+      if (!id) continue;
+      const inline = tokens[i + 1];
+      if (!inline || inline.type !== 'inline') continue;
+
+      const link = new state.Token('html_inline', '', 0);
+      link.content =
+        `<a class="header-anchor" href="#${escapeHtml(id)}" aria-hidden="true">#</a>`;
+      (inline.children ??= []).push(link);
+    }
   });
 
   // 站点自己的插件放在最后注册，方便覆盖或追加规则
@@ -652,13 +607,46 @@ function inlineText(token: MdToken | undefined): string {
   return children.map((child) => (child.type === 'text' || child.type === 'code_inline' ? child.content : '')).join('');
 }
 
+/**
+ * 块级 HTML 容器。只认 `<div>`：它在正文里最常用，配对规则也简单。
+ */
+const DIV_TAG_RE = /<div\b([^>]*)>|<\/div\s*>/gi;
+
+/**
+ * 按出现顺序啃一块 HTML，维护 div 栈。
+ *
+ * 入栈的是「这个 div 带不带 `data-no-toc`」。带标记的容器里，标题照常渲染，
+ * 但不进「本页」目录 —— 示例里演示的标题不该出现在目录里，何况不写 `{#}`
+ * 时那个 id 只是按序号编的，点了也跳不过去。
+ */
+function trackDivs(html: string, stack: boolean[]): void {
+  for (const match of html.matchAll(DIV_TAG_RE)) {
+    if (match[1] === undefined) {
+      stack.pop();
+      continue;
+    }
+    stack.push(/\bdata-no-toc\b/i.test(match[1]));
+  }
+}
+
 function collectHeadings(tokens: MdToken[]): Heading[] {
   const out: Heading[] = [];
+  /** 当前所在的 div：true 表示带 `data-no-toc` */
+  const containers: boolean[] = [];
+  // 编号按「第几个标题」算，与是否进了目录无关，跳过示例标题不会让后面的 id 整体前移
+  let seen = 0;
   for (let i = 0; i < tokens.length; i += 1) {
     const t = tokens[i];
-    if (!t || t.type !== 'heading_open') continue;
+    if (!t) continue;
+    if (t.type === 'html_block') {
+      trackDivs(t.content, containers);
+      continue;
+    }
+    if (t.type !== 'heading_open') continue;
+    seen += 1;
+    if (containers.includes(true)) continue;
     const level = Number(t.tag.slice(1));
-    const id = t.attrGet('id') ?? `h${level}-${out.length + 1}`;
+    const id = t.attrGet('id') ?? `h${level}-${seen}`;
     out.push({ level, text: inlineText(tokens[i + 1]), id });
   }
   return out;
@@ -684,11 +672,13 @@ export function renderMarkdown(
   src: string,
   env: RenderEnv,
 ): RenderResult {
-  const { markdown, hints, sources } = extractDirectives(src);
-  const raw = md.parse(markdown, env);
+  // 每页一个新对象：站点插件（`options.setup` 注册的规则）往里写结构化数据，
+  // 渲染完原样交给布局的 `it.page.meta`。核心不规定里面有什么。
+  env.data = {};
+  const raw = md.parse(src, env);
   const tokens = asTokens(raw);
   const headings = collectHeadings(tokens);
   const links = collectLinks(tokens);
   const html = md.renderer.render(raw, md.options, env);
-  return { html, headings, links, hints, sources };
+  return { html, headings, links, data: env.data };
 }

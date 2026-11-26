@@ -2,8 +2,8 @@
 title: 样式与 Less
 keywords: 样式, css, less, styles, 覆盖主题, 编译
 description: 样式写在 assets/ 里，.less 会自动编译成同名 .css。这一页讲页面级样式怎么挂、为什么页面样式能盖住主题、以及几个容易踩的编译细节。
-section: basics
-order: 6
+section: advanced
+order: 1
 updated: 2026-11-17
 draft: false
 ---
@@ -70,7 +70,7 @@ styles: site.css
 
 想微调主题观感，直接写同名选择器覆盖就够了，不需要 `!important`。`!important` 一旦加上，后面想再改就得继续加。
 
-皮肤要正常写出 `</head>`。缺这个标签时样式表会被塞到文件最前面，跑到 `<!doctype html>` 之前，浏览器会因此进入怪异模式。皮肤的写法见 [皮肤](/basics/skins)。
+皮肤要正常写出 `</head>`。缺这个标签时样式表会被塞到文件最前面，跑到 `<!doctype html>` 之前，浏览器会因此进入怪异模式。皮肤的写法见 [皮肤](/advanced/skins)。
 
 ## 主题自带的样式 {#theme-extra}
 
@@ -111,4 +111,4 @@ x zh/index -> styles: nope.css
 
 > 体积会明显变大：每页都带一份完整样式，站内搜索的索引也跟着内联，总量按页数成倍放大。单文件产物适合把一页单独发出去，不适合做站时默认开着。
 
-脚本的挂法见 [JavaScript](/basics/javascript)，图片等资源的路径规则见 [静态资源](/basics/assets)。
+脚本的挂法见 [JavaScript](/advanced/javascript)，图片等资源的路径规则见 [静态资源](/basics/assets)。

@@ -86,7 +86,7 @@ layout: landing
 
 | 布局 | 可用变量 |
 |---|---|
-| `doc` | `site`、`page`（含 `html`、`headings`、`hints`、`sources`）、`nav`、`sidebar`、`index` |
+| `doc` | `site`、`page`（含 `html`、`headings`、`meta`）、`nav`、`sidebar`、`index` |
 | `category` | `site`、`lang`、`category`、`nav`、`index` |
 | `not-found` | `site`、`lang`、`nav`、`index` |
 | `redirect` | `site`、`from`、`to` |

@@ -14,10 +14,10 @@ categories: [syntax]
 ```
 my-wiki/
 ├── wiki.config.ts     站点配置
-├── content/*.md    内容，一个文件一页
+├── content/*.md       内容，一个文件一页
 ├── layouts/*.eta      可选：覆盖主题的布局
 ├── macros/*.eta       可选：内容里调用的宏
-└── assets/            图片等静态资源
+└── assets/            可选：图片等静态资源
 ```
 
 `wiki.config.ts` 在哪，哪里就是内容根目录。

@@ -31,10 +31,6 @@ categories: [official]
 
 没有分词、没有高亮、没有模糊匹配：输入什么就按子串找，标题命中排在正文命中前面。索引大小由 `search.excerpt` 控制，匹配策略见 [[search#ui]]。
 
-## 术语提示没有弹窗 {#hints}
-
-`hints` 只是留在页面里的一段 JSON，主题目前没做「点一下看解释」的交互。
-
 ## 没有图片处理 {#images}
 
 `assets/` 原样复制，不做缩放、不做哈希、不做 `<picture>`。

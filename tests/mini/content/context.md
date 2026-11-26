@@ -27,11 +27,12 @@ categories: [syntax]
 | `categories` | 分类：frontmatter 声明的，加上宏通过 `addCategory` 登记的 |
 | `frontmatter` | frontmatter 原对象 |
 | `markdown` | 整篇 markdown 原文（含 frontmatter），「查看源码」用的就是它 |
+| `meta` | 站点插件写进 `state.env.data` 的东西，核心不规定里面有什么；没插件时是 `{}` |
 | 其余 frontmatter 字段 | 平铺在同一层，`it.page.自定义键` 直接可用 |
 
 结构化字段优先，frontmatter 里恰好写了同名键也不会盖掉它们。
 
-差别只有一处：布局 `doc` 额外有渲染产物 `html` / `headings` / `hints` / `sources`，另外把出处字段整理成对象 `source`（`site` / `title` / `url` / `revid` / `license` / `licenseUrl` / `changes`）。宏执行时这些还没生成。
+差别只有一处：布局 `doc` 额外有渲染产物 `html` / `headings` / `meta`，另外把出处字段整理成对象 `source`（`site` / `title` / `url` / `revid` / `license` / `licenseUrl` / `changes`）。宏执行时这些还没生成。
 
 其余布局的情况见 [[layouts#context]]：`index` 的 `page` 只是占位对象，`category` / `not-found` / `redirect` 没有 `page`。
 
@@ -59,7 +60,7 @@ categories: [syntax]
 
 ## 拿不到的东西 {#missing}
 
-宏执行时，本页的 `html` / `headings` / `hints` / `sources` 还在生成中，所以**宏里读不到**。这是循环依赖，不是遗漏。要用这类数据得放在布局层做——布局模板里 `it.page.headings` 是有的。
+宏执行时，本页的 `html` / `headings` / `meta` 还在生成中，所以**宏里读不到**。这是循环依赖，不是遗漏。要用这类数据得放在布局层做——布局模板里 `it.page.headings` 是有的。
 
 ## 魔术字对照 {#magic}
 

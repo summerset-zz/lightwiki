@@ -42,13 +42,13 @@
 | 类型 | 位置 | 说明 |
 |---|---|---|
 | `PageSeed` | `content.ts` | 扫描结果，含未渲染的 `body` |
-| `Page` | `content.ts` | 渲染结果，含 `html` / `headings` / `links` / `hints` / `sources` / `categories` |
+| `Page` | `content.ts` | 渲染结果，含 `html` / `headings` / `links` / `meta` / `categories` |
 | `PageInfo` | `context.ts` | 宏与布局看到的 `it.page` |
 | `SiteInfo` | `context.ts` | `it.site`，含 `pages[]` / `categoryList` / `generatedAt` |
 | `LinkResolver` | `resolve.ts` | slug 与标题索引，`resolve(target)`（单语言，无语言维度） |
 | `MacroRegistry` | `macros.ts` | 宏的加载与同步渲染，内部维护展开栈 |
 
-`it.page` 由 `context.ts` 的 `pageInfoOf()` **唯一构造**：布局与宏拿到的是同一套字段。差别只有一处——布局 `doc` 额外有渲染产物（`html` / `headings` / `hints` / `sources`），因为宏执行时这些还在生成。`it.site` 两边是同一个对象。
+`it.page` 由 `context.ts` 的 `pageInfoOf()` **唯一构造**：布局与宏拿到的是同一套字段。差别只有一处——布局 `doc` 额外有渲染产物（`html` / `headings` / `meta`），因为宏执行时这些还在生成。`it.site` 两边是同一个对象。
 
 曾踩过的坑：这块以前是布局、宏各写一份字段集，导致 `it.page.slug` 在宏里能用、在布局里是 `undefined`。**新增字段只改 `pageInfoOf` 一处。**
 
@@ -80,7 +80,7 @@
 `markdown.ts` 的 `createMarkdown(options)`：
 
 ```
-markdown-it (html, linkify)
+markdown-it (html，不开 linkify)
   + markdown-it-attrs            {#anchor} / .class
   + inline ruler: wikilink       [[目标]] / [[目标|文字]]
   + inline ruler: macro          {{宏}} / {{宏(a, "b")}}
@@ -109,7 +109,7 @@ markdown-it (html, linkify)
 **内联模式由后处理完成，不靠布局判断**：`inline: true` 时，`inline.ts` 在 HTML 生成后把 `<link rel="stylesheet">` 换成 `<style>`、`<script src>` 换成内联脚本、其余资源换成 data URI。布局照常写 `<link>`——用户覆盖的布局也能享受内联，不需要主题配合。
 **皮肤里的代码块也由后处理上色**：皮肤产出的是最终 HTML，不经过 markdown 解析器。所以标了 `lang` 的 `<pre>` / `<code>`（`<code>` 优先）由 `code-blocks.ts` 在 HTML 出口交给 highlighter 染色，产物里补上 `class="language-x"`。**build 与 dev 两个出口都要调**（`build.ts` 的 `emit` 与 `dev/src/index.ts` 的 `inject`），只改一处就会出现「预览和产物不一样」。`lang="markdown"` 且以 `---` 开头时，frontmatter 段改用 `yaml` 规则单独染 —— hljs 的 markdown 语法不认识 frontmatter，会把后面的 `---` 当成标题分隔线。内容是转义过的（`&lt;`），染色前先解实体；已经带 `hljs-` 的块跳过，避免二次处理；语言不认识时原样保留并在构建警告里点名。注意**只有 `lang` 属性触发**，`class="language-x"` 不触发——否则会把 markdown 刚生成的高亮结果再染一遍。
 
-**页面元数据交给浏览器也靠后处理**：`frontmatterInjection: true` 时，`page-data.ts` 把 `pageInfoOf()` 的结果（减去 `markdown`）写成 `<script type="application/json" id="lightwiki-page-data">` 插到 `</body>` 前。用 `application/json` 而不是 `window.__DATA__ = {...}`，是为了让它只作为数据存在（不执行、不受 CSP 限制），主题的 JS 用 `JSON.parse(textContent)` 读。同样**build 与 dev 两个出口都要调**；JSON 里的 `<` 一律转成 `\u003c`，否则 frontmatter 里一个 `</script>` 就能把标签截断。分类页与 404 没有 frontmatter，它们的 `emit` 调用不带 `page`，自然不注入。默认关闭：它会把每页的 frontmatter 原样交给浏览器。
+**页面元数据交给浏览器也靠后处理**：`frontmatterInjection: true` 时，`page-data.ts` 把 `pageInfoOf()` 的结果（减去 `markdown`）写成 `<script type="application/json" id="lightwiki-page-data">` 插到 **`</head>` 前**（皮肤没写 `</head>` 时退回 `</body>`）。放 head 是为了不赌 defer 的顺序：页面级脚本都在 body 尾，head 里的数据必然先于它们存在。用 `application/json` 而不是 `window.__DATA__ = {...}`，是为了让它只作为数据存在（不执行、不受 CSP 的 `script-src` 限制）。主题的 `assets/page-data.js` 提供 `pageMeta()`：首次调用取标签并 parse，之后返回缓存对象，页面上没有标签时返回 `null`；`doc.eta` 在 `frontmatterInjection` 打开时才引入这个脚本。同样**build 与 dev 两个出口都要调**；JSON 里的 `<` 一律转成 `\u003c`，否则 frontmatter 里一个 `</script>` 就能把标签截断。分类页与 404 没有 frontmatter，它们的 `emit` 调用不带 `page`，自然不注入。默认关闭：它会把每页的 frontmatter 原样交给浏览器。
 
 ### 7.1 搜索与「查看源码」的边界
 
@@ -152,6 +152,10 @@ dist/
 资源走 `assets.ts` 的 `collectAssets()` / `copyAssets()`：`.less` 编译成同名 `.css`，**产物里不留 `.less`**。
 
 **覆盖顺序：主题先、用户后**。内容仓库的 `assets/` 复制到 `assets/`，主题的复制到 `assets/theme/`，后者先落盘，所以用户在 `assets/theme/` 里放同名文件就能盖掉主题资源。inline 模式同理（`createInlineBundle` 按数组顺序写入，同 key 后写赢）。
+
+**`dev` 必须按同一条规则解析**：`/assets/*` 先查内容仓库的 `assets/<rest>`（请求 `.css` 时同名 `.less` 也算），没有再回落到主题目录。曾经这里无条件落到主题目录，覆盖只在产物里生效、预览里看不见。
+
+同名 `.less` 与 `.css` 都以 `.less` 的编译结果为准。`collectAssets()` 用产物路径做键、显式记住条目来自 `.less`，不能靠写入顺序 —— 那是 `readdir` 的顺序，不同文件系统不一样。
 
 `theme.ts` 的 `listThemeFiles()` / `ejectTheme()` 就靠这条：`wiki theme eject` 把主题的 `layouts/`、`macros/`、`assets/` 分别复制到内容仓库的 `layouts/`、`macros/`、`assets/theme/`，三类文件的生效方式因此完全一致（内容仓库优先）。
 
@@ -208,6 +212,8 @@ dist/
 | 加一种页面类型（新 URL） | `routes.ts` → `view.ts` 的 `create*View` → `build.ts` → `dev` 的 `resolveDevRoute` → 主题新布局 |
 | 加一个模板变量 | `context.ts`（`PageInfo` / `SiteInfo` + `pageInfoOf`）→ `view.ts` 与 `macros.ts` 自动继承 |
 | 加一种行内语法 | `markdown.ts` 的 ruler 注册 + 实现 → `tests/mini` 加一节 |
+| 改页内目录收哪些标题 | `markdown.ts` 的 `collectHeadings`（`<div data-no-toc>` 里的整段跳过，`trackDivs` 维护容器栈） |
+| 改标题旁的锚点链接 | `markdown.ts` 的 `lightwiki:heading-anchor` 规则（只给带 id 的标题插 `<a class="header-anchor">`）→ 主题 `theme-extra.less` |
 | 改资源管线 | `assets.ts` → `build.ts` 的调用处 → `dev` 的 asset 分支 |
 | 改主题提供的文件列表或 eject 落点 | `theme.ts` 的 `AREAS` → `cli` 的 `theme list / eject` |
 | 改内联规则（哪些标签、哪种 data URI） | `inline.ts` 的 `inlineHtml` / `MIME` 表 |
@@ -217,7 +223,7 @@ dist/
 | 改 dev 监听哪些目录 | `dev/src/index.ts` 的 `collectWatchTargets`（`rebuild` 与 `reload` 两类） |
 | 改搜索命中策略或结果样式 | `theme-default/assets/search.js` 的 `score`、`style.css` 的 `.search-*` |
 | 改索引里放什么 | `search.ts` 的 `buildSearchIndex` → `site.search.excerpt` 配置 |
-| 改交给浏览器的元数据（`lightwiki-page-data`） | `page-data.ts` 的 `pageDataOf` / `injectPageData` → `build.ts` 的 `emit` 与 `dev` 的 `inject` |
+| 改交给浏览器的元数据（`lightwiki-page-data`） | `page-data.ts` 的 `pageDataOf` / `injectPageData` → `build.ts` 的 `emit` 与 `dev` 的 `inject` → 主题 `assets/page-data.js` 的 `pageMeta()` |
 
 改完至少跑：`yarn type:check`、`yarn wiki check tests/mini`、`yarn wiki build tests/mini`。
 

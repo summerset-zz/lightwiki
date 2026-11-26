@@ -133,6 +133,40 @@ function addDeclaredNames(name: string): void {
   }
 }
 
+/**
+ * markdown 语法的缺口。
+ *
+ * highlight.js 的 markdown 只认标题、列表、强调、行内代码与链接。我们的正文里
+ * 大量在 ```md 块里演示三条**自家**写法 —— 指令注释 `<!-- source: … -->`、
+ * 宏调用 `{{catalog}}`、双链 `[[页面]]` —— 原生一条都不匹配，整块看着和纯文本
+ * 没区别（`start/structure` 当时就是这个现象）。
+ *
+ * 和 addDeclaredNames 一样，从语言包重新拿原始定义再包一层。依赖 `xml` 已注册
+ * 的是官方定义本身，这里不涉及。
+ */
+const MARKDOWN_EXTRA_CONTAINS = [
+  { className: 'comment', begin: /<!--/, end: /-->/ },
+  {
+    className: 'template-variable',
+    variants: [{ begin: /\{\{/, end: /\}\}/ }, { begin: /\[\[/, end: /\]\]/ }],
+  },
+];
+
+function addMarkdownExtras(): void {
+  try {
+    const factory = requireLang('highlight.js/lib/languages/markdown') as (
+      h: typeof hljs,
+    ) => Record<string, unknown>;
+    hljs.registerLanguage('markdown', ((h: typeof hljs) => {
+      const base = factory(h);
+      const contains = Array.isArray(base.contains) ? base.contains : [];
+      return { ...base, contains: [...MARKDOWN_EXTRA_CONTAINS, ...contains] };
+    }) as never);
+  } catch {
+    // 拿不到原始定义就保持原样：只是少两种颜色，不该让高亮整个失效
+  }
+}
+
 export async function createHighlighter(config: LoadedConfig): Promise<Highlighter> {
   const enabled = config.highlight.enabled;
   const registered = new Set<string>();
@@ -144,6 +178,8 @@ export async function createHighlighter(config: LoadedConfig): Promise<Highlight
     // 声明名字本来不上色，这里给 JS / TS 补上（见 DECLARED_NAME_RE）
     addDeclaredNames('javascript');
     addDeclaredNames('typescript');
+    // markdown 块里也要能看出 `{{宏}}` 与 `[[双链]]`，见 MARKDOWN_EXTRA_CONTAINS
+    addMarkdownExtras();
     // 排在 BUILTIN 之后：它把 `<% %>` 内部交给 javascript、其余交给 xml
     hljs.registerLanguage('eta', ETA_DEFINITION as never);
     registered.add('eta');

@@ -2,7 +2,7 @@
 title: 命令行
 keywords: cli, 命令, init, dev, check, build, 退出码
 description: 四个命令、它们的参数、退出码，以及 wiki check 会检查哪些东西。
-section: advanced
+section: reference
 order: 2
 updated: 2026-11-17
 draft: false
@@ -23,7 +23,7 @@ wiki theme eject [dir] [--only file]  copy theme files into the repo so you can 
 
 `[dir]` 是内容仓库根，也就是含 `wiki.config.ts` 的那个目录。省略时用当前目录。
 
-theme 下面两个子命令见 [皮肤](/basics/skins#copy)。
+theme 下面两个子命令见 [皮肤](/advanced/skins#copy)。
 
 ## 参数全表 {#flags}
 
@@ -91,9 +91,9 @@ npx @lightwiki/cli build . -c wiki.config.en.ts -o dist-en   # 换一份配置�
 
 `wiki build <目录>` 构建到配置里的 `outputDir`，默认是 `dist/`。构建会先清空输出目录。
 
-产物里有哪些文件，见 [目录结构](/start/structure)。
+产物里有哪些文件、几个开关怎么改变产物，见 [本地打包](/deploy/build)。
 
-加 `--inline`（或配置里写 `inline: true`）时产物只剩 `.html`，样式、脚本、图片与搜索索引都内联进页面。体积代价见 [站点配置](/advanced/config)。
+加 `--inline`（或配置里写 `inline: true`）时产物只剩 `.html`，样式、脚本、图片与搜索索引都内联进页面，体积代价见 [单文件模式](/deploy/build#inline)。
 
 ## theme 查看并复制主题文件 {#theme}
 
@@ -105,7 +105,7 @@ npx @lightwiki/cli theme eject . --only layouts/doc.eta
 
 `list` 输出里带 `*` 的那几行表示本地已经有同名文件，构建时用的是你的那份。`eject` 默认跳过已存在的文件，`--force` 才覆盖。
 
-复制出来的文件不再跟随工具升级，取舍与落点见 [皮肤](/basics/skins#copy)。
+复制出来的文件不再跟随工具升级，取舍与落点见 [皮肤](/advanced/skins#copy)。
 
 ## check 检查什么 {#check}
 
@@ -126,7 +126,7 @@ npx @lightwiki/cli theme eject . --only layouts/doc.eta
 | `orphan page(s)` | 没有任何页面链到它 | 否，`--strict` 时算 |
 | `category note(s)` | 分类没在配置里声明，或 `sidebarCategory` 没有成员 | 否 |
 
-「链到它」只算**正文链接**：markdown 渲染出来的 `[]()`、双链、以及模板展开后落进正文的链接。导航、侧栏、皮肤里直接写的 `<a>` 都不算入链，也不算红链。所以把首页内容整块写在皮肤里时，它链过去的那几页仍会被报成孤页。原因与取舍见 [皮肤](/basics/skins#content-links)。
+「链到它」只算**正文链接**：markdown 渲染出来的 `[]()`、双链、以及模板展开后落进正文的链接。导航、侧栏、皮肤里直接写的 `<a>` 都不算入链，也不算红链。所以把首页内容整块写在皮肤里时，它链过去的那几页仍会被报成孤页。原因与取舍见 [皮肤](/advanced/skins#content-links)。
 
 `--strict` 只把红链与孤页这两项升级为失败，其它提示项不受影响。
 
@@ -134,4 +134,4 @@ npx @lightwiki/cli theme eject . --only layouts/doc.eta
 
 ## 再往下 {#next}
 
-每个字段的作用与默认值见 [站点配置](/advanced/config)。内容怎么写见 [frontmatter](/basics/frontmatter)。
+每个字段的作用与默认值见 [站点配置](/reference/config)。内容怎么写见 [frontmatter](/basics/frontmatter)。

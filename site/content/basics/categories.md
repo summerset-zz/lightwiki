@@ -3,8 +3,8 @@ title: 分类
 keywords: 分类, category, categories, sidebarCategory, catalog, pages
 description: 分类是贴在页面上的 ASCII 标签，构建时据此生成分类页。这一页讲怎么声明、怎么用、以及未声明时会发生什么。
 section: basics
-order: 8
-updated: 2026-11-17
+order: 4
+updated: 2026-11-26
 draft: false
 ---
 
@@ -65,7 +65,29 @@ slug 会出现在两处：分类页的地址，以及 `wiki check` 的提示文�
 
 没被任何页面用到的分类不会生成页。所以在配置里先声明一堆分类，不会产生空页。
 
-分类页没有正文，只有标题和页面列表。它用主题的 `category` 皮肤，想改样子就覆盖 `layouts/category.eta`。皮肤的写法见 [皮肤](/basics/skins)。
+分类页没有正文，只有标题和页面列表。它用主题的 `category` 皮肤，想改样子就覆盖 `layouts/category.eta`。皮肤的写法见 [皮肤](/advanced/skins)。
+
+## 分类页的排序 {#order}
+
+条目按 frontmatter 的 `order` 升序，`order` 相同按 slug，没写 `order` 的排最后。
+
+这是**跨 section 的扁平排序**：分类页正文不分组，`basics` 里 `order: 1` 的页和 `tools` 里 `order: 1` 的页会挨在一起。想让某个分组整体靠前，就把那一组的 `order` 整体写小（比如 basics 用 10–19、tools 用 20–29）。
+
+想换排序规则（比如按最后更新倒序），覆盖 `layouts/category.eta` 即可。皮肤里的 `it.category.pages` 只有 `title` / `url`，要更多字段就从 `it.site.pages` 自己筛：
+
+```eta
+<% const slug = it.category.slug %>
+<% const list = it.site.pages
+     .filter((p) => p.categories.includes(slug))
+     .sort((a, b) => b.updated.localeCompare(a.updated)) %>
+<ul class="index-list">
+<% for (const item of list) { %>
+  <li><a href="<%= item.url %>"><%= item.title %></a></li>
+<% } %>
+</ul>
+```
+
+`it.site.pages` 每条有 `slug` `url` `title` `section` `order` `updated` `categories`，且已按 section → order → slug 排好；不含草稿与 404 页。
 
 ## 没有分类总览页 {#catalog}
 
@@ -128,4 +150,4 @@ sidebarCategory "typography" has no pages; the sidebar falls back to site naviga
 
 语言在 `it.lang`。分类页没有 `it.page`，因为它不对应某个内容文件；`it.nav`、`it.site`、`it.index` 与普通页面一致。
 
-皮肤怎么写，见 [皮肤](/basics/skins)。
+皮肤怎么写，见 [皮肤](/advanced/skins)。

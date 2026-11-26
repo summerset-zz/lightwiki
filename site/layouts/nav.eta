@@ -24,15 +24,15 @@ const menus = [
       { label: 'Markdown 与扩展语法', href: '/basics/markdown' },
       { label: 'frontmatter', href: '/basics/frontmatter' },
       { label: '模板', href: '/basics/templates' },
-      { label: '皮肤', href: '/basics/skins' },
+      { label: '皮肤', href: '/advanced/skins' },
     ],
   },
   {
     label: '配置与部署',
     items: [
-      { label: '站点配置', href: '/advanced/config' },
-      { label: '命令行', href: '/advanced/cli' },
-      { label: '发布到 GitHub Pages', href: '/advanced/deploy-pages' },
+      { label: '站点配置', href: '/reference/config' },
+      { label: '命令行', href: '/reference/cli' },
+      { label: '发布到 GitHub Pages', href: '/deploy/pages' },
     ],
   },
 ];

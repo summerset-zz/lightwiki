@@ -1,73 +1,159 @@
 ---
 title: Markdown 与扩展语法
-keywords: markdown, 语法, 双链, wikilink, 红链, redlink, 锚点, anchor, 行内 HTML, html, 属性, attrs, 指令, hint, source
+keywords: markdown, 语法, 双链, wikilink, 红链, redlink, 锚点, anchor, 行内 HTML, html, 属性, attrs
 description: 正文就是标准 markdown，在此之上还有双链、红链判定、显式锚点、行内 HTML、给元素加 class，以及两条写在注释里的指令。
 section: basics
 order: 1
-updated: 2026-11-17
+updated: 2026-11-25
 draft: false
 ---
 
-正文用标准 markdown 写，标题、列表、表格、代码块、脚注都按 CommonMark。在这之上，构建时还会处理五种写法：双链、红链判定、显式锚点、行内 HTML、给元素加 class。此外还有两条写在 HTML 注释里的指令。
+轻维基的`md`文件是一个包含`frontmatter`文件头的markdown文件。
+- `frontmatter`是文件开头、由一组`---`包围的`yaml`格式内容，用来定义这一段是什么、搜索关键词、描述和出现在边栏中的类别和顺序等。详情请阅读[frontmatter语法](/basics/frontmatter)。
+- frontmatter之后是markdown正文。我们使用的是标准的CommonMark语法 + markdown-it-attrs的扩展语法。本文将着重介绍markdown部分。
 
-## 双链 {#wikilink}
+## 什么是markdown {#whatismd}
+<strong>markdown</strong>是一种易于阅读和撰写的文本格式，它的优势主要有以下两点：
+- 写作者不需要理解`html`，不需要理解标签、闭合等概念，已于排版、且专注于内容本身。
+- 原始内容也具有足够的可读性。
 
-双链（wikilink）用两层方括号指到另一页，从 MediaWiki 过来的人会熟悉这个写法。目标可以是 slug，也可以是页面标题：
+我们在此列举一些常见的markdown语法：
+- 段落：连续两个回车，生成html的`<p>`标签。
+- 标题：行首的一个或多个`#`。`#`越多则目录层级越深。生成html的`<h1>~<h6>`标签。
+- 链接：`[显示文本](链接)`。生成html的`<a>`标签。
+- 图片：`![图片占位文本](图片资源地址)`。生成html的`<img>`标签，占位文本会成为`<img>`标签的`alt`属性。
+- 列表：在行首使用`-``*`等符号生成无序列表(html`ul`)，`1.``a.`等符号生成有序列表(html`ol`)，标签后加一个空格。列表前使用`tab`表示层级关系。
+- 引用块：在行首使用`>`后跟一个空格表示引用块。
+- 行内代码：使用一对反引号 `` ` `` 包裹代码，生成html`<code>`标签。
+- 代码块：在行首使用三个反引号 ```` ``` ````，换行，写上内容，再换行加三个反引号。生成html`<pre>`标签。
 
-- 按 slug：`[[start/structure]]`
-- 按标题：`[[目录结构]]`
+````md
+#### 四个井号的标题
+我是第一段文字。
+
+我是第二段文字，我还有一个[指向markdown官网的链接](https://markdown.org/)。
+
+这里，我引用了一个指向`assets/md-favicon.png`的图片：![就是这张](/assets/md-favicon.png)
+
+- 列表项1里再插一张图，但只有24px大：![就是这张](/assets/md-favicon.png){width=24}
+- 列表项2
+  1. 二级列表1
+  2. 二级列表2
+- 回到一级列表
+
+> 这是一个blockquote。
+>
+> 而这是blockquote的第二行。
+
+```html
+<div>而这是一个html代码围栏。</div>
+```
+
+````
+<div class="md-render-example" data-no-toc>
+
+#### 四个井号的标题
+我是第一段文字。
+
+我是第二段文字，我还有一个[指向markdown官网的链接](https://markdown.org/)。
+
+这里，我引用了一个指向`assets/md-favicon.png`的图片：![就是这张](/assets/md-favicon.png)
+
+- 列表项1里再插一张图，但只有24px大：![就是这张](/assets/md-favicon.png){width=24}
+- 列表项2
+  1. 二级列表1
+  2. 二级列表2
+- 回到一级列表
+
+> 这是一个blockquote。
+>
+> 而这是blockquote的第二行。
+
+```html
+<div>而这是一个html代码围栏。</div>
+```
+
+</div>
+
+
+
+## 特有语法和限制 {#lightwiki-excluded}
+
+在上文中，除了`![就是这张](/assets/md-favicon.png){width=24}`这种给图片加其他属性的语法属于`markdown-it-attrs`之外，使用的都是标准CommonMark语法。本章会介绍轻维基和`markdown-it-attrs`的额外支持和限制。
+
+### 显式锚点 {#anchors}
+在标题语法后空格、并增加`{#anchorname}`可以为这一节增加一个锚点。锚点可以使页面被访问时自动滚动到这一节，该功能由`markdown-it-attrs`提供。
+
+例如，本小节的标题是这么写的：
+```md
+### 标题的anchor {#anchor}
+```
+当你点击右侧目录中本小节标题时，浏览器的标题栏会变为：
+```
+.../basics/markdown/#anchor
+```
+复制该地址，下次再访问时就会自动跳转到本小节。
+- 鼠标悬停时，标题后会出现一个`#`，点击这个符号也会更新标题栏中的锚点。
+- 如果不写显式锚点，这个符号就不会出现。
+
+### 内链 {#interlink}
+markdown本身支持内链，所以这不算轻维基的独有功能；但轻维基将根据配置预判编译后的内链可到达性。因此，我们约定：
+- 内链以`/`开头（html标准，代表编译后从域名后出发）
+- 内链的根目录即为`content`目录（或你在wiki.config.ts中指定的其他目录）。
+
+以本页为例，本页相对于`content`目录的文件为`/basics/markdown.md`，所以指向本页的内链应当写作`[显示文本](/basics/markdown)`，效果：[显示文本](/basics/markdown)。
+
+> 你也可以使用`./`或`../`来表示<strong>相对路径</strong>。但其行为与配置中的`urlStyle`相关，所以不建议使用。
+
+> 如果你希望部署后的链接不从域名根开始（比如`https://mysite.com/doc/`），则可以在wiki.config.ts中配置`basePath`，内链书写方式不变。basePath会在编译时自动加上。
+
+### mediawiki式内链 {#wikilink}
+如果你之前对mediawiki的语法（`wikitext`）比较熟悉，你也可以使用双方括号的方式处理内链。内链的目标可以是页面标题或者slug。例如：
+- 按 slug：`[[start/structure]]`。slug就是相对于`content`目录的文件路径，并去掉扩展名`.md`。
+- 按标题：`[[目录结构]]`。标题是在`md`文件的`frontmatter`中定义的。
 - 带显示文字：`[[start/structure|看目录]]`
 - 带锚点：`[[basics/frontmatter#fields]]`
 
-构建时它们全部被解析成真实链接，产物里看不到方括号。上面第一条解析出来的就是 [目录结构](/start/structure)。
+编译器在判断时，会优先按slug判断：如果对应的文件不存在，才会按照标题来处理。如果仍找不到，轻维基会将其视为一个<strong>死链</strong>。
 
-解析顺序固定为先 slug、再标题。slug 来自文件名，最稳；标题来自 frontmatter，改标题就会断链。同一个写法如果正好是某页的 slug、又是另一页的标题，按 slug 那一页算。
+### 死链检查 {#redlink}
 
-目标找不到时，页面上留一段不带链接的占位文字，鼠标停上去会提示没找到，`wiki check` 把它列成未解析的内链。
+在编译阶段（包括开发服务器运行中），轻维基会对链接进行检查，并提前告知潜在的死链。具体情况如下：
 
-本站自己的正文一般直接写 `[文字](/start/structure)`，双链是给习惯 MediaWiki 的人留的写法。
+- 对于markdown源生链接 `[文本](slug)`，仅在slug指向站内时：
+  - 如果`slug`无匹配文本，则输出为一个带有`class="redlink"`的链接。默认皮肤中显示为红色。
+- 对于mediawiki式链接 `[[标题|外显文本]]`：
+  - 如果`标题`不存在，则输出一个带有`class="wikilink-missing"`的`span`标签（不可点），默认皮肤中显示为带有点的下划线。
 
-## 红链 {#redlink}
+两种情况均会在`wiki check`阶段报警，但不会阻止编译。
 
-指向还不存在的页面的站内链接会被标上 `class="redlink"`。主题给它的样式是红字加虚线下划线，一眼能看出这里还差一页。
+此外，以下情况会跳过死链检查：
+| 链接写法                                               | 为什么会跳过               |
+| ------------------------------------------------------ | -------------------------- |
+| 仅包含`#anchor`、`?queryparam=value`                   | 指向的是当前页             |
+| `https://…`、`mailto:`                                 | 站外地址，无法确认可到达性 |
+| 结尾带有扩展名 `/x.css`、`/x.png`                      | 指向的是静态文件           |
+| 配置为`urlStyle: 'file'` 时，后缀名不为 `.html` 的路径 | 视为静态文件               |
 
-判定依据是构建时已经知道的所有页面地址。不在地址表里的站内路径，只要不像资源（`/assets/` 下面、带 `.css` 这类扩展名），也不像分类页，就算红链。从别处搬来的内容留着原站路径，会一起被点名。
+## 外链 {#external-link}
 
-页面链接一律以 `/` 开头：`[结构](/start/structure)`。directory 模式的尾斜杠由构建补上，部署在子路径时 `basePath` 也会加上。
+外链可以用标准markdown链接（如`[显示文本](https://example.com)`）、尖括号链接（如`<https://example.com>`）实现。正文中的裸写地址（如直接写https://example.com）不会被识别为链接。这可能与你的IDE的语言服务不一致。
 
-相对路径同样会被检查，但解析基准是**当前页所在的目录**，与浏览器一致，不是站点根，也不是 `content/` 目录。所以 `/start/intro/` 里写 `./guide` 落到 `/start/intro/guide`，写 `docs/guide` 落到 `/start/intro/docs/guide`，两条几乎必然不存在。要跨页引用就写以 `/` 开头的地址。
 
-几种不参与判定的写法：
+## 直接写HTML {#html}
 
-| 写法 | 为什么不算 |
-|---|---|
-| `#锚点`、`?查询` | 指向的还是这一页 |
-| `https://…`、`mailto:` | 站外地址，不检查可达性 |
-| 带扩展名的 `/x.css`、`/x.png` | 当资源 |
-| `urlStyle: 'file'` 下不带 `.html` 的相对路径 | 可能是任意静态文件，当资源跳过 |
+在正文中直接写html标签会被原样保留。如果你碰到了markdown无法实现的排版样式时可以使用此方案。例如以下代码会直接绘制svg图形：
 
-`wiki check` 会把这些链接列出来，`check --strict` 时它们算失败。构建只给一句汇总提示，不拦产物。
-
-> 这一页不放真实例子。放一个修不好的红链，`wiki check` 就永远是红的。
-
-## 显式锚点 {#anchors}
-
-在标题末尾写 `{#名字}`，这一节的 id 就固定下来：
-
-```md
-## 三种长度 {#counts}
+```html
+<figure style="margin: 1.75rem 0">
+  <svg viewBox="0 0 240 64" width="100%" role="img" aria-label="三段文字共用一条基线">
+    <text x="4" y="34" font-size="20" fill="currentColor">Aa</text>
+    <text x="64" y="34" font-size="20" font-family="serif" fill="currentColor">Aa</text>
+    <text x="124" y="34" font-size="20" font-style="italic" fill="currentColor">Aa</text>
+    <line x1="4" y1="38" x2="236" y2="38" stroke="currentColor" stroke-dasharray="4 4" />
+  </svg>
+</figure>
 ```
-
-不写 id 的话，中文标题会拿到按序号编出来的 id，比如 `h2-3`。这个名字没有含义，改标题或调整顺序都会变，别人存下来的锚点就成了死链接。显式写等于给这一节取一个不会变的名字。锚点用于 `##` 到 `######`，页面大标题来自 frontmatter，不参与。
-
-本页每个二级标题都这么写。这一节写的是 `{#anchors}`，所以 [点这里](#anchors) 能跳回来。
-
-id 取英文短词最省事：改中文标题时不用跟着改 `{#...}`，别人存下来的锚点也不会断。
-
-## 行内 HTML {#html}
-
-正文里的 HTML 原样保留：`<figure>`、`<svg>`、`<style>`、`style` 属性都能用。markdown 表达不了精细排版时，用它最直接。
-
 <figure style="margin: 1.75rem 0">
   <svg viewBox="0 0 240 64" width="100%" role="img" aria-label="三段文字共用一条基线">
     <text x="4" y="34" font-size="20" fill="currentColor">Aa</text>
@@ -77,53 +163,49 @@ id 取英文短词最省事：改中文标题时不用跟着改 `{#...}`，别�
   </svg>
 </figure>
 
-上面这张图就是一段内联 SVG，没有对应的图片文件。
-
-用的时候守两条：颜色写 `currentColor` 或主题的 CSS 变量，写死 `#333` 在暗色主题下会看不见；块级 HTML 前后留空行，否则会被当行内内容处理。
-
-什么时候该用：文字排版本身就是你要展示的内容时，比如字距、基线、字形对比，markdown 表达不了这些。普通说明文字仍然用 markdown，HTML 混进正文会让源码难读。
-
-## 给元素加 class {#attrs}
-
-元素后面紧贴 `{.class}`，构建时会变成 class 属性：
+请注意。如果你在html内写了markdown，则这一部分markdown也会被解析。
 
 ```md
-![示意](/assets/x.png){.wide}
+<div class="md-render-example" data-no-toc>
+
+#### 虚假的标题
+虚假的内容
+</div>
 ```
+<div class="md-render-example" data-no-toc>
 
-除了 `{.class}`，还能写 `{#id}` 和 `key=value` 这样的属性，由 markdown-it-attrs 处理。
+#### 虚假的标题
+虚假的内容
+</div>
+不加`data-no-toc`的情况下，html内的标题会被右侧TOC收录。
 
-> 加了 class 不等于有样式。主题没有 `.wide` 这类预设，得先在 `assets/` 的样式表里写好它，或者覆盖皮肤的样式。
+## markdown-it-attrs {#attrs}
+本节的功能由[markdown-it-attrs](https://www.npmjs.com/package/markdown-it-attrs)插件提供。
 
-## 提示与来源指令 {#directives}
+你可以在markdown标记结尾增加花括号、并在花括号中添加`attr`和`class`等属性。我们之前用到的[显式锚点](#anchors)功能也是由此插件提供的。例如：
+````md
+## 标题 {.h2-class}
+段落 {data-toggle=modal}
+<!-- 这一段会输出为 -->
+<h1 class="h2-class">标题</h1>
+<p data-toggle="modal">段落</p>
 
-两条指令都写在 HTML 注释里。构建时注释被剥离，产物里看不到它们本身。
+<!-- 对于一些行内标记也有效-->
+普通文本，*我是em标签*{.red}普通文本
+<!-- 这一段会输出为 -->
+<p>普通文本，<em class="red">我是em标签</em>普通文本</p>
 
-术语提示：
-
-```md
-<!-- hint: Unicode 区块 | 区块是 Unicode 给码位划的行政区间。 -->
+<!-- 对于代码围栏也有效-->
+```python {data=asdf}
+nums = [x for x in range(10)]
 ```
+<!-- 代码围栏会被解析为-->
+<pre data="asdf"><code class="language-python">nums = [x for x in range(10)]
+</code></pre>
+````
 
-它是标题的附属数据，归属上方最近的带锚点标题，所以写在标题下面最稳。产物里变成一段 JSON：
 
-```html
-<script type="application/json" id="lightwiki-hints">…</script>
-```
 
-默认主题只把这段数据放进页面，不负责显示。想让读者看见，得自己写脚本读它。
-
-小节来源，只借了某几节时用：
-
-```md
-<!-- source: zh.wikipedia.org | 示例条目 | 12345678 | CC BY-SA 4.0 | https://creativecommons.org/licenses/by-sa/4.0/ | 仅用于演示 -->
-```
-
-六段用 `|` 分隔，顺序固定：站点、标题、修订号、许可证、许可证地址、改动说明。站点写域名，不带协议；改动说明里可以再出现 `|`，只切前五刀。产物里会在文末生成一节来源列表。
-
-修订号写固定的版本号（`oldid`），不要写页面地址：上游一改，署名就指到另一版了。
-
-整篇都是改编的话，改用 frontmatter 的 `source*` 一组字段，见 [frontmatter](/basics/frontmatter)。
 
 ## 页面身份是文件名 {#next}
 
@@ -131,4 +213,4 @@ id 取英文短词最省事：改中文标题时不用跟着改 `{#...}`，别�
 
 目录怎么摆、首页是哪一页，见 [目录结构](/start/structure)。开头那段 YAML 写什么，见 [frontmatter](/basics/frontmatter)。
 
-正文里想插入一段由站内数据算出来的列表或表格，那是另一套机制，见 [模板](/basics/templates)。代码块怎么上色、支持哪些语言，见 [代码高亮](/basics/code-highlight)。
+正文里想插入一段由站内数据算出来的列表或表格，那是另一套机制，见 [模板](/basics/templates)。代码块怎么上色、支持哪些语言，见 [代码高亮](/advanced/code-highlight)。

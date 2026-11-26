@@ -4,7 +4,7 @@ keywords: 资源, assets, 图片, 路径, basePath, assetsDir
 description: 图片、字体、下载文件都放在 assets/ 目录，构建时整体拷进产物。这一页讲目录怎么组织、正文与皮肤里引用路径为什么写法不同。
 section: basics
 order: 5
-updated: 2026-11-17
+updated: 2026-11-26
 draft: false
 ---
 
@@ -30,7 +30,35 @@ draft: false
 
 主题自己的资源落在另一个子目录 `assets/theme/`，所以 `assets/style.css` 不会和主题的 `assets/theme/style.css` 撞名。
 
-> `.less` 是唯一会被改动的资源文件，构建时编译成同名 `.css`，产物里不会出现 `.less`。规则见 [样式与 Less](/basics/styles)。
+> `.less` 是唯一会被改动的资源文件，构建时编译成同名 `.css`，产物里不会出现 `.less`。规则见 [样式与 Less](/advanced/styles)。
+
+## 覆盖主题资源 {#theme}
+
+`assets/theme/` 与主题的资源目录**同路径**：构建时主题那份先落盘、你的后落盘，同名文件由你整个替换。所以它不是「再叠一层」，而是一层同名覆盖。预览与产物按同一条规则走。
+
+主题目前提供三个文件：
+
+| 主题里的文件 | 产物 | 覆盖它会怎样 |
+|---|---|---|
+| `assets/theme/style.css` | `assets/theme/style.css` | 整套主题样式被换掉 |
+| `assets/theme/theme-extra.less` | `assets/theme/theme-extra.css` | 主题自带的 `.note` / `.card` / `.glossary` / `.wikilink-missing` 一起消失 |
+| `assets/theme/search.js` | `assets/theme/search.js` | 搜索交互换成你的实现 |
+
+**是替换，不是合并。** 想改其中几个又不想重写全部，先拿一份完整副本再改：
+
+```bash
+npx @lightwiki/cli theme eject . --only assets/theme-extra.less
+```
+
+`theme eject` 的 `assets/` 落点就是 `assets/theme/`。复制出来的文件不跟随工具升级，取舍见 [皮肤](/advanced/skins)。
+
+只想**补充**自己的全站样式，就别占用这三个文件名：新建 `assets/extra.less`，在皮肤里加一行 `<link>`（皮肤只能整份覆盖，见 [皮肤](/advanced/skins#copy)）：
+
+```html
+<link rel="stylesheet" href="<%= it.site.base %>/assets/extra.css">
+```
+
+只给某几页挂样式用 frontmatter 的 `styles` 字段，见 [frontmatter](/basics/frontmatter#less)。
 
 ## 正文里怎么引用 {#markdown}
 
@@ -82,7 +110,7 @@ assetsDir: 'static',
 
 样式表里的 `url(...)` 同样不会加前缀，路径相对样式表文件本身解析，所以 `url(../img/x.png)` 是从 css 所在目录往回找。
 
-皮肤里还能拿到哪些字段，见 [皮肤](/basics/skins)。
+皮肤里还能拿到哪些字段，见 [皮肤](/advanced/skins)。
 
 ## 目录与命名建议 {#naming}
 
@@ -107,4 +135,4 @@ assets/
 
 > 产物里的 `assets/` 与提交的目录一一对应，源目录多大，产物里就多大。
 
-页面级样式与脚本的挂法见 [样式与 Less](/basics/styles) 和 [JavaScript](/basics/javascript)。
+页面级样式与脚本的挂法见 [样式与 Less](/advanced/styles) 和 [JavaScript](/advanced/javascript)。

@@ -2,9 +2,9 @@
 title: 代码高亮
 keywords: 高亮, highlight, 代码块, 语言, highlight.js, eta
 description: 代码块围栏带上语言名就会上色。这一页讲内置了哪些语言、怎么加别的、怎么改配色。
-section: basics
-order: 9
-updated: 2026-11-22
+section: advanced
+order: 3
+updated: 2026-11-25
 draft: false
 ---
 
@@ -51,6 +51,18 @@ const x = 1;
 
 写了不认识的语言名不会报错，只是那一块不上色。`javscript` 这类拼错属于静默失败，写完看一眼页面颜色对不对。
 
+## markdown 块里补的三条 {#md-extras}
+
+highlight.js 官方的 `markdown` 只认标题、列表、强调、行内代码和链接。可本站正文经常在 `md` 块里演示指令注释、宏调用、双链，这三样一条都不匹配，整块看起来就跟纯文本一样。所以内置的 `markdown` 在定义前面补了三条：
+
+| 写法 | 拿到的 class |
+|---|---|
+| `<!-- … -->` | `hljs-comment` |
+| `{{宏}}` | `hljs-template-variable` |
+| `[[双链]]` | `hljs-template-variable` |
+
+只在围栏写 `md` / `markdown` 时生效；写 `text` 还是原样。
+
 ## eta 是自定义的 {#eta}
 
 highlight.js 没有 Eta。官方定义里最接近的是 `erb`，同样是 HTML 里夹 `<% %>`，但它按 Ruby 解析，用不上。
@@ -78,7 +90,7 @@ highlight: {
 },
 ```
 
-一个语言只要在 highlight.js 里有定义，写上就能用，不用额外装包。字段的默认值和位置见 [站点配置](/advanced/config)。
+一个语言只要在 highlight.js 里有定义，写上就能用，不用额外装包。字段的默认值和位置见 [站点配置](/reference/config)。
 
 > 写名字时先按真名找。配 `vue` 会用 highlight.js 官方的 Vue 定义，不是别名表里的 `xml`。真名没注册时才退回别名。
 
@@ -159,7 +171,7 @@ highlight: { enabled: false },
 }
 ```
 
-自己的样式表怎么挂到页面、跟主题谁盖谁，见 [样式与 Less](/basics/styles)。
+自己的样式表怎么挂到页面、跟主题谁盖谁，见 [样式与 Less](/advanced/styles)。
 
 ## 行内代码不上色 {#inline}
 

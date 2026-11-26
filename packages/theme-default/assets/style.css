@@ -142,7 +142,7 @@ a.redlink:hover {
   border-left: 3px solid var(--line);
   color: var(--fg-dim);
   font-size: 0.85rem;
-} 
+}
 
 .prose {
   font-size: 1rem;
@@ -222,7 +222,7 @@ a.redlink:hover {
   padding: 0.1em 0.35em;
   border-radius: 3px;
   background: var(--code-bg);
-  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-family: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Monaco, "Cascadia Mono", Consolas, "Liberation Mono", "Noto Sans Mono", "DejaVu Sans Mono", "Roboto Mono", "Courier New", monospace;
   font-size: 0.9em;
 }
 
@@ -261,6 +261,11 @@ a.redlink:hover {
   padding-left: 1.25rem
 }
 
+/* li 末尾的块不再补下边距：嵌套列表趴在 li 尾部时，下一条会被它顶开一截 */
+.prose li>:last-child {
+  margin-bottom: 0
+}
+
 .prose table {
   width: 100%;
   border-collapse: collapse;
@@ -290,24 +295,13 @@ a.redlink:hover {
   height: auto;
 }
 
-.section-sources {
-  margin-top: 3rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--line);
-  font-size: 0.85rem;
-  color: var(--fg-dim);
-}
-
-.section-sources h2 {
-  font-size: 1rem;
-  margin: 0 0 0.5rem;
-  border: 0;
-  padding: 0;
-}
-
-.section-sources ul {
-  margin: 0;
-  padding-left: 1.1rem;
+/*用于在md里演示md*/
+.prose .md-render-example {
+  padding: 0.9rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  font-size: 0.8rem;
+  line-height: 1.6;
 }
 
 /* —— 搜索 —— */

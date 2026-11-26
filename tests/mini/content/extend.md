@@ -96,6 +96,26 @@ export default {
 
 注意：`md` 的类型是 `unknown`，需要自己 `import type MarkdownIt from 'markdown-it'` 后断言。
 
+### 把数据交给布局 {#plugin-data}
+
+插件想留下点什么（比如把注释形式的花样解析成结构化数据），就写 `state.env.data`：
+
+```ts
+md.core.ruler.push('site:my-data', (state) => {
+  const data = (state.env.data ??= {});
+  for (const token of state.tokens) {
+    if (token.type !== 'html_block') continue; // 围栏是 fence token，天然跳过
+    // ... 解析 token.content，写进 data
+  }
+});
+```
+
+- `env.data` 是**每页一个新对象**，不用清理；
+- 渲染完原样挂到 `it.page.meta`，也会进 `lightwiki-page-data`；
+- 拿到 token 流之后，围栏里的内容不会被误伤 —— 这比事后用正则擀原文可靠得多。
+
+核心不规定 `meta` 里有什么，怎么画也由你：在 `layouts/doc.eta` 里读 `it.page.meta.xxx` 就行。
+
 ## 布局覆盖 {#layouts}
 
 样式之外还能换整页结构，见 [[layouts]]。

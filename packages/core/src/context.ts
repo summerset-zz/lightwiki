@@ -54,6 +54,11 @@ export interface PageInfo {
    * 注意它**不是** `source` —— 那个是「改编来源」。
    */
   markdown: string;
+  /**
+   * 站点插件交给布局的结构化数据。核心不规定里面有什么 ——
+   * 插件往 `state.env.data` 写什么，这里就是什么；没插件时是空对象。
+   */
+  meta: Record<string, unknown>;
 }
 
 /** 约定：slug 为 `404` 的页面不进导航，也不按普通页面输出，只负责生成根目录的 404.html */
@@ -110,6 +115,8 @@ export interface PageInfoInput {
   relativePath: string;
   draft: boolean;
   raw: string;
+  /** 插件数据；`Page` 有，`PageSeed` 没有 */
+  meta?: Record<string, unknown>;
   data: {
     title: string;
     description?: string | undefined;
@@ -126,7 +133,7 @@ export interface PageInfoInput {
  *
  * **宏与布局必须用同一个构造器**：曾经布局那边是手写的字段子集，
  * 导致 `it.page.slug` 在宏里能拿到、在布局里是 undefined。
- * 布局额外拥有的只有渲染产物（`html` / `headings` / `hints` / `sources`）。
+ * 布局额外拥有的只有渲染产物（`html` / `headings` / `meta`）。
  */
 export function pageInfoOf(input: PageInfoInput, lang: string): PageInfo {
   return {
@@ -146,6 +153,7 @@ export function pageInfoOf(input: PageInfoInput, lang: string): PageInfo {
     categories: categoriesOf(input.data.categories),
     frontmatter: input.data as unknown as Record<string, unknown>,
     markdown: input.raw,
+    meta: input.meta ?? {},
   };
 }
 

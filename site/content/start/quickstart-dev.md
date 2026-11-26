@@ -27,7 +27,7 @@ draft: false
   - × 不适合高频使用，因为每次都要下载
   - × 默认使用最新版本，可能会造成版本冲突
   - × 缺少快捷的CLI执行入口
-- 包管理器(npm/yarn等)
+- 包管理器(npm/yarn等，下文称`package.json`)
   - √ 包保存到本地，可以锁定版本
   - √ 使用`package.json`管理版本、易于迁移
   - √ 便捷保存常用命令，并随着`package.json`一并迁移
@@ -96,7 +96,7 @@ npx degit summerset-zz/lightwiki-starter my-wiki
 }
 ```
 
-> 使用`package.json`需要在升级版本时额外调整CI配置。参考[发布到 GitHub Pages](/advanced/deploy-pages#cli-version)。
+> 使用`package.json`需要在升级版本时额外调整CI配置。参考[发布到 GitHub Pages](/deploy/pages#cli-version)。
 
 ## 两种方式对比 {#init-compare}
 
@@ -119,7 +119,7 @@ npx degit summerset-zz/lightwiki-starter my-wiki
 | `AGENTS.md`                   | 给AI的使用说明（用于日常维护、开发等）                                             |
 | `README.md`                   | 给你的使用说明                                                                     |
 | `.gitignore`                  | git版本控制忽略列表                                                                |
-| `.github/workflows/pages.yml` | 自动构建脚本。请参考[发布到 GitHub Pages](/advanced/deploy-pages#cli-version) |
+| `.github/workflows/pages.yml` | 自动构建脚本。请参考[发布到 GitHub Pages](/deploy/pages#cli-version) |
 | `package.json`                | 如果使用方式2，则会新增此文件                                                      |
 
 ### 三条命令 {#commands}
@@ -135,7 +135,7 @@ npx degit summerset-zz/lightwiki-starter my-wiki
 | 目录       | 放什么                                                          |
 | ---------- | --------------------------------------------------------------- |
 | `assets/`  | 静态资源：额外的图片、字体、样式表                              |
-| `layouts/` | [自定义皮肤](/basics/skins)。默认使用的皮肤是主题自带的。  |
+| `layouts/` | [自定义皮肤](/advanced/skins)。默认使用的皮肤是主题自带的。  |
 | `macros/`  | [自定义模板](/basics/templates)。`eta`文件名对应模板名称。 |
 
 

@@ -18,7 +18,6 @@ categories: [demo]
 - [[anchors|锚点]]：让标题能被稳定引用
 - [[links|链接]]：站内链接与双链
 - [[macros|宏]]：`{{…}}` 的三种形态
-- [[directives|行内指令]]：术语提示与小节来源
 - [[category-page|分类]]：页面归类与分类侧栏
 - [[context|模板上下文]]：`it.page` 与 `it.site`
 - [[html|在正文里写 HTML]]：内联 SVG 与颜色约定

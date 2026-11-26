@@ -4,7 +4,7 @@ keywords: 链接, link, 双链, wikilink, 内链
 description: 站内链接写站内绝对路径，双链可以按 slug 或标题解析，外链自动加 nofollow。
 section: syntax
 order: 4
-updated: 2026-11-17
+updated: 2026-11-25
 draft: false
 categories: [syntax]
 ---
@@ -62,3 +62,16 @@ categories: [syntax]
 写完整的地址即可，构建时会自动加 `rel="nofollow noopener"`，指向其他域名的还会加 `target="_blank"`。
 
 效果：[Eta 模板引擎](https://eta.js.org/)
+
+## 裸写的地址不成链 {#bare-url}
+
+不套方括号也不套尖括号的地址是**普通文字**，不会被识别成链接：
+
+```md
+https://example.com
+index.md
+```
+
+效果：https://example.com 与 index.md —— 两段纯文字。
+
+工具用 markdown-it 的 linkify 靠后缀猜域名。`index.md` 的 `.md` 恰好是摩尔多瓦的顶级域名，`README.md`、`style.css` 同理，于是文件名叫着叫着就变成了 `http://index.md/`。所以干脆整条关掉：要链接就写 `[文字](https://example.com)`，或者 `<https://example.com>`。

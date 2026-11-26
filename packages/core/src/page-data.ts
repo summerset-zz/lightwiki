@@ -31,12 +31,20 @@ export function pageDataOf(page: PageInfoInput, lang: string): Record<string, un
   return rest;
 }
 
-/** 把元数据塞进页面。没有 `</body>` 时追加到末尾（和搜索索引一致）。 */
+/**
+ * 把元数据塞进页面，位置是 `</head>` 前。
+ *
+ * 放 head 而不是 `</body>` 前：页面级脚本（`scripts` 字段、主题的 `search.js`）
+ * 都在 body 尾，head 里的数据必然先于它们存在，不用赌 defer 的执行顺序。
+ * 皮肤没写出 `</head>` 时退回 `</body>`，再没有就追加到末尾。
+ */
 export function injectPageData(html: string, data: Record<string, unknown>): string {
   // `<` 一律转成 `\u003c`：frontmatter 里出现 `</script>` 会提前关掉标签。
   // JSON 里 `\u003c` 与 `<` 等价，JSON.parse 之后拿到的还是原字符。
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
   const tag = `<script type="application/json" id="${PAGE_DATA_ID}">${json}</script>`;
 
-  return html.includes('</body>') ? html.replace('</body>', `${tag}\n</body>`) : `${html}\n${tag}`;
+  if (html.includes('</head>')) return html.replace('</head>', `${tag}\n</head>`);
+  if (html.includes('</body>')) return html.replace('</body>', `${tag}\n</body>`);
+  return `${html}\n${tag}`;
 }

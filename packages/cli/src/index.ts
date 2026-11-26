@@ -300,6 +300,12 @@ async function run(args: string[]): Promise<number> {
       }
     }
 
+    if (result.styleConflicts.length > 0) {
+      section(`${result.styleConflicts.length} style file(s) have both .less and .css`);
+      line('  the .less wins: its output overwrites the hand-written .css (dev serves the .less too)');
+      for (const name of result.styleConflicts) line(`  ! assets/${name}`);
+    }
+
     if (result.missingHome) {
       section('no home page');
       line(`  ${config.content}/index.md is missing -- that page IS the site entry (${pageUrl(config, 'index')})`);

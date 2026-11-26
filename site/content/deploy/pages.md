@@ -2,7 +2,7 @@
 title: 发布到 GitHub Pages
 keywords: 部署, github pages, workflow, actions, basePath, 自定义域名
 description: 仓库推上去就自动构建发布，需要先在设置里把 Source 选成 GitHub Actions。
-section: advanced
+section: deploy
 order: 3
 updated: 2026-11-17
 draft: false
@@ -51,7 +51,7 @@ const env =
 const basePath = env.LIGHTWIKI_BASE_PATH ?? '/';
 ```
 
-所以本地预览是 `/`，线上自动变成 `/<仓库名>/`。仓库改名也不用动配置。字段本身见 [站点配置](/advanced/config)。
+所以本地预览是 `/`，线上自动变成 `/<仓库名>/`。仓库改名也不用动配置。字段本身见 [站点配置](/reference/config)。
 
 ## 工具版本写在哪 {#cli-version}
 
@@ -116,7 +116,7 @@ npx @lightwiki/cli build .
 
 `check` 有问题会用退出码告诉你，`build` 成功说明产物能出来。CI 里跑的是同一条构建命令，只是版本号写死。
 
-两个命令的用法见 [命令行](/advanced/cli)。
+两个命令的用法见 [命令行](/reference/cli)。
 
 ## 要改的地方 {#tweaks}
 
@@ -128,5 +128,5 @@ npx @lightwiki/cli build .
 
 ## 再往下 {#next}
 
-- [部署到自有服务器](/advanced/deploy-server)
-- [打包成 CHM](/advanced/deploy-chm)
+- [部署到自有服务器](/deploy/server)
+- [打包成 CHM](/deploy/chm)

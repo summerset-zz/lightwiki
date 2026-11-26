@@ -12,10 +12,8 @@ import {
   createMarkdown,
   renderMarkdown,
   type Heading,
-  type Hint,
   type LinkRef,
   type RenderEnv,
-  type SectionSource,
   type UnresolvedRef,
 } from './markdown.js';
 import { createSiteInfo, pageInfoOf, type PageInfo } from './context.js';
@@ -37,8 +35,8 @@ export interface Page {
   html: string;
   headings: Heading[];
   links: LinkRef[];
-  hints: Hint[];
-  sources: SectionSource[];
+  /** 站点插件写进 `env.data` 的数据，原样交给布局的 `it.page.meta` */
+  meta: Record<string, unknown>;
   url: string;
   outputPath: string;
   draft: boolean;
@@ -270,8 +268,7 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
       html: rendered.html,
       headings: rendered.headings,
       links: rendered.links,
-      hints: rendered.hints,
-      sources: rendered.sources,
+      meta: rendered.data,
       url: seed.url,
       outputPath: seed.outputPath,
       draft: seed.draft,

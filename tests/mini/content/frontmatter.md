@@ -39,8 +39,7 @@ sidebarCategory: syntax
 | `scripts` | 字符串 / 数组 / `{ src, module }` | 额外引入的脚本，注入 `</body>` 前（普通脚本带 `defer`，`module: true` 则加 `type="module"`） |
 | `categories` | 字符串或数组 | 见 [[category-page]] |
 | `sidebarCategory` | 字符串 | 用哪个分类的页面列表充当侧栏 |
-| `hintTitle` `hint` | 字符串 | 整篇只有一个术语提示时用 |
-| `sourceSite` 等 | 字符串 | 整篇改编的来源，见 [[directives#source]] |
+| `sourceSite` 等 | 字符串 | 整篇改编的来源：`sourceSite` / `sourceTitle` / `sourceUrl` / `sourceRevid` / `sourceLicense` / `sourceLicenseUrl` / `sourceChanges` |
 | `license` `licenseUrl` `authors` | 字符串 | 站点自有的内容许可 |
 
 ## 页面的样式与脚本 {#assets}

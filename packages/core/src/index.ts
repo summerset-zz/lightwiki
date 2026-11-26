@@ -47,14 +47,11 @@ export {
 } from './resolve.js';
 export {
   createMarkdown,
-  extractDirectives,
   renderMarkdown,
   type Heading,
-  type Hint,
   type LinkRef,
   type RenderEnv,
   type RenderResult,
-  type SectionSource,
   type UnresolvedRef,
 } from './markdown.js';
 export {

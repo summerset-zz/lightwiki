@@ -2,8 +2,8 @@
 title: 打包成 CHM
 keywords: chm, html help, 离线, 兼容性
 description: 目前不直接生成 CHM。这一页列出要自己打包时必须满足的条件，以及主题在 CHM 里会退化成什么样。
-section: advanced
-order: 5
+section: deploy
+order: 2
 updated: 2026-11-17
 draft: false
 ---
@@ -34,7 +34,7 @@ CHM 是 Windows 的离线帮助文件格式（HTML Help），由一组 HTML 页�
 | `redirectMode` | `'js'` | `_redirects` 对 CHM 没有意义，跳转页才有用 |
 | 文件名 | 全 ASCII | slug 来自文件名。CHM 编译器按系统代码页处理路径，中文或空格容易导致打包失败，或运行时找不到文件 |
 
-这四项在 [站点配置](/advanced/config) 里都有说明。文件的路径规则见 [目录结构](/start/structure)。
+这四项在 [站点配置](/reference/config) 里都有说明。文件的路径规则见 [目录结构](/start/structure)。
 
 四条之外还有一条：页面里不要用 `type="module"` 的脚本，原因见下一节。
 
@@ -90,9 +90,9 @@ CHM 查看器用的是 Windows 自带的 Internet Explorer 排版组件（mshtml
 - 不用 `sticky`、`grid`、`gap`
 - 不要依赖脚本，搜索这类功能直接不提供
 
-具体怎么写皮肤见 [皮肤](/basics/skins)。
+具体怎么写皮肤见 [皮肤](/advanced/skins)。
 
 ## 再往下 {#next}
 
-- [发布到 GitHub Pages](/advanced/deploy-pages)
-- [部署到自有服务器](/advanced/deploy-server)
+- [发布到 GitHub Pages](/deploy/pages)
+- [部署到自有服务器](/deploy/server)

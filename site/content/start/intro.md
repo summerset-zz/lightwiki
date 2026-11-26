@@ -53,7 +53,7 @@ draft: false
 
 你的设备还应当安装`nodejs`，版本大于或等于`20`。
 
-如果你需要版本控制、多用户协作和[发布到github pages](/advanced/deploy-pages)功能，你还应当安装`git`。
+如果你需要版本控制、多用户协作和[发布到github pages](/deploy/pages)功能，你还应当安装`git`。
 
 > 不知道怎么安装nodejs和git？没关系。我们准备了[纯新人用的指导](/start/quickstart-ai)。
 > 

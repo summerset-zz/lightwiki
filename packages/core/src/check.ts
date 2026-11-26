@@ -1,4 +1,6 @@
 import { existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import fg from 'fast-glob';
 import type { LoadedConfig } from './config.js';
 import { loadContent, type ContentProblem } from './content.js';
 import { buildLinkReport, type LinkReport } from './links.js';
@@ -61,6 +63,8 @@ export interface CheckResult {
   layoutIssues: LayoutIssue[];
   /** frontmatter 的 styles / scripts 找不到文件（构建时只警告，但仍然是写错了） */
   assetIssues: AssetIssue[];
+  /** 同名 `.css` 与 `.less`：构建会用 `.less` 编译出的那份覆盖手写的 `.css` */
+  styleConflicts: string[];
   /** 缺首页：`index.md` 不在内容目录里，站点的入口页会直接 404 */
   missingHome: boolean;
 }
@@ -164,6 +168,16 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     }
   }
 
+  // 同名 `.css` 与 `.less`：构建时 `.less` 编译出来的那份会覆盖手写的 `.css`，
+  // 预览也跟随这个规则。不是错，但作者多半不知道，得点名。
+  const styleDir = resolve(config.root, config.assetsDir);
+  const styleConflicts: string[] = [];
+  for (const rel of await fg('**/*.less', { cwd: styleDir })) {
+    const css = rel.replace(/\.less$/i, '.css');
+    if (existsSync(join(styleDir, css))) styleConflicts.push(css);
+  }
+  styleConflicts.sort();
+
   // 内容目录里必须有 index.md：它是首页唯一的来源
   const missingHome = !pages.some((page) => page.slug === INDEX_SLUG);
 
@@ -188,6 +202,7 @@ export async function checkSite(config: LoadedConfig): Promise<CheckResult> {
     categoryIssues,
     layoutIssues,
     assetIssues,
+    styleConflicts,
     missingHome,
   };
 }

@@ -4,7 +4,7 @@ keywords: 快速上手, 入门, 不会代码, AI, Copilot, Cursor, ChatGPT, node
 description: 不用碰命令行也能建站：让 AI 帮你搭好，或者下载压缩包直接改字。
 section: start
 order: 2
-updated: 2026-11-17
+updated: 2026-11-25
 draft: false
 ---
 
@@ -20,7 +20,7 @@ draft: false
 
 然后，告诉你的AI：
 ```
-按照 https://summerset-zz.github.io/lightwiki/assets/agents.md 的指导，在 d:\mywiki 处开一个新仓库。
+按照 <https://summerset-zz.github.io/lightwiki/assets/agents.md> 的指导，在 d:\mywiki 处开一个新仓库。
 ```
 
 这篇指导文档会告诉你的AI：
@@ -87,6 +87,6 @@ npx @lightwiki/cli check .
 
 - 学习markdown语法和轻维基的扩展语法 → [markdown语法文档](/basics/markdown)
 - 学习模板语法 → [模板语法文档](/basics/templates)
-- 学习皮肤语法 → [皮肤语法文档](/basics/skins)
+- 学习皮肤语法 → [皮肤语法文档](/advanced/skins)
 - 继续熟悉工作区 → [目录结构](/start/structure)
-- 熟悉产物结构 → [产物结构](/start/dist)
+- 熟悉产物结构 → [产物结构](/deploy/build)

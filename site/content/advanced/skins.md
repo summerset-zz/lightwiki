@@ -2,8 +2,8 @@
 title: 皮肤
 keywords: 皮肤, layout, layouts, eta, 模板覆盖, doc.eta, html 骨架
 description: 皮肤是整页的 HTML 骨架，一个文件一页。这一页讲皮肤放在哪、怎么换、里面能拿到哪些数据，以及资源路径为什么必须自己拼。
-section: basics
-order: 4
+section: advanced
+order: 5
 updated: 2026-11-22
 draft: false
 ---
@@ -11,6 +11,8 @@ draft: false
 皮肤（layout）是一整页的 HTML 骨架，一个 `.eta` 文件就是一个皮肤。主题提供默认外观，你把同名文件放进内容仓库的 `layouts/` 就把那一层顶掉。
 
 它不处理 markdown，只负责把渲染好的正文装进页面。`<head>` 里放什么、侧栏在哪、正文插在哪，都写在它里面。
+
+皮肤写的是 Eta 模板。这一页只讲「皮肤能用什么」，标签与转义规则本身见 [Eta 语法](/reference/eta)。
 
 ## 默认的 doc {#doc}
 
@@ -78,8 +80,7 @@ layout: landing
 | `markdown` | 整篇 markdown 原文（含 frontmatter），用来做查看源码 |
 | `html` | 已经渲染好的正文 HTML |
 | `headings` | 页内标题，进目录用 |
-| `hints` | frontmatter 的 `hintTitle` / `hint` |
-| `sources` | 正文里 `<!-- source: -->` 收集到的来源 |
+| `meta` | 站点插件写进 `state.env.data` 的数据，核心不规定里面有什么 |
 | `source` | frontmatter 里 `source*` 一组的整理版：`site` `title` `url` `revid` `license` `licenseUrl` `changes` |
 | `license` `licenseUrl` `authors` | frontmatter 对应字段 |
 
@@ -193,7 +194,7 @@ frontmatter 写 `layout: landing`，这一页就用它。
 <pre lang="ts"><code>const x: number = 1;</code></pre>
 ```
 
-代码内容里有 `<` 时要写成 `&lt;`。语言名能写什么、写错会怎样，见 [代码高亮](/basics/code-highlight)。
+代码内容里有 `<` 时要写成 `&lt;`。语言名能写什么、写错会怎样，见 [代码高亮](/advanced/code-highlight)。
 
 ## 资源路径要自己拼 {#assets}
 

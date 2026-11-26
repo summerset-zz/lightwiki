@@ -3,7 +3,7 @@ title: 引用外部库
 keywords: 外部库, cdn, mermaid, 前端脚本, vendor
 description: 有些事只能在浏览器里做。用 mermaid 走一遍完整链路：库放哪、怎么挂、初始化写在哪，以及 CDN 与本地各自的代价。
 section: advanced
-order: 6
+order: 4
 updated: 2026-11-17
 draft: false
 scripts:
@@ -48,7 +48,7 @@ scripts:
 
 两个文件都放在 `assets/` 下，`vendor/` 是习惯用法，用来跟自己的脚本分开。
 
-字段本身能写几种形态，见 [JavaScript](/basics/javascript)。
+字段本身能写几种形态，见 [JavaScript](/advanced/javascript)。
 
 **站外地址也能写。** 想用 CDN 就直接填完整地址：
 
@@ -121,4 +121,4 @@ scripts:
 
 上面就是做法：只在那页的 frontmatter 写 `scripts`。不想让全站都加载 5.5 MB，就别放进皮肤。
 
-反过来，想让全站都能画图，就把两个 `<script>` 写进皮肤，或者在自己的 `layouts/nav.eta` 旁边放一个共用片段。皮肤的写法见 [皮肤](/basics/skins)。
+反过来，想让全站都能画图，就把两个 `<script>` 写进皮肤，或者在自己的 `layouts/nav.eta` 旁边放一个共用片段。皮肤的写法见 [皮肤](/advanced/skins)。

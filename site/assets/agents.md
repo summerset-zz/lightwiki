@@ -71,7 +71,7 @@ npx --yes @lightwiki/cli build .     # 产出静态文件到 dist/
 
 ```
 wiki.config.ts      站点配置，只有这一个配置文件
-content/*.md     内容，一个文件一页
+content/*.md        内容，一个文件一页
 assets/             图片、字体、样式、脚本（可选）
 layouts/            皮肤，覆盖主题的整页 HTML（可选）
 macros/             模板，正文里的 {{名字}} 展开成什么（可选）
@@ -92,9 +92,9 @@ section: guide
 正文从这行下面开始。
 ```
 
-`title` 必填且同一语言内不能重复。`section` 是侧栏分组，取值必须是 `wiki.config.ts` 里 `sections` 列出的。
+`title` 必填，全站不能重名。`section` 是侧栏分组，取值必须是 `wiki.config.ts` 里 `sections` 列出的。
 
-正文是标准 markdown，另外支持双链 `[[页面标题]]`、显式锚点 `## 小节 {#id}`、行内 HTML。
+正文是标准 markdown，另外支持双链 `[[页面标题]]`、显式锚点 `## 小节 {#id}`、行内 HTML。裸写的网址不会自动成链，要链接就写 `[文字](地址)` 或 `<https://…>`。
 
 **文件名就是地址**：`content/about.md` 就是 `/about/`。改文件名等于改地址，外部链接会断。
 
@@ -131,15 +131,21 @@ env:
 
 | 内容 | 地址 |
 |---|---|
+| 目录结构 | <https://summerset-zz.github.io/lightwiki/start/structure/> |
 | 全部 frontmatter 字段 | <https://summerset-zz.github.io/lightwiki/basics/frontmatter/> |
 | 正文语法（双链、锚点、HTML、class） | <https://summerset-zz.github.io/lightwiki/basics/markdown/> |
 | 模板 | <https://summerset-zz.github.io/lightwiki/basics/templates/> |
-| 皮肤 | <https://summerset-zz.github.io/lightwiki/basics/skins/> |
-| 样式与脚本 | <https://summerset-zz.github.io/lightwiki/basics/styles/> |
 | 分类 | <https://summerset-zz.github.io/lightwiki/basics/categories/> |
-| 站点配置全字段 | <https://summerset-zz.github.io/lightwiki/advanced/config/> |
-| 命令行 | <https://summerset-zz.github.io/lightwiki/advanced/cli/> |
-| 发布到 GitHub Pages | <https://summerset-zz.github.io/lightwiki/advanced/deploy-pages/> |
-| 目录结构 | <https://summerset-zz.github.io/lightwiki/start/structure/> |
+| 静态资源 | <https://summerset-zz.github.io/lightwiki/basics/assets/> |
+| 皮肤 | <https://summerset-zz.github.io/lightwiki/advanced/skins/> |
+| 样式与 Less | <https://summerset-zz.github.io/lightwiki/advanced/styles/> |
+| JavaScript | <https://summerset-zz.github.io/lightwiki/advanced/javascript/> |
+| 代码高亮 | <https://summerset-zz.github.io/lightwiki/advanced/code-highlight/> |
+| 本地打包（产物结构） | <https://summerset-zz.github.io/lightwiki/deploy/build/> |
+| 发布到 GitHub Pages | <https://summerset-zz.github.io/lightwiki/deploy/pages/> |
+| 部署到自有服务器 | <https://summerset-zz.github.io/lightwiki/deploy/server/> |
+| 站点配置全字段 | <https://summerset-zz.github.io/lightwiki/reference/config/> |
+| 命令行 | <https://summerset-zz.github.io/lightwiki/reference/cli/> |
+| Eta 语法 | <https://summerset-zz.github.io/lightwiki/reference/eta/> |
 
 源码：<https://github.com/summerset-zz/lightwiki>
