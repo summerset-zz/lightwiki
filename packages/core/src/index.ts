@@ -54,6 +54,7 @@ export {
   type RenderResult,
   type UnresolvedRef,
 } from './markdown.js';
+export { type Citation } from './citations.js';
 export {
   assetHref,
   categoryOutputPath,

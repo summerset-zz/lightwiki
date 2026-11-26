@@ -1,5 +1,12 @@
 import MarkdownIt from 'markdown-it';
 import attrs from 'markdown-it-attrs';
+import {
+  citationCoreRule,
+  citationFinalizeRule,
+  citationProblems,
+  citationRule,
+  type Citation,
+} from './citations.js';
 import type { LoadedConfig } from './config.js';
 import type { PageInfo, SiteInfo } from './context.js';
 import type { Highlighter } from './highlight.js';
@@ -18,6 +25,7 @@ interface MdToken {
   tag: string;
   content: string;
   children: MdToken[] | null;
+  meta: Record<string, unknown> | null;
   attrGet(name: string): string | null;
   attrSet(name: string, value: string): void;
   attrJoin(name: string, value: string): void;
@@ -75,6 +83,8 @@ export interface RenderEnv {
    * 渲染完会挂到 `it.page.meta`，也会进 `lightwiki-page-data`。
    */
   data?: Record<string, unknown>;
+  /** 渲染期收集：本页的参考文献（`<ref>`），渲染完交给 `it.page.citations` */
+  citations?: Citation[];
 }
 
 export interface RenderResult {
@@ -83,6 +93,10 @@ export interface RenderResult {
   links: LinkRef[];
   /** 站点插件写进 `env.data` 的东西，原样交给布局 */
   data: Record<string, unknown>;
+  /** 本页的参考文献，按编号顺序；没写过 `<ref>` 就是空数组 */
+  citations: Citation[];
+  /** 引用写法本身的问题（例如 `<ref>` 没配对），由调用方转成 warning */
+  citationProblems: string[];
 }
 
 export interface MarkdownOptions {
@@ -118,11 +132,13 @@ export function createMarkdown(options: MarkdownOptions = {}): MarkdownIt {
   // state 的类型拿不到（@types/markdown-it 用 export = 导出），所以参数用 any。
   md.inline.ruler.before('link', 'lightwiki:wikilink', wikilinkRule);
   md.inline.ruler.before('link', 'lightwiki:macro', macroRule);
+  // `<ref>` 必须在 `html_inline` 之前，否则会被当普通 HTML 原样输出
+  md.inline.ruler.before('html_inline', 'lightwiki:citation', citationRule);
   // 整行只有一个宏时走块级，否则 `<div>` 会被包进 `<p>`
   md.block.ruler.before('paragraph', 'lightwiki:macro-block', macroBlockRule);
 
-  // 站点自己的插件放在最后注册，方便覆盖或追加规则
-  options.setup?.(md);
+  // 编号与列表落位。必须在下面的 `lightwiki:urls` 之前，条目里的内链才能被一起改写。
+  md.core.ruler.push('lightwiki:citations', citationCoreRule);
 
   // 站内链接按语言与 basePath 改写，外链统一加 nofollow。
   // 放在 core ruler 里做，而不是渲染后正则替换 —— token 结构是可靠的。
@@ -183,6 +199,9 @@ export function createMarkdown(options: MarkdownOptions = {}): MarkdownIt {
       (inline.children ??= []).push(link);
     }
   });
+
+  // 参考文献的 HTML 要等内链改写完才准，所以排在最后
+  md.core.ruler.push('lightwiki:citations-final', citationFinalizeRule);
 
   // 站点自己的插件放在最后注册，方便覆盖或追加规则
   options.setup?.(md);
@@ -675,10 +694,19 @@ export function renderMarkdown(
   // 每页一个新对象：站点插件（`options.setup` 注册的规则）往里写结构化数据，
   // 渲染完原样交给布局的 `it.page.meta`。核心不规定里面有什么。
   env.data = {};
+  // 引用是逐页重新收集的，`env` 每页都是新的，这里只防一手复用
+  env.citations = undefined;
   const raw = md.parse(src, env);
   const tokens = asTokens(raw);
   const headings = collectHeadings(tokens);
   const links = collectLinks(tokens);
   const html = md.renderer.render(raw, md.options, env);
-  return { html, headings, links, data: env.data };
+  return {
+    html,
+    headings,
+    links,
+    data: env.data,
+    citations: env.citations ?? [],
+    citationProblems: citationProblems(env),
+  };
 }

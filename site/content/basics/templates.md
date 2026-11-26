@@ -3,7 +3,7 @@ title: 模板
 keywords: 模板, macro, macros, eta, catalog, pages, 自定义模板
 description: 主题自带两个模板，其余要自己写。这一页讲清模板是怎么被展开的、参数怎么写、it 里有什么，以及未定义模板时构建怎么办。
 section: basics
-order: 3
+order: 4
 updated: 2026-11-26
 draft: false
 ---

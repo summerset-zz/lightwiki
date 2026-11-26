@@ -3,7 +3,7 @@ title: 分类
 keywords: 分类, category, categories, sidebarCategory, catalog, pages
 description: 分类是贴在页面上的 ASCII 标签，构建时据此生成分类页。这一页讲怎么声明、怎么用、以及未声明时会发生什么。
 section: basics
-order: 4
+order: 5
 updated: 2026-11-26
 draft: false
 ---

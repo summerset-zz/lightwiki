@@ -134,6 +134,7 @@ env:
 | 目录结构 | <https://summerset-zz.github.io/lightwiki/start/structure/> |
 | 全部 frontmatter 字段 | <https://summerset-zz.github.io/lightwiki/basics/frontmatter/> |
 | 正文语法（双链、锚点、HTML、class） | <https://summerset-zz.github.io/lightwiki/basics/markdown/> |
+| 引用（`<ref>` 上标 + 文末列表） | <https://summerset-zz.github.io/lightwiki/basics/citations/> |
 | 模板 | <https://summerset-zz.github.io/lightwiki/basics/templates/> |
 | 分类 | <https://summerset-zz.github.io/lightwiki/basics/categories/> |
 | 静态资源 | <https://summerset-zz.github.io/lightwiki/basics/assets/> |

@@ -3,7 +3,7 @@ title: frontmatter
 keywords: frontmatter, 元数据, metadata, yaml, title, description, keywords, section, order, updated, draft, layout, styles, scripts, categories, sidebarCategory, frontmatterInjection, lightwiki-page-data, js
 description: 页面开头两个 --- 之间的 YAML，决定这页叫什么、排在哪、用哪套皮肤，以及写坏了会怎样。
 section: basics
-order: 2
+order: 3
 updated: 2026-11-26
 draft: false
 ---

@@ -150,6 +150,7 @@ export function createPageView(
       // 布局额外拥有的：渲染产物
       html: page.html,
       headings: page.headings,
+      citations: page.citations,
       source: {
         site: page.data.sourceSite ?? '',
         title: page.data.sourceTitle ?? '',

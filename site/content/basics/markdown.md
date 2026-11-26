@@ -81,6 +81,8 @@ draft: false
 
 在上文中，除了`![就是这张](/assets/md-favicon.png){width=24}`这种给图片加其他属性的语法属于`markdown-it-attrs`之外，使用的都是标准CommonMark语法。本章会介绍轻维基和`markdown-it-attrs`的额外支持和限制。
 
+引用（`<ref>`）是另一套行内语法，会生成上标编号和文末的参考文献列表，写法与限制见[引用](/basics/citations)。
+
 ### 显式锚点 {#anchors}
 在标题语法后空格、并增加`{#anchorname}`可以为这一节增加一个锚点。锚点可以使页面被访问时自动滚动到这一节，该功能由`markdown-it-attrs`提供。
 

@@ -17,6 +17,7 @@ categories: [demo]
 - [[frontmatter|frontmatter]]：字段表与容错
 - [[anchors|锚点]]：让标题能被稳定引用
 - [[links|链接]]：站内链接与双链
+- [[citations|引用]]：`<ref>` 的编号与插入位置
 - [[macros|宏]]：`{{…}}` 的三种形态
 - [[category-page|分类]]：页面归类与分类侧栏
 - [[context|模板上下文]]：`it.page` 与 `it.site`

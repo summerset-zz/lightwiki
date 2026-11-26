@@ -84,8 +84,12 @@ markdown-it (html，不开 linkify)
   + markdown-it-attrs            {#anchor} / .class
   + inline ruler: wikilink       [[目标]] / [[目标|文字]]
   + inline ruler: macro          {{宏}} / {{宏(a, "b")}}
+  + inline ruler: citation       <ref>内容</ref> / <ref name="x" />
   + block ruler: macro-block     整行一个宏 → 块级解析
+  + core ruler: citations        编号 + 上标 + 列表落位（必须在 urls 之前）
   + core ruler: urls             链接改写 + 外链 nofollow
+  + core ruler: heading-anchor   `{#id}` 标题后的 `#`
+  + core ruler: citations-final  把最终 HTML 交给 `it.page.citations`
   + options.setup(md)            站点插件（最后注册，可覆盖）
 ```
 
@@ -95,6 +99,17 @@ markdown-it (html，不开 linkify)
 2. **代码块免疫**来自"踩在解析器规则边界上"（fence 与 backticks 先消费），不是文本扫描。不要改成正则预替换。
 
 展开栈（`env.macroStack`）必须**跨子解析传递**，否则 `A → {{A}}` 会无限循环。
+
+### 6.1 引用（`citations.ts`）
+
+`<ref>` 的内容**不留在正文里**：行内规则只把内容摘出来存进 `env`，原位置放一个空的 `html_inline` 占位。
+为什么分两条 core 规则：列表里的内容要以行内 token 的形式重新插回主 token 流，`urls` 才会改写它的链接、
+标红链；而交给皮肤的 HTML 又必须等 `urls` 跑完才准，所以要一条在前（落位）、一条在后（取 HTML）。
+
+- 编号在 core 阶段按**首次出现**分配，与 `<references/>` 的位置无关，所以标记写在文档任何地方都行。
+- `<ref>` 内容用 `md.inline.parse` 解析，因此只支持行内；跨块（空行、列表、代码块）时配不上对，
+  规则会记一条 `problems`，由 `content.ts` 转成 warning（`wiki check` 与 `wiki build` 都打印）。
+- 嵌套 `<ref>` 不支持：内容里的 `<ref>` / `</ref>` 标签直接摘掉，只留文字。
 
 ## 7. 主题契约
 
@@ -214,6 +229,7 @@ dist/
 | 加一种行内语法 | `markdown.ts` 的 ruler 注册 + 实现 → `tests/mini` 加一节 |
 | 改页内目录收哪些标题 | `markdown.ts` 的 `collectHeadings`（`<div data-no-toc>` 里的整段跳过，`trackDivs` 维护容器栈） |
 | 改标题旁的锚点链接 | `markdown.ts` 的 `lightwiki:heading-anchor` 规则（只给带 id 的标题插 `<a class="header-anchor">`）→ 主题 `theme-extra.less` |
+| 改引用（`<ref>`）的编号、上标或列表结构 | `citations.ts` 的三条规则（行内摘内容 / 编号落位 / 取 HTML）→ 主题 `theme-extra.less` 的 `.cite` 与 `.citations` |
 | 改资源管线 | `assets.ts` → `build.ts` 的调用处 → `dev` 的 asset 分支 |
 | 改主题提供的文件列表或 eject 落点 | `theme.ts` 的 `AREAS` → `cli` 的 `theme list / eject` |
 | 改内联规则（哪些标签、哪种 data URI） | `inline.ts` 的 `inlineHtml` / `MIME` 表 |

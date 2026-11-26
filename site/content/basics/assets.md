@@ -3,7 +3,7 @@ title: 静态资源
 keywords: 资源, assets, 图片, 路径, basePath, assetsDir
 description: 图片、字体、下载文件都放在 assets/ 目录，构建时整体拷进产物。这一页讲目录怎么组织、正文与皮肤里引用路径为什么写法不同。
 section: basics
-order: 5
+order: 6
 updated: 2026-11-26
 draft: false
 ---

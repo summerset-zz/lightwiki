@@ -8,6 +8,7 @@ import {
   type Frontmatter,
 } from '@lightwiki/schema';
 import type { LoadedConfig } from './config.js';
+import type { Citation } from './citations.js';
 import {
   createMarkdown,
   renderMarkdown,
@@ -35,6 +36,8 @@ export interface Page {
   html: string;
   headings: Heading[];
   links: LinkRef[];
+  /** 本页的参考文献（`<ref>`），按编号顺序 */
+  citations: Citation[];
   /** 站点插件写进 `env.data` 的数据，原样交给布局的 `it.page.meta` */
   meta: Record<string, unknown>;
   url: string;
@@ -258,6 +261,12 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
       categories: new Set<string>(),
     };
     const rendered = renderMarkdown(md, seed.body, env);
+    if (rendered.citationProblems.length > 0) {
+      warnings.push({
+        file: `${dir}/${seed.relativePath}`,
+        messages: rendered.citationProblems,
+      });
+    }
 
     return {
       slug: seed.slug,
@@ -268,6 +277,7 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
       html: rendered.html,
       headings: rendered.headings,
       links: rendered.links,
+      citations: rendered.citations,
       meta: rendered.data,
       url: seed.url,
       outputPath: seed.outputPath,
