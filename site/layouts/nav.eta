@@ -8,7 +8,7 @@
  * 二级菜单用 <details>，零依赖、键盘可用。下面那几行脚本只负责
  * 「点别处、按 Esc 时收起」。不支持时影响很小（菜单仍然能展开）。
  */
-const version = '0.5.0';
+const version = '0.6.0';
 
 const menus = [
   {

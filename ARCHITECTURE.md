@@ -100,6 +100,13 @@ markdown-it (html，不开 linkify)
 
 展开栈（`env.macroStack`）必须**跨子解析传递**，否则 `A → {{A}}` 会无限循环。
 
+**模板之间传数据用 `it.shared`**：`renderMarkdown` 每页新建一个 `{}` 放进 `env.shared`，
+`expandMacro` 把它作为 `it.shared` 交给每次宏调用，`createPageView` 又把同一个对象交给布局。
+渲染是同步、单线程、按文档顺序的，所以它天然单向：后面的宏能看到前面的宏写的，反过来不行；
+皮肤在所有宏之后渲染，因此拿到的是整页最终状态。它**不序列化**（不进 `lightwiki-page-data`）——
+要给浏览器读的数据走 `env.data` / `it.page.meta`。别再往 `it.page` 或 `it.page.meta` 上挂临时状态：
+前者与 frontmatter 平铺字段同命名空间，后者在宏里根本就不是插件写的那一个对象。
+
 ### 6.1 引用（`citations.ts`）
 
 `<ref>` 的内容**不留在正文里**：行内规则只把内容摘出来存进 `env`，原位置放一个空的 `html_inline` 占位。

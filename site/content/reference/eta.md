@@ -78,3 +78,5 @@ Eta 没有专门的注释标签，用 JS 注释：
 `it` 里有什么，按皮肤类型不同：内容页的 `doc` 皮肤有 `it.page` / `it.site` / `it.nav` / `it.sidebar` / `it.index` / `it.partials`，四个内置皮肤各有差异，逐项见 [皮肤 → 皮肤里的数据](/advanced/skins#context)。
 
 宏里的 `it` 还多 `args`（位置参数）与 `named`（命名参数），见 [模板](/basics/templates)。
+
+皮肤与宏都有 `it.shared`：一页一个的共享暂存区，见 [模板之间传数据](/basics/templates#shared)。

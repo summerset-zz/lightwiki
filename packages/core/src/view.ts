@@ -133,6 +133,12 @@ export interface PageView {
   sidebar: Sidebar;
   index: { url: string };
   partials: Partials;
+  /**
+   * 模板之间传过的东西（`it.shared`），与宏里那个是同一个对象。
+   *
+   * 皮肤渲染时整页的宏都跑完了，所以这里拿到的是最终状态。
+   */
+  shared: Record<string, unknown>;
 }
 
 export function createPageView(
@@ -168,6 +174,7 @@ export function createPageView(
     sidebar: buildSidebar(config, pages, page),
     index: { url: pageUrl(config, INDEX_SLUG) },
     partials: detectPartials(config),
+    shared: page.shared,
   };
 }
 

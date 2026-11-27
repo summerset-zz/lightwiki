@@ -58,6 +58,21 @@ categories: [syntax]
 <% } %>
 ```
 
+## it.shared {#shared}
+
+模板之间的共享暂存区，一页一个。`shared-set` 往里累加，`shared-show` 只读：
+
+```md
+{{shared-show}} {{shared-set}} {{shared-show}} {{shared-set}} {{shared-show}}
+```
+
+实际效果：{{shared-show}} {{shared-set}} {{shared-show}} {{shared-set}} {{shared-show}}
+
+第一个 `shared-show` 读到 0 —— **方向是单向的：后引用的模板能拿到前一个模板注入的数据，反过来不行**。页面按文档顺序渲染，前面的模板执行时后面的还没跑。
+
+一页一份，另一页里 `it.shared` 是空的。它是运行期状态，不进浏览器、也不进页面数据；要给浏览器读的走 `it.page.meta`。皮肤里也能读（`it.shared`），那时整页的模板都跑完了。
+
+
 ## 拿不到的东西 {#missing}
 
 宏执行时，本页的 `html` / `headings` / `meta` 还在生成中，所以**宏里读不到**。这是循环依赖，不是遗漏。要用这类数据得放在布局层做——布局模板里 `it.page.headings` 是有的。

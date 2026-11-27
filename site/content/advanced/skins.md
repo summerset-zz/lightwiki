@@ -69,6 +69,7 @@ layout: landing
 | `it.sidebar` | 侧栏，默认等于 `nav`；页面写了 `sidebarCategory` 就换成那个分类的页面 |
 | `it.index` | 只有一个 `url`，指向首页 |
 | `it.partials` | 内容仓库里提供了哪些可选片段，目前只有 `nav`，见下面那节 |
+| `it.shared` | 模板之间传过的东西（一页一个）。皮肤渲染时整页模板都跑完了，所以这里是最终状态 |
 
 `it.page` 在普通内容页里有这些：
 
@@ -80,6 +81,7 @@ layout: landing
 | `markdown` | 整篇 markdown 原文（含 frontmatter），用来做查看源码 |
 | `html` | 已经渲染好的正文 HTML |
 | `headings` | 页内标题，进目录用 |
+| `citations` | 本页的参考文献，元素有 `number` `id` `name` `count` `html` |
 | `meta` | 站点插件写进 `state.env.data` 的数据，核心不规定里面有什么 |
 | `source` | frontmatter 里 `source*` 一组的整理版：`site` `title` `url` `revid` `license` `licenseUrl` `changes` |
 | `license` `licenseUrl` `authors` | frontmatter 对应字段 |

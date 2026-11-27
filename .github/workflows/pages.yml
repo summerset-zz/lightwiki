@@ -1,8 +1,10 @@
-# 把语法手册发到 GitHub Pages，当在线 demo。
+# 把主站文档（site/）发到 GitHub Pages。
 #
 # 项目站点的地址是 `https://<owner>.github.io/<repo>/`，所以要用环境变量告诉站点
 # 「我挂在子路径下」—— 否则产物里的链接会指向根目录。
 # 首次运行前要在仓库 Settings → Pages 里把 Source 设成 "GitHub Actions"。
+#
+# 语法回归测试（tests/mini）不再发布：它由 `ci.yml` 每次 push / PR 校验并构建。
 name: Pages
 
 on:
@@ -35,17 +37,17 @@ jobs:
       - run: corepack enable
       - run: yarn install --immutable
 
-      # 暂时仍发布 tests/mini（语法回归测试）：主站 site/ 还在建设，只有占位首页。
-      # 主站文档写完（「开始 / 基础 / 高级」三组齐了）之后，把这两处 tests/mini 换成 site。
-      - name: 构建语法回归测试
+      # 主站文档写完（「开始 / 基础 / 高级 / 发布 / 配置指引」五组齐了）之后，
+      # 这里从 `tests/mini` 换成了 `site`。回归测试仍由 `ci.yml` 每次校验并构建。
+      - name: 构建主站文档
         env:
           LIGHTWIKI_BASE_PATH: /${{ github.event.repository.name }}/
           LIGHTWIKI_SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-        run: yarn wiki build tests/mini
+        run: yarn wiki build site
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: tests/mini/dist
+          path: site/dist
       - id: deployment
         uses: actions/deploy-pages@v4

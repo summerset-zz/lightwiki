@@ -56,8 +56,10 @@ const ALIASES: Record<string, string> = {
  * `subLanguage: 'ruby'` —— 没注册 ruby 时那段完全不工作，实测还不如直接用 xml。
  *
  * 所以自己写一个：整块按 HTML 走，`<% ... %>` 里按 JS 走。实测收益：
- * 纯逻辑块从「只剩 tag/name 两类」变成「keyword/property/tag/name 四类」，
- * `<%# 注释 %>` 也有了颜色。
+ * 纯逻辑块从「只剩 tag/name 两类」变成「keyword/property/tag/name 四类」。
+ *
+ * 不认 `<%# ... %>`：那不是 Eta 语法（会被当成 exec 标签里的 `#` 而报语法错），
+ * 注释只能写成 JS 的块注释，所以不给它上注释色 —— 染了只会让人以为那是合法写法。
  *
  * 标记本身（`<%` / `<%=` / `%>`）用 `beginScope` / `endScope` 单独染成 `hljs-meta`：
  * 它们会落到 xml 子语言里当普通文本，看着和正文一样。注意 hljs 不允许这两个选项
@@ -69,7 +71,6 @@ const ETA_DEFINITION = (h: typeof hljs) => ({
   name: 'Eta',
   subLanguage: 'xml',
   contains: [
-    h.COMMENT('<%#', '%>'),
     {
       begin: /<%[%~=-]?/,
       end: /[-%]?%>/,

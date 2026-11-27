@@ -15,6 +15,13 @@ export interface MacroBase {
   /** 全站信息，与布局模板里的 `it.site` 是同一个对象 */
   site: SiteInfo;
   lang: string;
+  /**
+   * 模板之间的共享暂存区：一页一个，按文档顺序传递。
+   *
+   * 后面的宏能读到前面的宏写进去的值，反过来不行（渲染是顺序的）。
+   * 皮肤里也有同一个对象（`it.shared`），且那时整页的宏都跑完了。
+   */
+  shared: Record<string, unknown>;
   /** 让宏可以给当前页登记分类 */
   addCategory: (name: string) => void;
 }

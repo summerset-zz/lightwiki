@@ -38,6 +38,8 @@ export interface Page {
   links: LinkRef[];
   /** 本页的参考文献（`<ref>`），按编号顺序 */
   citations: Citation[];
+  /** 模板之间传过的东西（`it.shared`），布局里同样拿得到 */
+  shared: Record<string, unknown>;
   /** 站点插件写进 `env.data` 的数据，原样交给布局的 `it.page.meta` */
   meta: Record<string, unknown>;
   url: string;
@@ -278,6 +280,7 @@ export async function loadContent(config: LoadedConfig): Promise<LoadedContent> 
       headings: rendered.headings,
       links: rendered.links,
       citations: rendered.citations,
+      shared: rendered.shared,
       meta: rendered.data,
       url: seed.url,
       outputPath: seed.outputPath,

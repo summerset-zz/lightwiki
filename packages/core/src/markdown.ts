@@ -85,6 +85,13 @@ export interface RenderEnv {
   data?: Record<string, unknown>;
   /** 渲染期收集：本页的参考文献（`<ref>`），渲染完交给 `it.page.citations` */
   citations?: Citation[];
+  /**
+   * 模板之间的共享暂存区（`it.shared`）。一页一个，与 `env.data` 同源时机新建。
+   *
+   * 渲染是按文档顺序、同步、单线程的，所以它天然有方向：后面的宏能看到前面的宏
+   * 写进去的东西，反过来不行。皮肤在所有宏跑完之后渲染，因此拿到的是最终状态。
+   */
+  shared?: Record<string, unknown>;
 }
 
 export interface RenderResult {
@@ -97,6 +104,8 @@ export interface RenderResult {
   citations: Citation[];
   /** 引用写法本身的问题（例如 `<ref>` 没配对），由调用方转成 warning */
   citationProblems: string[];
+  /** 模板读写过的共享暂存区，交给布局的 `it.shared` */
+  shared: Record<string, unknown>;
 }
 
 export interface MarkdownOptions {
@@ -416,6 +425,7 @@ function expandMacro(
       page: (env.pageInfo ?? {}) as PageInfo,
       site: (env.siteInfo ?? {}) as SiteInfo,
       lang: env.lang,
+      shared: (env.shared ??= {}),
       addCategory: (category: string) => {
         (env.categories ??= new Set<string>()).add(category);
         // 立刻反映到 `it.page.categories`，宏里后续读取能看到自己刚加的分类
@@ -467,7 +477,11 @@ function macroRule(state: any, silent: boolean): boolean {
   });
 
   if (text !== null) {
-    // 展开结果再走一遍行内解析：`**粗体**`、`[[双链]]`、内嵌的 `{{宏}}` 都会生效
+    // 展开结果再走一遍行内解析：`**粗体**`、`[[双链]]`、内嵌的 `{{宏}}` 都会生效。
+    //
+    // 必须先冲掉前面攒着的文本：`md.inline.parse` 是直接往 tokens 数组里塞的，
+    // 绕过了 `state.push()` 的自动 flush，否则 `文字{{宏}}` 会渲染成「宏输出文字」。
+    state.pushPending();
     const stack = env.macroStack ?? [];
     stack.push(call.name.toLowerCase());
     try {
@@ -696,6 +710,8 @@ export function renderMarkdown(
   env.data = {};
   // 引用是逐页重新收集的，`env` 每页都是新的，这里只防一手复用
   env.citations = undefined;
+  // 模板之间的共享区也是每页一份：换页就是新字典，不会漏到下一页
+  env.shared = {};
   const raw = md.parse(src, env);
   const tokens = asTokens(raw);
   const headings = collectHeadings(tokens);
@@ -708,5 +724,6 @@ export function renderMarkdown(
     data: env.data,
     citations: env.citations ?? [],
     citationProblems: citationProblems(env),
+    shared: env.shared ?? {},
   };
 }
