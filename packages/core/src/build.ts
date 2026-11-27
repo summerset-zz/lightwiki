@@ -11,7 +11,7 @@ import { assetList, injectPageAssets, isExternalUrl, pageAssetUrl, resolvePageAs
 import { injectPageData, pageDataOf } from './page-data.js';
 import { createRenderer } from './render.js';
 import { relativeUrl, rewriteRelativeLinks } from './relative.js';
-import { categoryOutputPath, INDEX_SLUG, indexOutputPath, normalizeBasePath, pageUrl, SEARCH_INDEX_FILE, shouldInlineSearch, urlToOutputPath, withBasePath } from './routes.js';
+import { categoryOutputPath, INDEX_SLUG, indexOutputPath, normalizeBasePath, pageUrl, SEARCH_INDEX_FILE, shouldInlineSearch, stripBasePath, urlToOutputPath, withBasePath } from './routes.js';
 import { buildSearchIndex, injectSearchIndex } from './search.js';
 import {
   createCategoryView,
@@ -256,6 +256,9 @@ export async function buildSite(
   // 重定向：默认生成 JS 跳转页（用户可能只有 GitHub Pages 这类没有服务端的托管）
   if (config.redirects.length > 0) {
     const taken = new Set(written);
+    // canonical 用：`siteUrl` 里可能已经写上了 basePath（用户常这么写，CI 模板
+    // 也这么传），拼之前先摘掉，否则会出来 `/repo/repo/a/`
+    const siteRoot = stripBasePath(config.siteUrl, base);
 
     if (config.redirectMode !== 'server') {
       for (const rule of config.redirects) {
@@ -271,14 +274,14 @@ export async function buildSite(
         // 跳转地址在 file 模式下要跟着相对化（meta refresh 与 JS 都要用）；
         // canonical 必须是绝对地址，否则对搜索引擎没有意义。
         //
-        // `rule.to` 是作者写的站内路径，不含 basePath。两条路径都要补上：
-        // 少了它，项目站点（`/<repo>/`）上 meta refresh 会跳到域名根，canonical 也会指错。
+        // `rule.to` 是作者写的站内路径，不含 basePath，要补上：少了它，项目站点
+        // （`/<repo>/`）上 meta refresh 会跳到域名根。
         const html = await renderer.renderLayout('redirect', {
           site: siteInfo,
           from: rule.from,
           to: rule.to,
           href: relativeMode ? relativeUrl(rule.to, relative, config) : withBasePath(rule.to, config),
-          canonical: `${config.siteUrl.replace(/\/+$/, '')}${withBasePath(rule.to, config)}`,
+          canonical: `${siteRoot}${withBasePath(rule.to, config)}`,
         });
         await emit(relative, html);
         taken.add(relative);

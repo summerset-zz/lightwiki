@@ -194,6 +194,20 @@ export function withBasePath(path: string, config: LoadedConfig): string {
   return path === base || path.startsWith(`${base}/`) ? path : `${base}${path}`;
 }
 
+/**
+ * 把 `siteUrl` 末尾可能带上的 basePath 摘掉。
+ *
+ * 用户和 CI 模板都习惯把 basePath 写进 `siteUrl`（`https://u.github.io/repo`），
+ * 而拼 canonical 这类绝对地址时我们还要再加一次 basePath —— 不先摘就是 `/repo/repo/a/`。
+ * 两种写法都能用：写了就摘，没写就不动。
+ */
+export function stripBasePath(siteUrl: string, basePath: string): string {
+  const site = siteUrl.replace(/\/+$/, '');
+  const base = normalizeBasePath(basePath);
+  if (!base) return site;
+  return site === base || site.endsWith(base) ? site.slice(0, -base.length) : site;
+}
+
 /** 资源路径（图片等）只加 basePath，不改语言、不改扩展名 */
 export function assetHref(src: string, config: LoadedConfig): string {
   if (!src.startsWith('/') || src.startsWith('//')) return src;
